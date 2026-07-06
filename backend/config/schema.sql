@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS erp_marketing;
-USE erp_marketing;
-
 -- 1. Users/Operators
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,

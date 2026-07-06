@@ -5,11 +5,11 @@ const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || 'srv2092.hstgr.io',
   port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : '',
-  database: process.env.DB_NAME || 'erp_marketing',
+  user: process.env.DB_USER || 'u533684840_erpinf',
+  password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : 'Infimech.web123',
+  database: process.env.DB_NAME || 'u533684840_erpinfimech',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -19,18 +19,18 @@ const pool = mysql.createPool({
 async function initializeDatabase() {
   let tempConn;
   try {
-    // 1. Connect without database first to ensure the database itself exists
+    const targetDb = process.env.DB_NAME || 'u533684840_erpinfimech';
+    // 1. Connect directly to target database to avoid restricted creation permission errors on shared hosting
     tempConn = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
+      host: process.env.DB_HOST || 'srv2092.hstgr.io',
       port: process.env.DB_PORT || 3306,
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : ''
+      user: process.env.DB_USER || 'u533684840_erpinf',
+      password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : 'Infimech.web123',
+      database: targetDb
     });
     
-    await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'erp_marketing'}\`;`);
+    console.log('✓ Connected to database: ' + targetDb);
     await tempConn.end();
-    
-    console.log('✓ Database confirmed/created.');
 
     // 2. Test main connection pool
     const conn = await pool.getConnection();
@@ -67,7 +67,8 @@ async function initializeDatabase() {
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS version VARCHAR(50) NOT NULL DEFAULT '1.0'",
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS sharing_status VARCHAR(50) NOT NULL DEFAULT 'Private'",
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS size VARCHAR(50) NOT NULL DEFAULT '2.4 MB'",
-      "ALTER TABLE users MODIFY COLUMN role ENUM('Superadmin', 'Admin', 'Digital Marketing', 'Operator') NOT NULL DEFAULT 'Operator'"
+      "ALTER TABLE users MODIFY COLUMN role ENUM('Superadmin', 'Admin', 'Digital Marketing', 'Operator') NOT NULL DEFAULT 'Operator'",
+      "ALTER TABLE client_contacts CHANGE COLUMN lead_id client_id INT NOT NULL"
     ];
     for (const alt of alterStatements) {
       try { await conn.query(alt); } catch (e) { /* column may already exist */ }
