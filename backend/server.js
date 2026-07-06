@@ -45,18 +45,25 @@ app.use((err, req, res, next) => {
 
 // Initialize DB and start server
 async function startServer() {
+  let dbInitialized = false;
   try {
     await initializeDatabase();
-    
-    app.listen(PORT, () => {
-      console.log(`=========================================`);
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-      console.log(`=========================================`);
-    });
+    dbInitialized = true;
   } catch (err) {
-    console.error('Failed to start server due to database initialization failure:', err);
-    process.exit(1);
+    console.error('⚠️ Database initialization failed on startup:', err.message);
+    console.error('The server will start anyway, but database queries might fail until connection issues are resolved.');
   }
+
+  app.listen(PORT, () => {
+    console.log(`=========================================`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    if (dbInitialized) {
+      console.log(`✓ Database initialized successfully.`);
+    } else {
+      console.log(`⚠️ Database is OFFLINE. The app will retry connection on demand.`);
+    }
+    console.log(`=========================================`);
+  });
 }
 
 startServer();
