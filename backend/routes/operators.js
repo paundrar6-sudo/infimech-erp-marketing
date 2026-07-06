@@ -16,6 +16,7 @@ router.get('/', verifyToken, async (req, res) => {
       total: rows.length,
       active: rows.filter(u => u.status === 'Active').length,
       inactive: rows.filter(u => u.status !== 'Active').length,
+      superadmin: rows.filter(u => u.role === 'Superadmin').length,
       admin: rows.filter(u => u.role === 'Admin').length,
       marketing: rows.filter(u => u.role === 'Digital Marketing').length,
       operator: rows.filter(u => u.role === 'Operator').length
@@ -32,7 +33,7 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // Add operator (Admin only)
-router.post('/', verifyToken, requireRole(['Admin']), async (req, res) => {
+router.post('/', verifyToken, requireRole(['Superadmin', 'Admin']), async (req, res) => {
   const { name, email, password, phone, role, avatar_url } = req.body;
 
   if (!name || !email || !password || !role) {
@@ -65,7 +66,7 @@ router.post('/', verifyToken, requireRole(['Admin']), async (req, res) => {
 });
 
 // Update operator status/details (Admin only)
-router.put('/:id', verifyToken, requireRole(['Admin']), async (req, res) => {
+router.put('/:id', verifyToken, requireRole(['Superadmin', 'Admin']), async (req, res) => {
   const { id } = req.params;
   const { name, email, phone, role, status, password, avatar_url } = req.body;
 
@@ -102,7 +103,7 @@ router.put('/:id', verifyToken, requireRole(['Admin']), async (req, res) => {
 });
 
 // Delete operator (Admin only)
-router.delete('/:id', verifyToken, requireRole(['Admin']), async (req, res) => {
+router.delete('/:id', verifyToken, requireRole(['Superadmin', 'Admin']), async (req, res) => {
   const { id } = req.params;
 
   if (parseInt(id) === req.user.id) {

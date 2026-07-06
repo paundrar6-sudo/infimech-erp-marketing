@@ -66,7 +66,8 @@ async function initializeDatabase() {
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS category VARCHAR(100) NOT NULL DEFAULT 'Brosur'",
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS version VARCHAR(50) NOT NULL DEFAULT '1.0'",
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS sharing_status VARCHAR(50) NOT NULL DEFAULT 'Private'",
-      "ALTER TABLE assets ADD COLUMN IF NOT EXISTS size VARCHAR(50) NOT NULL DEFAULT '2.4 MB'"
+      "ALTER TABLE assets ADD COLUMN IF NOT EXISTS size VARCHAR(50) NOT NULL DEFAULT '2.4 MB'",
+      "ALTER TABLE users MODIFY COLUMN role ENUM('Superadmin', 'Admin', 'Digital Marketing', 'Operator') NOT NULL DEFAULT 'Operator'"
     ];
     for (const alt of alterStatements) {
       try { await conn.query(alt); } catch (e) { /* column may already exist */ }
@@ -78,17 +79,19 @@ async function initializeDatabase() {
       console.log('🌱 Database is empty. Seeding default operators, leads, and marketing campaigns...');
       
       const adminPass = await bcrypt.hash('admin123', 10);
+      const barunaPass = await bcrypt.hash('baruna123', 10);
       const marketerPass = await bcrypt.hash('marketing123', 10);
       const operatorPass = await bcrypt.hash('operator123', 10);
 
       // Seed Users/Operators
       const insertUserSql = `
         INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES 
-        ('Ahmad Zaky', 'admin@erp.com', ?, '+6281122334455', 'Admin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Ahmad'),
+        ('Super Admin', 'admin.@gmail.com', ?, '+6281122334455', 'Superadmin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=SuperAdmin'),
+        ('Baruna', 'baruna.work@gmail.com', ?, '+6289988776655', 'Admin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Baruna'),
         ('Siti Sarah', 'marketing@erp.com', ?, '+6289988776655', 'Digital Marketing', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah'),
         ('Budi Santoso', 'operator@erp.com', ?, '+6287766554433', 'Operator', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Budi')
       `;
-      await conn.query(insertUserSql, [adminPass, marketerPass, operatorPass]);
+      await conn.query(insertUserSql, [adminPass, barunaPass, marketerPass, operatorPass]);
 
       // Seed Clients/Leads with deadline, notes, and company
       const insertLeadsSql = `
@@ -164,9 +167,44 @@ async function initializeDatabase() {
       `;
       await conn.query(insertSocialSql);
 
-      console.log('✓ Default data seeded successfully.');
-    } else {
-      console.log('✓ Database already contains data, skipping seeding.');
+    }
+    
+    // 5. Idempotent check to ensure the new admin and superadmin users exist, and clean up the old admin@erp.com
+    try {
+      // Delete old admin@erp.com
+      await conn.query("DELETE FROM users WHERE email = 'admin@erp.com'");
+
+      // Ensure admin.@gmail.com exists
+      const [adminCheck] = await conn.query('SELECT id FROM users WHERE email = ?', ['admin.@gmail.com']);
+      const superadminPass = await bcrypt.hash('admin123', 10);
+      if (adminCheck.length === 0) {
+        await conn.query(
+          "INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES ('Super Admin', 'admin.@gmail.com', ?, '+6281122334455', 'Superadmin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=SuperAdmin')",
+          [superadminPass]
+        );
+      } else {
+        await conn.query(
+          "UPDATE users SET role = 'Superadmin', password = ? WHERE email = ?",
+          [superadminPass, 'admin.@gmail.com']
+        );
+      }
+
+      // Ensure baruna.work@gmail.com exists
+      const [barunaCheck] = await conn.query('SELECT id FROM users WHERE email = ?', ['baruna.work@gmail.com']);
+      const barunaPass = await bcrypt.hash('baruna123', 10);
+      if (barunaCheck.length === 0) {
+        await conn.query(
+          "INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES ('Baruna', 'baruna.work@gmail.com', ?, '+6289988776655', 'Admin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Baruna')",
+          [barunaPass]
+        );
+      } else {
+        await conn.query(
+          "UPDATE users SET role = 'Admin', password = ? WHERE email = ?",
+          [barunaPass, 'baruna.work@gmail.com']
+        );
+      }
+    } catch (e) {
+      console.error('Error upserting admin/superadmin:', e);
     }
     
     conn.release();

@@ -988,7 +988,7 @@ export default function App() {
                   type="email" 
                   className="form-input" 
                   style={{ paddingLeft: '38px' }} 
-                  placeholder="admin@erp.com" 
+                  placeholder="admin.@gmail.com" 
                   value={loginEmail} 
                   onChange={(e) => setLoginEmail(e.target.value)} 
                   required 
@@ -1017,9 +1017,8 @@ export default function App() {
           </form>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '15px' }}>
             Info Akun Percobaan:<br />
-            <strong>admin@erp.com</strong> (Pass: admin123)<br />
-            <strong>marketing@erp.com</strong> (Pass: marketing123)<br />
-            <strong>operator@erp.com</strong> (Pass: operator123)
+            <strong>admin.@gmail.com</strong> (Pass: admin123) [Superadmin]<br />
+            <strong>baruna.work@gmail.com</strong> (Pass: baruna123) [Admin]
           </div>
         </div>
       </div>
@@ -1868,12 +1867,14 @@ export default function App() {
                                 <td>{op.phone || '-'}</td>
                                 <td>
                                   <span className={`badge`} style={{
-                                    background: op.role === 'Admin' ? 'rgba(239,68,68,0.15)' : op.role === 'Digital Marketing' ? 'rgba(168,85,247,0.15)' : 'rgba(6,182,212,0.15)',
-                                    color: op.role === 'Admin' ? 'var(--accent-red)' : op.role === 'Digital Marketing' ? 'var(--accent-purple)' : 'var(--accent-cyan)'
-                                  }}>{op.role}</span>
+                                    background: op.role === 'Superadmin' ? 'rgba(245,158,11,0.15)' : op.role === 'Admin' ? 'rgba(239,68,68,0.15)' : op.role === 'Digital Marketing' ? 'rgba(168,85,247,0.15)' : 'rgba(6,182,212,0.15)',
+                                    color: op.role === 'Superadmin' ? 'var(--accent-orange)' : op.role === 'Admin' ? 'var(--accent-red)' : op.role === 'Digital Marketing' ? 'var(--accent-purple)' : 'var(--accent-cyan)'
+                                  }}>
+                                    {op.role}
+                                  </span>
                                 </td>
                                 <td>
-                                  <span className={`badge`} style={{
+                                  <span className="badge" style={{
                                     background: op.status === 'Active' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
                                     color: op.status === 'Active' ? 'var(--accent-green)' : 'var(--text-muted)'
                                   }}>{op.status}</span>
@@ -1894,7 +1895,7 @@ export default function App() {
                                     }}>
                                       <Edit3 size={14} />
                                     </button>
-                                    {op.email !== 'admin@erp.com' && (
+                                    {op.email !== 'admin.@gmail.com' && op.email !== 'baruna.work@gmail.com' && (
                                       <button className="icon-btn" style={{ color: 'var(--accent-red)' }} onClick={() => deleteOperator(op.id)}>
                                         <Trash2 size={14} />
                                       </button>
@@ -3896,6 +3897,7 @@ export default function App() {
                     <option value="Operator">Operator</option>
                     <option value="Digital Marketing">Digital Marketing</option>
                     <option value="Admin">Admin</option>
+                    <option value="Superadmin">Superadmin</option>
                   </select>
                 </div>
               </div>

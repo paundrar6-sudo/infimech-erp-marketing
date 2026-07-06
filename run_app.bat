@@ -49,9 +49,8 @@ echo   - Frontend Portal : http://localhost:5173
 echo   - Backend API      : http://localhost:5000
 echo.
 echo   Operator Akun Percobaan:
-echo     1. Administrator  : admin@erp.com (Pass: admin123)
-echo     2. Digital Marketer: marketing@erp.com (Pass: marketing123)
-echo     3. Operator CRM   : operator@erp.com (Pass: operator123)
+echo     1. Superadmin     : admin.@gmail.com (Pass: admin123)
+echo     2. Administrator  : baruna.work@gmail.com (Pass: baruna123)
 echo.
 echo ===================================================
 echo Tekan tombol apa saja untuk mematikan semua server...

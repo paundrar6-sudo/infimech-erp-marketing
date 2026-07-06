@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   phone VARCHAR(50) NULL,
-  role ENUM('Admin', 'Digital Marketing', 'Operator') NOT NULL DEFAULT 'Operator',
+  role ENUM('Superadmin', 'Admin', 'Digital Marketing', 'Operator') NOT NULL DEFAULT 'Operator',
   status ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
   avatar_url VARCHAR(255) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
