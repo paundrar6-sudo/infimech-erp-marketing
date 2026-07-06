@@ -37,6 +37,41 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'online', service: 'Marketing ERP API', time: new Date() });
 });
 
+// Database connection diagnostic route
+app.get('/api/db-check', async (req, res) => {
+  const { pool } = require('./config/db');
+  try {
+    const conn = await pool.getConnection();
+    const [rows] = await conn.query('SELECT COUNT(*) as count FROM users');
+    conn.release();
+    res.json({
+      status: 'connected',
+      message: 'Database connection is successful and users exist.',
+      userCount: rows[0].count,
+      config: {
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'root',
+        database: process.env.DB_NAME || 'erp_marketing'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'failed',
+      message: 'Database connection failed.',
+      error: err.message,
+      code: err.code,
+      config: {
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'root',
+        database: process.env.DB_NAME || 'erp_marketing'
+      }
+    });
+  }
+});
+
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Express Error Handler:', err.stack);
