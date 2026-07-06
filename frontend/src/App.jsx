@@ -86,7 +86,7 @@ export default function App() {
 
   // Modals and Forms states
   const [leadModalOpen, setLeadModalOpen] = useState(false);
-  const [leadFormData, setLeadFormData] = useState({ id: '', name: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: '', verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200' });
+  const [leadFormData, setLeadFormData] = useState({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: '', verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '' });
   
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [newNoteFormData, setNewNoteFormData] = useState({ type: 'Call', notes: '' });
@@ -1444,7 +1444,11 @@ export default function App() {
                               phone: leadDetail.lead.phone || '',
                               logo_url: leadDetail.lead.logo_url || '',
                               location: leadDetail.lead.location || 'Jakarta',
-                              company_size: leadDetail.lead.company_size || '50-200'
+                              company_size: leadDetail.lead.company_size || '50-200',
+                              contact1_name: leadDetail.contacts && leadDetail.contacts[0] ? leadDetail.contacts[0].name : '',
+                              contact1_phone: leadDetail.contacts && leadDetail.contacts[0] ? leadDetail.contacts[0].phone : '',
+                              contact2_name: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].name : '',
+                              contact2_phone: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].phone : '',
                             });
                             setLeadModalOpen(true);
                           }}
@@ -1645,7 +1649,7 @@ export default function App() {
                           className="btn" 
                           style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
                           onClick={() => {
-                            setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200' });
+                            setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '' });
                             setLeadModalOpen(true);
                           }}
                         >
@@ -3417,6 +3421,60 @@ export default function App() {
                     onChange={(e) => setLeadFormData({ ...leadFormData, company_size: e.target.value })} 
                     placeholder="e.g. 50-200" 
                   />
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-cyan)', letterSpacing: '0.8px', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>Kontak Utama (Wajib - Perusahaan)</span>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">Nama Kontak 1</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={leadFormData.contact1_name || ''} 
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact1_name: e.target.value })} 
+                      placeholder="Nama Kontak Pertama" 
+                      required 
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">No. Telepon Kontak 1</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={leadFormData.contact1_phone || ''} 
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact1_phone: e.target.value })} 
+                      placeholder="e.g. +6281122334455" 
+                      required 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.8px', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>Kontak Kedua (Opsional)</span>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">Nama Kontak 2</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={leadFormData.contact2_name || ''} 
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact2_name: e.target.value })} 
+                      placeholder="Nama Kontak Kedua" 
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">No. Telepon Kontak 2</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={leadFormData.contact2_phone || ''} 
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact2_phone: e.target.value })} 
+                      placeholder="e.g. +6287766554433" 
+                    />
+                  </div>
                 </div>
               </div>
 

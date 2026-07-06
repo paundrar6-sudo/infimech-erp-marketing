@@ -210,10 +210,17 @@ router.delete('/contacts/:contactId', verifyToken, async (req, res) => {
 
 // Create new lead
 router.post('/', verifyToken, async (req, res) => {
-  const { name, company, industry, source, lead_score, status, value, owner_id, verified, phone, logo_url, deadline, notes } = req.body;
+  const { 
+    name, company, industry, source, lead_score, status, value, owner_id, verified, phone, logo_url, deadline, notes,
+    contact1_name, contact1_phone, contact2_name, contact2_phone
+  } = req.body;
 
   if (!name) {
     return res.status(400).json({ message: 'Nama klien wajib diisi.' });
+  }
+
+  if (!contact1_name || !contact1_name.trim() || !contact1_phone || !contact1_phone.trim()) {
+    return res.status(400).json({ message: 'Kontak utama (Nama & No. Telepon) wajib diisi.' });
   }
 
   try {
@@ -239,15 +246,31 @@ router.post('/', verifyToken, async (req, res) => {
       ]
     );
 
+    const client_id = result.insertId;
+
+    // Automatically save contact 1 (mandatory)
+    await pool.query(
+      'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+      [client_id, contact1_name, contact1_phone]
+    );
+
+    // Save contact 2 (optional, if name is provided)
+    if (contact2_name && contact2_name.trim() !== '') {
+      await pool.query(
+        'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+        [client_id, contact2_name, contact2_phone || '']
+      );
+    }
+
     // Automatically create an initial interaction log
     await pool.query(
       'INSERT INTO lead_interactions (lead_id, type, notes, created_by) VALUES (?, "Note", "Lead baru ditambahkan ke sistem.", ?)',
-      [result.insertId, req.user.id]
+      [client_id, req.user.id]
     );
 
     res.status(201).json({
       message: 'Lead berhasil ditambahkan.',
-      leadId: result.insertId
+      leadId: client_id
     });
   } catch (err) {
     console.error('Create lead error:', err);
@@ -293,10 +316,17 @@ router.put('/:id/status', verifyToken, async (req, res) => {
 // Update full lead details
 router.put('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { name, company, industry, source, lead_score, status, value, owner_id, verified, phone, logo_url, deadline, notes } = req.body;
+  const { 
+    name, company, industry, source, lead_score, status, value, owner_id, verified, phone, logo_url, deadline, notes,
+    contact1_name, contact1_phone, contact2_name, contact2_phone
+  } = req.body;
 
   if (!name) {
     return res.status(400).json({ message: 'Nama klien wajib diisi.' });
+  }
+
+  if (!contact1_name || !contact1_name.trim() || !contact1_phone || !contact1_phone.trim()) {
+    return res.status(400).json({ message: 'Kontak utama (Nama & No. Telepon) wajib diisi.' });
   }
 
   try {
@@ -319,6 +349,47 @@ router.put('/:id', verifyToken, async (req, res) => {
         deadline || null, notes || null, id
       ]
     );
+
+    // Sync client contacts
+    const [existingContacts] = await pool.query(
+      'SELECT id FROM client_contacts WHERE client_id = ? ORDER BY id ASC',
+      [id]
+    );
+
+    // 1. Update/Insert contact 1
+    if (existingContacts.length > 0) {
+      const contact1_id = existingContacts[0].id;
+      await pool.query(
+        'UPDATE client_contacts SET name = ?, phone = ? WHERE id = ?',
+        [contact1_name, contact1_phone, contact1_id]
+      );
+    } else {
+      await pool.query(
+        'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+        [id, contact1_name, contact1_phone]
+      );
+    }
+
+    // 2. Update/Insert/Delete contact 2
+    if (existingContacts.length > 1) {
+      const contact2_id = existingContacts[1].id;
+      if (contact2_name && contact2_name.trim() !== '') {
+        await pool.query(
+          'UPDATE client_contacts SET name = ?, phone = ? WHERE id = ?',
+          [contact2_name, contact2_phone || '', contact2_id]
+        );
+      } else {
+        // If contact 2 was cleared, delete it
+        await pool.query('DELETE FROM client_contacts WHERE id = ?', [contact2_id]);
+      }
+    } else {
+      if (contact2_name && contact2_name.trim() !== '') {
+        await pool.query(
+          'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+          [id, contact2_name, contact2_phone || '']
+        );
+      }
+    }
 
     res.json({ message: 'Data lead berhasil diperbarui.' });
   } catch (err) {
