@@ -32,24 +32,7 @@
   --radius-lg: 20px;
 }
 
-[data-theme="light"] {
-  /* Light Mode alternative colors */
-  --bg-main: #f8fafc;
-  --bg-sidebar: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --border-color: rgba(0, 0, 0, 0.08);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-
-  --primary-glow: #4f46e5;
-  --primary-glow-hover: #3730a3;
-  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 16px 32px rgba(15, 23, 42, 0.12);
-}
+/* Light mode removed - system locks to dark mode */
 
 /* --- Base Rules --- */
 * {
@@ -151,10 +134,13 @@ body {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-brand span {
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-menu {
@@ -1180,11 +1166,95 @@ body {
 
 /* --- Dark/Light Mode toggle layout positioning --- */
 .theme-switch-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  display: none;
+}
+
+/* --- Form and Date Picker Dark Mode Styles --- */
+.form-select option {
+  background-color: var(--bg-sidebar);
+  color: var(--text-primary);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* --- Responsive Layout & Sidebar Navigation --- */
+.mobile-menu-btn,
+.mobile-close-btn {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Layout changes */
+  .app-container {
+    flex-direction: column;
+  }
+
+  .main-header {
+    padding: 0 16px;
+    height: 65px;
+  }
+
+  .header-subtitle {
+    display: none; /* Hide date/subtitle on mobile to save space */
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .search-bar-wrapper {
+    width: 140px; /* Make search bar smaller on mobile */
+  }
+
+  .content-body {
+    padding: 16px;
+  }
+
+  /* Sidebar transition and overlay styles */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 1100;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Mobile menu buttons */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .mobile-close-btn {
+    display: flex;
+  }
+
+  /* Sidebar backdrop overlay on mobile */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1050;
+    animation: fadeIn 0.2s ease-out;
+  }
 }

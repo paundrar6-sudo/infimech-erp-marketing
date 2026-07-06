@@ -6,7 +6,8 @@ import {
   Download, Share2, Check, ArrowRight, DollarSign, Target, Award,
   Users2, AlertTriangle, Eye, ShieldAlert, KeyRound, Mail, ChevronDown, ChevronRight, 
   MapPin, Building, Landmark, Phone, PlusCircle, ArrowLeft, Send, MoreVertical, FileText,
-  Copy, ExternalLink, ListChecks, CircleDot, Clipboard, PhoneCall, CheckSquare, CalendarDays
+  Copy, ExternalLink, ListChecks, CircleDot, Clipboard, PhoneCall, CheckSquare, CalendarDays,
+  Menu, X
 } from 'lucide-react';
 import { api } from './services/api';
 
@@ -20,7 +21,8 @@ export default function App() {
 
   // UI state
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'operator-crm', 'digital-marketing', 'follow-up'
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const theme = 'dark';
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
@@ -1026,11 +1028,31 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
+      
       {/* SIDEBAR NAVIGATION */}
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <Megaphone size={24} style={{ color: '#fff' }} />
-          <span>MarketERP</span>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-brand" style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', flexGrow: 1 }}
+            onClick={() => {
+              setCurrentView('dashboard');
+              setSelectedLeadId(null);
+              setSidebarOpen(false);
+            }}
+          >
+            <Megaphone size={24} style={{ color: '#fff' }} />
+            <span>MarketERP</span>
+          </div>
+          <button 
+            className="icon-btn mobile-close-btn" 
+            onClick={(e) => {
+              e.stopPropagation();
+              setSidebarOpen(false);
+            }}
+          >
+            <X size={20} />
+          </button>
         </div>
         
         <ul className="sidebar-menu">
@@ -1040,6 +1062,7 @@ export default function App() {
               onClick={() => {
                 setCurrentView('dashboard');
                 setSelectedLeadId(null);
+                setSidebarOpen(false);
               }}
             >
               <LayoutDashboard size={20} />
@@ -1071,6 +1094,7 @@ export default function App() {
                       setCurrentView('operator-crm');
                       setSelectedLeadId(null);
                       setOperatorTab('leads');
+                      setSidebarOpen(false);
                     }}
                   >
                     <Users size={16} />
@@ -1084,6 +1108,7 @@ export default function App() {
                     onClick={() => {
                       setCurrentView('digital-marketing');
                       setDigitalTab('campaigns');
+                      setSidebarOpen(false);
                     }}
                   >
                     <Target size={16} />
@@ -1098,6 +1123,7 @@ export default function App() {
                       setCurrentView('follow-up');
                       setFuSelectedProspect(null);
                       setFollowUpTab('kanban');
+                      setSidebarOpen(false);
                     }}
                   >
                     <Calendar size={16} />
@@ -1108,17 +1134,6 @@ export default function App() {
             )}
           </li>
         </ul>
-
-        <div className="theme-switch-container" style={{ borderTop: '1px solid var(--border-color)', marginTop: 'auto' }}>
-          <span style={{ flexGrow: 1 }}>Tema Sistem</span>
-          <button 
-            className="icon-btn" 
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title="Ubah tema"
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
 
         <div className="sidebar-footer">
           {user && (
@@ -1147,16 +1162,21 @@ export default function App() {
         
         {/* HEADER BAR */}
         <header className="main-header">
-          <div className="header-title-container">
-            <h1 className="header-title">
-              {currentView === 'dashboard' && 'Analytics & Reporting'}
-              {currentView === 'operator-crm' && (selectedLeadId ? `Detail Client • ${leadDetail?.lead?.name || ''}` : 'Marketing Operator')}
-              {currentView === 'digital-marketing' && 'Marketing Digital'}
-              {currentView === 'follow-up' && (fuSelectedProspect ? `Prospect Detail • ${fuSelectedProspect?.lead?.name || ''}` : 'Marketing Follow Up')}
-            </h1>
-            <span className="header-subtitle">
-              Sistem ERP Pemasaran Digital Terpadu • {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button className="icon-btn mobile-menu-btn" onClick={() => setSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <div className="header-title-container">
+              <h1 className="header-title">
+                {currentView === 'dashboard' && 'Analytics & Reporting'}
+                {currentView === 'operator-crm' && (selectedLeadId ? `Detail Client • ${leadDetail?.lead?.name || ''}` : 'Marketing Operator')}
+                {currentView === 'digital-marketing' && 'Marketing Digital'}
+                {currentView === 'follow-up' && (fuSelectedProspect ? `Prospect Detail • ${fuSelectedProspect?.lead?.name || ''}` : 'Marketing Follow Up')}
+              </h1>
+              <span className="header-subtitle">
+                Sistem ERP Pemasaran Digital Terpadu • {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
+            </div>
           </div>
 
           <div className="header-actions">
