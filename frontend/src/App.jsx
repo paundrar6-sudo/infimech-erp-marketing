@@ -363,11 +363,11 @@ export default function App() {
       if (publicShareAsset && publicShareAsset.id === id) {
         setPublicShareAsset(prev => ({ ...prev, download_count: (prev.download_count || 0) + 1 }));
       }
-      // Open the actual download link
-      window.open(fileUrl || '#', '_blank');
+      // Open/Download the actual file URL
+      handleOpenOrDownloadFile(fileUrl, publicShareAsset?.name || 'Dokumen');
     } catch (err) {
       console.error(err);
-      window.open(fileUrl || '#', '_blank');
+      handleOpenOrDownloadFile(fileUrl, 'Dokumen');
     }
   };
 
@@ -654,6 +654,28 @@ export default function App() {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const handleOpenOrDownloadFile = (fileUrl, filename) => {
+    if (!fileUrl) return;
+    if (fileUrl.startsWith('data:')) {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      const mimeMatch = fileUrl.match(/^data:([^;]+);/);
+      const mime = mimeMatch ? mimeMatch[1] : '';
+      let ext = 'pdf';
+      if (mime.includes('image/')) ext = 'png';
+      else if (mime.includes('word') || mime.includes('officedocument') || mime.includes('msword')) ext = 'docx';
+      else if (mime.includes('excel') || mime.includes('sheet') || mime.includes('ms-excel')) ext = 'xlsx';
+      else if (mime.includes('video/')) ext = 'mp4';
+      
+      link.download = filename.includes('.') ? filename : `${filename}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      window.open(fileUrl, '_blank');
+    }
+  };
+
   // --- Actions ---
 
   const handleLogoUpload = (file) => {
@@ -813,13 +835,14 @@ export default function App() {
     }
   };
 
-  const triggerDownloadAsset = async (id, fileUrl) => {
+  const triggerDownloadAsset = async (asset) => {
     try {
-      await api.downloadAsset(id);
+      await api.downloadAsset(asset.id);
       fetchAssets();
-      window.open(fileUrl || '#', '_blank');
+      handleOpenOrDownloadFile(asset.file_url, asset.name || 'Dokumen');
     } catch (err) {
       console.error(err);
+      handleOpenOrDownloadFile(asset?.file_url, asset?.name || 'Dokumen');
     }
   };
 
@@ -2203,7 +2226,7 @@ export default function App() {
                               <button
                                 className="btn btn-primary"
                                 style={{ flex: 1, padding: '7px 0', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--primary-glow)', border: 'none' }}
-                                onClick={() => triggerDownloadAsset(a.id, a.file_url)}
+                                onClick={() => triggerDownloadAsset(a)}
                               >
                                 <Download size={12} />
                                 <span>Unduh</span>
@@ -2239,7 +2262,7 @@ export default function App() {
                         <span className="badge" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary-glow)', width: 'fit-content' }}>{a.file_type}</span>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '10px' }}>
                           <span>{a.download_count} downloads</span>
-                          <button className="icon-btn" onClick={() => triggerDownloadAsset(a.id, a.file_url)}>
+                          <button className="icon-btn" onClick={() => triggerDownloadAsset(a)}>
                             <Download size={14} />
                           </button>
                         </div>
@@ -3253,7 +3276,7 @@ export default function App() {
                       <button
                         className="btn"
                         style={{ padding: '2px 8px', fontSize: '10px', height: 'auto', background: 'rgba(6,182,212,0.15)', color: 'var(--accent-cyan)', border: 'none', borderRadius: '4px', fontWeight: 600 }}
-                        onClick={() => window.open(selectedAssetHistory.file_url || '#', '_blank')}
+                        onClick={() => handleOpenOrDownloadFile(selectedAssetHistory.file_url, selectedAssetHistory.name || 'Dokumen')}
                       >
                         Buka File Aktif
                       </button>
@@ -3272,7 +3295,7 @@ export default function App() {
                         <button
                           className="btn"
                           style={{ padding: '2px 8px', fontSize: '10px', height: 'auto', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', fontWeight: 600 }}
-                          onClick={() => window.open(hist.file_url, '_blank')}
+                          onClick={() => handleOpenOrDownloadFile(hist.file_url, `${selectedAssetHistory.name || 'Dokumen'}_v${hist.version}`)}
                         >
                           Buka File Lama
                         </button>
