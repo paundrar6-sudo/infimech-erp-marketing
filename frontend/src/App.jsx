@@ -505,25 +505,29 @@ export default function App() {
     }
   };
 
-  const deleteFuSubtask = async (subtaskId) => {
-    if (!confirm('Hapus subtask ini?')) return;
-    try {
-      await api.deleteSubtask(subtaskId);
-      if (fuSelectedProspect) fetchSubtasks(fuSelectedProspect.lead.id);
-    } catch (err) {
-      alert('Gagal menghapus subtask: ' + err.message);
-    }
+  const deleteFuSubtask = (subtaskId) => {
+    showConfirm('Hapus subtask ini?', async () => {
+      try {
+        await api.deleteSubtask(subtaskId);
+        if (fuSelectedProspect) fetchSubtasks(fuSelectedProspect.lead.id);
+        showAlert('Subtask berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert('Gagal menghapus subtask: ' + err.message, 'Gagal', 'error');
+      }
+    });
   };
 
-  const deleteFuProspect = async (id) => {
-    if (!confirm('Hapus prospek ini?')) return;
-    try {
-      await api.deleteLead(id);
-      setFuSelectedProspect(null);
-      fetchFollowUpLeads();
-    } catch (err) {
-      alert(err.message);
-    }
+  const deleteFuProspect = (id) => {
+    showConfirm('Hapus prospek ini?', async () => {
+      try {
+        await api.deleteLead(id);
+        setFuSelectedProspect(null);
+        fetchFollowUpLeads();
+        showAlert('Prospek berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   const addFuNewProspect = async () => {
@@ -682,18 +686,19 @@ export default function App() {
     }
   };
 
-  const deleteLead = async (id) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus lead ini?')) return;
-    try {
-      await api.deleteLead(id);
-      setSelectedLeadId(null);
-      setLeadDetail(null);
-      fetchLeads();
-      fetchDashboard();
-      alert('Lead berhasil dihapus.');
-    } catch (err) {
-      alert(err.message);
-    }
+  const deleteLead = (id) => {
+    showConfirm('Apakah Anda yakin ingin menghapus lead ini?', async () => {
+      try {
+        await api.deleteLead(id);
+        setSelectedLeadId(null);
+        setLeadDetail(null);
+        fetchLeads();
+        fetchDashboard();
+        showAlert('Lead berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   // Client Contacts
@@ -706,19 +711,21 @@ export default function App() {
       setContactModalOpen(false);
       fetchLeadDetails(selectedLeadId);
     } catch (err) {
-      alert('Gagal menambahkan kontak: ' + err.message);
+      showAlert('Gagal menambahkan kontak: ' + err.message, 'Gagal', 'error');
     }
   };
 
-  const deleteClientContact = async (contactId) => {
-    if (!confirm('Hapus kontak ini?')) return;
-    try {
-      await api.deleteContact(contactId);
-      setActiveContactMenuId(null);
-      fetchLeadDetails(selectedLeadId);
-    } catch (err) {
-      alert('Gagal menghapus kontak: ' + err.message);
-    }
+  const deleteClientContact = (contactId) => {
+    showConfirm('Hapus kontak ini?', async () => {
+      try {
+        await api.deleteContact(contactId);
+        setActiveContactMenuId(null);
+        fetchLeadDetails(selectedLeadId);
+        showAlert('Kontak berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert('Gagal menghapus kontak: ' + err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   const addInteractionLog = async (e) => {
@@ -753,15 +760,16 @@ export default function App() {
     }
   };
 
-  const deleteCampaign = async (id) => {
-    if (!confirm('Hapus kampanye ini?')) return;
-    try {
-      await api.deleteCampaign(id);
-      fetchCampaigns();
-      alert('Kampanye berhasil dihapus.');
-    } catch (err) {
-      alert(err.message);
-    }
+  const deleteCampaign = (id) => {
+    showConfirm('Hapus kampanye ini?', async () => {
+      try {
+        await api.deleteCampaign(id);
+        fetchCampaigns();
+        showAlert('Kampanye berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   // Assets
@@ -770,15 +778,15 @@ export default function App() {
     try {
       if (assetFormData.id) {
         await api.updateAsset(assetFormData.id, assetFormData);
-        alert('Aset berhasil diperbarui.');
+        showAlert('Aset berhasil diperbarui.', 'Sukses', 'success');
       } else {
         await api.createAsset(assetFormData);
-        alert('Aset berhasil ditambahkan.');
+        showAlert('Aset berhasil ditambahkan.', 'Sukses', 'success');
       }
       setAssetModalOpen(false);
       fetchAssets();
     } catch (err) {
-      alert(err.message);
+      showAlert(err.message, 'Gagal', 'error');
     }
   };
 
@@ -792,14 +800,16 @@ export default function App() {
     }
   };
 
-  const deleteAsset = async (id) => {
-    if (!confirm('Hapus aset ini dari library?')) return;
-    try {
-      await api.deleteAsset(id);
-      fetchAssets();
-    } catch (err) {
-      alert(err.message);
-    }
+  const deleteAsset = (id) => {
+    showConfirm('Hapus aset ini dari library?', async () => {
+      try {
+        await api.deleteAsset(id);
+        fetchAssets();
+        showAlert('Aset berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   // Calendar / Social Scheduling
@@ -808,26 +818,28 @@ export default function App() {
     try {
       if (postFormData.id) {
         await api.updateSocialPost(postFormData.id, postFormData);
-        alert('Jadwal post berhasil diperbarui.');
+        showAlert('Jadwal post berhasil diperbarui.', 'Sukses', 'success');
       } else {
         await api.createSocialPost(postFormData);
-        alert('Postingan berhasil dijadwalkan.');
+        showAlert('Postingan berhasil dijadwalkan.', 'Sukses', 'success');
       }
       setPostModalOpen(false);
       fetchSocialPosts();
     } catch (err) {
-      alert(err.message);
+      showAlert(err.message, 'Gagal', 'error');
     }
   };
 
-  const deleteSocialPost = async (id) => {
-    if (!confirm('Batalkan dan hapus postingan ini?')) return;
-    try {
-      await api.deleteSocialPost(id);
-      fetchSocialPosts();
-    } catch (err) {
-      alert(err.message);
-    }
+  const deleteSocialPost = (id) => {
+    showConfirm('Batalkan dan hapus postingan ini?', async () => {
+      try {
+        await api.deleteSocialPost(id);
+        fetchSocialPosts();
+        showAlert('Postingan berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   // Profile update self
