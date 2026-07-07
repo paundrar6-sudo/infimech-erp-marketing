@@ -84,6 +84,23 @@ export default function App() {
   const [leadsFilterSource, setLeadsFilterSource] = useState('');
   const [leadsMeta, setLeadsMeta] = useState({ industries: [], sources: [] });
 
+  // Custom Alert & Confirm Modals
+  const [customAlert, setCustomAlert] = useState({ show: false, title: 'Notifikasi', message: '', type: 'success' });
+  const [customConfirm, setCustomConfirm] = useState({ show: false, message: '', onConfirm: null });
+
+  const showAlert = (message, title = 'Notifikasi', type = 'success') => {
+    setCustomAlert({ show: true, title, message, type });
+  };
+
+  const showConfirm = (message, onConfirm) => {
+    setCustomConfirm({ show: true, message, onConfirm });
+  };
+
+  // Override local alert
+  const alert = (msg) => {
+    showAlert(msg, 'Notifikasi', 'info');
+  };
+
   // Modals and Forms states
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [leadFormData, setLeadFormData] = useState({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: '', verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '' });
@@ -535,29 +552,30 @@ export default function App() {
     try {
       if (projectFormData.id) {
         await api.updateProject(projectFormData.id, projectFormData);
-        alert('Proyek berhasil diperbarui.');
+        showAlert('Proyek berhasil diperbarui.', 'Sukses', 'success');
       } else {
         await api.createProject(projectFormData);
-        alert('Proyek baru berhasil dibuat.');
+        showAlert('Proyek baru berhasil dibuat.', 'Sukses', 'success');
       }
       setProjectModalOpen(false);
       fetchProjects();
       fetchDashboard();
     } catch (err) {
-      alert(err.message);
+      showAlert(err.message, 'Gagal', 'error');
     }
   };
 
-  const deleteProject = async (id) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus proyek ini?')) return;
-    try {
-      await api.deleteProject(id);
-      fetchProjects();
-      fetchDashboard();
-      alert('Proyek berhasil dihapus.');
-    } catch (err) {
-      alert(err.message);
-    }
+  const deleteProject = (id) => {
+    showConfirm('Apakah Anda yakin ingin menghapus proyek ini?', async () => {
+      try {
+        await api.deleteProject(id);
+        fetchProjects();
+        fetchDashboard();
+        showAlert('Proyek berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   const saveOperator = async (e) => {
@@ -565,27 +583,28 @@ export default function App() {
     try {
       if (operatorFormData.id) {
         await api.updateOperator(operatorFormData.id, operatorFormData);
-        alert('Operator berhasil diperbarui.');
+        showAlert('Operator berhasil diperbarui.', 'Sukses', 'success');
       } else {
         await api.createOperator(operatorFormData);
-        alert('Operator baru berhasil ditambahkan.');
+        showAlert('Operator baru berhasil ditambahkan.', 'Sukses', 'success');
       }
       setOperatorModalOpen(false);
       fetchFollowUpOperators();
     } catch (err) {
-      alert(err.message);
+      showAlert(err.message, 'Gagal', 'error');
     }
   };
 
-  const deleteOperator = async (id) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus operator ini?')) return;
-    try {
-      await api.deleteOperator(id);
-      fetchFollowUpOperators();
-      alert('Operator berhasil dihapus.');
-    } catch (err) {
-      alert(err.message);
-    }
+  const deleteOperator = (id) => {
+    showConfirm('Apakah Anda yakin ingin menghapus operator ini?', async () => {
+      try {
+        await api.deleteOperator(id);
+        fetchFollowUpOperators();
+        showAlert('Operator berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
   };
 
   // Helper: format value as "Rp 25jt" style
@@ -3977,6 +3996,70 @@ export default function App() {
                 <button type="submit" className="btn btn-primary">Simpan Operator</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* CUSTOM ALERT MODAL */}
+      {customAlert.show && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              {customAlert.type === 'error' ? (
+                <XCircle size={48} color="#ef4444" />
+              ) : (
+                <CheckCircle2 size={48} color="#06b6d4" />
+              )}
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: 'white' }}>
+              {customAlert.title || 'Notifikasi'}
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
+              {customAlert.message}
+            </p>
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600 }}
+              onClick={() => setCustomAlert({ ...customAlert, show: false })}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRM MODAL */}
+      {customConfirm.show && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <AlertTriangle size={48} color="#f59e0b" />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: 'white' }}>
+              Konfirmasi
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
+              {customConfirm.message}
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ flex: 1, justifyContent: 'center', border: '1px solid var(--border-color)' }}
+                onClick={() => setCustomConfirm({ show: false, message: '', onConfirm: null })}
+              >
+                Batal
+              </button>
+              <button 
+                className="btn" 
+                style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                onClick={() => {
+                  const onConf = customConfirm.onConfirm;
+                  setCustomConfirm({ show: false, message: '', onConfirm: null });
+                  if (onConf) onConf();
+                }}
+              >
+                Ya, Hapus
+              </button>
+            </div>
           </div>
         </div>
       )}
