@@ -442,31 +442,35 @@ export default function App() {
   const saveFuProspectEdit = async (e) => {
     e.preventDefault();
     try {
+      const finalForm = { ...fuEditForm, name: fuEditForm.company };
       if (fuEditForm.id) {
         // Edit existing
-        await api.updateLead(fuEditForm.id, fuEditForm);
+        await api.updateLead(fuEditForm.id, finalForm);
         if (fuSelectedProspect && fuSelectedProspect.lead.id === fuEditForm.id) {
           openFuProspectDetail(fuEditForm.id);
         }
+        showAlert('Prospek berhasil diperbarui.', 'Sukses', 'success');
       } else {
         // Create new prospect
         await api.createLead({
-          name: fuEditForm.name,
-          company: fuEditForm.company || '',
-          source: fuEditForm.source || 'Organic',
-          phone: fuEditForm.phone || '',
-          deadline: fuEditForm.deadline || null,
-          value: fuEditForm.value || 0,
-          notes: fuEditForm.notes || '',
-          status: fuEditForm.status || 'Lead',
-          industry: fuEditForm.industry || 'Other',
-          owner_id: user?.id
+          name: finalForm.name,
+          company: finalForm.company || '',
+          source: finalForm.source || 'Organic',
+          phone: finalForm.phone || '',
+          deadline: finalForm.deadline || null,
+          value: finalForm.value || 0,
+          notes: finalForm.notes || '',
+          status: finalForm.status || 'Lead',
+          industry: finalForm.industry || 'Other',
+          owner_id: user?.id,
+          logo_url: finalForm.logo_url || ''
         });
+        showAlert('Prospek baru berhasil disimpan.', 'Sukses', 'success');
       }
       setFuEditModalOpen(false);
       fetchFollowUpLeads();
     } catch (err) {
-      alert(err.message);
+      showAlert(err.message, 'Gagal', 'error');
     }
   };
 
@@ -652,16 +656,35 @@ export default function App() {
 
   // --- Actions ---
 
+  const handleLogoUpload = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setLeadFormData(prev => ({ ...prev, logo_url: event.target.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleProspectLogoUpload = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setFuEditForm(prev => ({ ...prev, logo_url: event.target.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Leads CRM
   const saveLead = async (e) => {
     e.preventDefault();
     try {
+      const finalLeadData = { ...leadFormData, name: leadFormData.company };
       if (leadFormData.id) {
-        await api.updateLead(leadFormData.id, leadFormData);
-        alert('Lead berhasil diperbarui.');
+        await api.updateLead(leadFormData.id, finalLeadData);
+        showAlert('Lead berhasil diperbarui.', 'Sukses', 'success');
       } else {
-        await api.createLead(leadFormData);
-        alert('Lead baru berhasil disimpan.');
+        await api.createLead(finalLeadData);
+        showAlert('Lead baru berhasil disimpan.', 'Sukses', 'success');
       }
       setLeadModalOpen(false);
       fetchLeads();
@@ -670,7 +693,7 @@ export default function App() {
       }
       fetchDashboard();
     } catch (err) {
-      alert(err.message);
+      showAlert(err.message, 'Gagal', 'error');
     }
   };
 
@@ -1694,7 +1717,6 @@ export default function App() {
                           <thead>
                             <tr>
                               <th>LOGO</th>
-                              <th>CLIENT NAME</th>
                               <th>PERUSAHAAN</th>
                               <th>INDUSTRY</th>
                               <th>SOURCE</th>
@@ -1707,12 +1729,15 @@ export default function App() {
                             {leads.map((l, i) => (
                               <tr key={i} style={{ cursor: 'pointer' }} onClick={() => fetchLeadDetails(l.id)}>
                                 <td>
-                                  <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Building size={14} style={{ color: 'var(--text-muted)' }} />
+                                  <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                    {l.logo_url ? (
+                                      <img src={l.logo_url} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                    ) : (
+                                      <Building size={14} style={{ color: 'var(--text-muted)' }} />
+                                    )}
                                   </div>
                                 </td>
-                                <td style={{ fontWeight: 600 }}>{l.name}</td>
-                                <td>{l.company || '-'}</td>
+                                <td style={{ fontWeight: 600, color: 'white' }}>{l.company || '-'}</td>
                                 <td>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <Building size={13} style={{ color: 'var(--text-muted)' }} />
@@ -3360,25 +3385,79 @@ export default function App() {
             <form onSubmit={saveLead} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Nama Klien</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={leadFormData.name} 
-                    onChange={(e) => setLeadFormData({ ...leadFormData, name: e.target.value })} 
-                    placeholder="e.g. Ahmad Fauzi" 
-                    required 
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Perusahaan</label>
+                  <label className="form-label">Nama Perusahaan (PT)</label>
                   <input 
                     type="text" 
                     className="form-input" 
                     value={leadFormData.company || ''} 
-                    onChange={(e) => setLeadFormData({ ...leadFormData, company: e.target.value })} 
+                    onChange={(e) => setLeadFormData({ ...leadFormData, company: e.target.value, name: e.target.value })} 
                     placeholder="e.g. PT Maju Bersama" 
+                    required 
                   />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Logo Perusahaan (PT)</label>
+                <div 
+                  style={{
+                    border: '2px dashed var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    background: 'rgba(255, 255, 255, 0.01)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'all 0.2s',
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      handleLogoUpload(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  onClick={() => document.getElementById('logo-file-input').click()}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                >
+                  <input 
+                    type="file" 
+                    id="logo-file-input" 
+                    accept="image/*" 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleLogoUpload(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  {leadFormData.logo_url ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                      <img 
+                        src={leadFormData.logo_url} 
+                        alt="Logo PT" 
+                        style={{ height: '50px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain' }} 
+                      />
+                      <button 
+                        type="button" 
+                        className="btn" 
+                        style={{ padding: '3px 8px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', fontSize: '10px', border: 'none', borderRadius: '4px', height: 'auto', fontWeight: 600 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLeadFormData(prev => ({ ...prev, logo_url: '' }));
+                        }}
+                      >
+                        Hapus Logo
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)' }}>
+                      <Download size={20} style={{ marginBottom: '6px', color: 'var(--accent-cyan)' }} />
+                      <div style={{ fontSize: '12px', fontWeight: 500 }}>Seret & Taruh logo di sini, atau klik untuk memilih</div>
+                      <div style={{ fontSize: '10px', marginTop: '2px', color: 'var(--text-muted)' }}>Mendukung format PNG, JPG, JPEG</div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -3710,24 +3789,79 @@ export default function App() {
 
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Nama Klien</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={fuEditForm.name || ''}
-                    onChange={(e) => setFuEditForm({ ...fuEditForm, name: e.target.value })}
-                    required
+                  <label className="form-label">Nama Perusahaan (PT)</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={fuEditForm.company || ''} 
+                    onChange={(e) => setFuEditForm({ ...fuEditForm, company: e.target.value, name: e.target.value })} 
+                    placeholder="e.g. PT Maju Bersama" 
+                    required 
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Perusahaan</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={fuEditForm.company || ''}
-                    onChange={(e) => setFuEditForm({ ...fuEditForm, company: e.target.value })}
-                    placeholder="e.g. PT Maju Bersama"
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Logo Perusahaan (PT)</label>
+                <div 
+                  style={{
+                    border: '2px dashed var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    background: 'rgba(255, 255, 255, 0.01)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'all 0.2s',
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      handleProspectLogoUpload(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  onClick={() => document.getElementById('prospect-logo-file-input').click()}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                >
+                  <input 
+                    type="file" 
+                    id="prospect-logo-file-input" 
+                    accept="image/*" 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleProspectLogoUpload(e.target.files[0]);
+                      }
+                    }}
                   />
+                  {fuEditForm.logo_url ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                      <img 
+                        src={fuEditForm.logo_url} 
+                        alt="Logo PT" 
+                        style={{ height: '50px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain' }} 
+                      />
+                      <button 
+                        type="button" 
+                        className="btn" 
+                        style={{ padding: '3px 8px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', fontSize: '10px', border: 'none', borderRadius: '4px', height: 'auto', fontWeight: 600 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFuEditForm(prev => ({ ...prev, logo_url: '' }));
+                        }}
+                      >
+                        Hapus Logo
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)' }}>
+                      <Download size={20} style={{ marginBottom: '6px', color: 'var(--accent-cyan)' }} />
+                      <div style={{ fontSize: '12px', fontWeight: 500 }}>Seret & Taruh logo di sini, atau klik untuk memilih</div>
+                      <div style={{ fontSize: '10px', marginTop: '2px', color: 'var(--text-muted)' }}>Mendukung format PNG, JPG, JPEG</div>
+                    </div>
+                  )}
                 </div>
               </div>
 

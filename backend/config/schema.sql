@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS clients (
   owner_id INT NULL,
   verified BOOLEAN DEFAULT FALSE,
   phone VARCHAR(50) NULL,
-  logo_url VARCHAR(255) NULL,
+  logo_url MEDIUMTEXT NULL,
   location VARCHAR(255) NULL DEFAULT 'Jakarta',
   company_size VARCHAR(50) NULL DEFAULT '50-200',
   deadline DATE NULL,
