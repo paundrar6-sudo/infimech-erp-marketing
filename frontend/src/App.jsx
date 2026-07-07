@@ -414,9 +414,13 @@ export default function App() {
 
   const openFuProspectDetail = async (leadId) => {
     try {
-      const data = await api.getLeadDetails(leadId);
+      const data = await api.getProjectDetails(leadId);
       setFuSelectedProspect(data);
-      fetchSubtasks(leadId);
+      if (data.lead?.client_real_id) {
+        fetchSubtasks(data.lead.client_real_id);
+      } else {
+        setFuSubtasks([]);
+      }
     } catch (err) {
       alert('Gagal mengambil detail prospek: ' + err.message);
     }
@@ -424,15 +428,17 @@ export default function App() {
 
   const openFuEditModal = (lead) => {
     setFuEditForm({
-      id: lead.id,
-      name: lead.name || '',
-      industry: lead.industry || '',
-      source: lead.source || '',
+      id: lead.id || lead.no_project || '',
+      name: lead.name || lead.name_project || '',
+      company: lead.company || lead.client_name || '',
+      contact_name: lead.contact_name || '',
+      status: lead.status || 'Lead',
+      industry: lead.industry || 'Other',
+      source: lead.source || 'Organic',
       phone: lead.phone || '',
       deadline: lead.deadline ? lead.deadline.split('T')[0] : '',
       value: lead.value || 0,
       notes: lead.notes || '',
-      status: lead.status || 'Lead',
       lead_score: lead.lead_score || 50,
       verified: lead.verified || false,
       logo_url: lead.logo_url || ''
@@ -445,28 +451,26 @@ export default function App() {
   const saveFuProspectEdit = async (e) => {
     e.preventDefault();
     try {
-      const finalForm = { ...fuEditForm, name: fuEditForm.company };
       if (fuEditForm.id) {
-        // Edit existing
-        await api.updateLead(fuEditForm.id, finalForm);
-        if (fuSelectedProspect && fuSelectedProspect.lead.id === fuEditForm.id) {
+        // Edit existing project/prospect
+        await api.updateProject(fuEditForm.id, {
+          name_project: fuEditForm.name,
+          client_name: fuEditForm.company,
+          contact_name: fuEditForm.contact_name || '',
+          status: fuEditForm.status ? fuEditForm.status.toUpperCase() : 'LEAD'
+        });
+        if (fuSelectedProspect && (fuSelectedProspect.lead.id === fuEditForm.id || fuSelectedProspect.lead.no_project === fuEditForm.id)) {
           openFuProspectDetail(fuEditForm.id);
         }
         showAlert('Prospek berhasil diperbarui.', 'Sukses', 'success');
       } else {
-        // Create new prospect
-        await api.createLead({
-          name: finalForm.name,
-          company: finalForm.company || '',
-          source: finalForm.source || 'Organic',
-          phone: finalForm.phone || '',
-          deadline: finalForm.deadline || null,
-          value: finalForm.value || 0,
-          notes: finalForm.notes || '',
-          status: finalForm.status || 'Lead',
-          industry: finalForm.industry || 'Other',
-          owner_id: user?.id,
-          logo_url: finalForm.logo_url || ''
+        // Create new project/prospect
+        await api.createProject({
+          no_project: `PRJ-${Date.now()}`,
+          name_project: fuEditForm.name,
+          client_name: fuEditForm.company || '',
+          contact_name: fuEditForm.contact_name || '',
+          status: fuEditForm.status ? fuEditForm.status.toUpperCase() : 'LEAD'
         });
         showAlert('Prospek baru berhasil disimpan.', 'Sukses', 'success');
       }
@@ -493,10 +497,11 @@ export default function App() {
     e.preventDefault();
     if (!fuSelectedProspect) return;
     try {
-      await api.createSubtask(fuSelectedProspect.lead.id, fuTaskForm);
+      const targetId = fuSelectedProspect.lead.client_real_id || fuSelectedProspect.lead.id;
+      await api.createSubtask(targetId, fuTaskForm);
       setFuTaskModalOpen(false);
       setFuTaskForm({ name: '', deadline: '', description: '', resource_link: '', assigned_to: '' });
-      fetchSubtasks(fuSelectedProspect.lead.id);
+      fetchSubtasks(targetId);
     } catch (err) {
       alert('Gagal membuat subtask: ' + err.message);
     }
@@ -506,7 +511,8 @@ export default function App() {
     try {
       const progressMap = { 'MT': 0, 'IFR': 25, 'EX': 50, 'IFC': 75, 'DONE': 100 };
       await api.updateSubtask(subtaskId, { status: newStatus, progress: progressMap[newStatus] || 0 });
-      if (fuSelectedProspect) fetchSubtasks(fuSelectedProspect.lead.id);
+      const targetId = fuSelectedProspect?.lead?.client_real_id || fuSelectedProspect?.lead?.id;
+      if (fuSelectedProspect) fetchSubtasks(targetId);
     } catch (err) {
       alert('Gagal update status: ' + err.message);
     }
@@ -516,7 +522,8 @@ export default function App() {
     showConfirm('Hapus subtask ini?', async () => {
       try {
         await api.deleteSubtask(subtaskId);
-        if (fuSelectedProspect) fetchSubtasks(fuSelectedProspect.lead.id);
+        const targetId = fuSelectedProspect?.lead?.client_real_id || fuSelectedProspect?.lead?.id;
+        if (fuSelectedProspect) fetchSubtasks(targetId);
         showAlert('Subtask berhasil dihapus.', 'Sukses', 'success');
       } catch (err) {
         showAlert('Gagal menghapus subtask: ' + err.message, 'Gagal', 'error');
@@ -527,7 +534,7 @@ export default function App() {
   const deleteFuProspect = (id) => {
     showConfirm('Hapus prospek ini?', async () => {
       try {
-        await api.deleteLead(id);
+        await api.deleteProject(id);
         setFuSelectedProspect(null);
         fetchFollowUpLeads();
         showAlert('Prospek berhasil dihapus.', 'Sukses', 'success');
@@ -2457,7 +2464,7 @@ export default function App() {
 
                           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
                             <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '8px' }}>CONTACT PERSON</div>
-                            <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>{fuSelectedProspect.lead?.name}</div>
+                            <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>{fuSelectedProspect.lead?.contact_name || '-'}</div>
                             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>{fuSelectedProspect.lead?.phone || '-'}</div>
                             {fuSelectedProspect.lead?.phone && (
                               <a
@@ -4066,16 +4073,37 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="form-row">
+              <div className="form-row" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">Nama Prospek / Proyek</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={fuEditForm.name || ''} 
+                    onChange={(e) => setFuEditForm({ ...fuEditForm, name: e.target.value })} 
+                    placeholder="e.g. 22. Simulasi Basin Sea ..." 
+                    required 
+                  />
+                </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Nama Perusahaan (PT)</label>
                   <input 
                     type="text" 
                     className="form-input" 
                     value={fuEditForm.company || ''} 
-                    onChange={(e) => setFuEditForm({ ...fuEditForm, company: e.target.value, name: e.target.value })} 
-                    placeholder="e.g. PT Maju Bersama" 
+                    onChange={(e) => setFuEditForm({ ...fuEditForm, company: e.target.value })} 
+                    placeholder="e.g. PT Transportasi Gas Indonesia" 
                     required 
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">Nama PIC / Kontak</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={fuEditForm.contact_name || ''} 
+                    onChange={(e) => setFuEditForm({ ...fuEditForm, contact_name: e.target.value })} 
+                    placeholder="e.g. Ryan Vidyantara" 
                   />
                 </div>
               </div>

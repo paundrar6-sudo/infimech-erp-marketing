@@ -3,39 +3,68 @@ const router = express.Router();
 const { pool } = require('../config/db');
 const { verifyToken } = require('../middleware/auth');
 
-// Get all dashboard metrics
+// Get all dashboard metrics aligned with Follow Up (Prospect table)
 router.get('/', verifyToken, async (req, res) => {
   try {
     // 1. KPI Summaries
-    const [activeLeads] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE status IN ('Lead', 'Proposal', 'Hold')");
-    const [totalWon] = await pool.query("SELECT COUNT(*) as count, IFNULL(SUM(value), 0) as value FROM clients WHERE status IN ('Won', 'Done')");
-    const [totalLoss] = await pool.query("SELECT COUNT(*) as count, IFNULL(SUM(value), 0) as value FROM clients WHERE status = 'Loss'");
-    const [revenueWon] = await pool.query("SELECT IFNULL(SUM(value), 0) as sum FROM clients WHERE status IN ('Won', 'Done')");
+    const [activeLeads] = await pool.query("SELECT COUNT(*) as count FROM Prospect WHERE UPPER(status) IN ('LEAD', 'PROPOSAL', 'HOLD')");
+    const [totalWon] = await pool.query("SELECT COUNT(*) as count, 0 as value FROM Prospect WHERE UPPER(status) IN ('WON', 'DONE')");
+    const [totalLoss] = await pool.query("SELECT COUNT(*) as count, 0 as value FROM Prospect WHERE UPPER(status) IN ('LOSS', 'REAL_LOSS')");
+    const [revenueWon] = await pool.query("SELECT 0 as sum");
 
     // 2. Stage Distribution (Pie Chart)
-    const [stageRows] = await pool.query("SELECT status, COUNT(*) as count FROM clients GROUP BY status");
+    const [stageRows] = await pool.query("SELECT status, COUNT(*) as count FROM Prospect GROUP BY status");
     const stageDistribution = {
       Lead: 0,
       Proposal: 0,
       Hold: 0,
-      Loss: 0,
+      Lose: 0,
       Won: 0,
       Done: 0
     };
     stageRows.forEach(row => {
-      if (stageDistribution[row.status] !== undefined) {
-        stageDistribution[row.status] = row.count;
+      const statusUpper = row.status.toUpperCase();
+      if (statusUpper === 'LEAD') {
+        stageDistribution.Lead += row.count;
+      } else if (statusUpper === 'PROPOSAL') {
+        stageDistribution.Proposal += row.count;
+      } else if (statusUpper === 'HOLD') {
+        stageDistribution.Hold += row.count;
+      } else if (statusUpper === 'LOSS' || statusUpper === 'REAL_LOSS') {
+        stageDistribution.Lose += row.count;
+      } else if (statusUpper === 'WON') {
+        stageDistribution.Won += row.count;
+      } else if (statusUpper === 'DONE') {
+        stageDistribution.Done += row.count;
       }
     });
 
     // 3. Urgent Follow Ups (Deadline <= 3 days, or last_contact older than 3 days)
-    // We fetch leads with status NOT IN ('Won', 'Loss', 'Done') sorted by last_contact ASC
     const [urgentFollowUps] = await pool.query(`
-      SELECT c.id, c.name, c.industry, c.last_contact, c.lead_score, c.status, c.value, c.phone, c.logo_url, u.name as owner_name
-      FROM clients c
-      LEFT JOIN users u ON c.owner_id = u.id
-      WHERE c.status IN ('Lead', 'Proposal', 'Hold')
-      ORDER BY c.last_contact ASC, c.lead_score DESC
+      SELECT 
+        p.no_project as id, 
+        p.name_project as name, 
+        p.client_name as company, 
+        c.industry, 
+        p.last_contact_date as last_contact, 
+        100 as lead_score, 
+        CASE 
+          WHEN UPPER(p.status) = 'LEAD' THEN 'Lead'
+          WHEN UPPER(p.status) = 'PROPOSAL' THEN 'Proposal'
+          WHEN UPPER(p.status) = 'HOLD' THEN 'Hold'
+          WHEN UPPER(p.status) = 'LOSS' OR UPPER(p.status) = 'LOSE' OR UPPER(p.status) = 'REAL_LOSS' THEN 'Lose'
+          WHEN UPPER(p.status) = 'WON' THEN 'Won'
+          WHEN UPPER(p.status) = 'DONE' THEN 'Done'
+          ELSE 'Lead'
+        END as status,
+        0 as value, 
+        c.contact_phone as phone, 
+        c.logo as logo_url, 
+        NULL as owner_name
+      FROM Prospect p
+      LEFT JOIN Client c ON p.client_name = c.name
+      WHERE UPPER(p.status) IN ('LEAD', 'PROPOSAL', 'HOLD')
+      ORDER BY p.last_contact_date ASC
       LIMIT 5
     `);
 
@@ -53,7 +82,6 @@ router.get('/', verifyToken, async (req, res) => {
     `);
 
     // Process CAC (Customer Acquisition Cost) per channel
-    // CAC = Spend / Conversions
     const cacAnalytics = campaignStats.map(stat => {
       const spend = parseFloat(stat.total_spend) || 0;
       const conversions = parseInt(stat.total_conversions) || 0;
@@ -78,8 +106,6 @@ router.get('/', verifyToken, async (req, res) => {
     });
 
     // 5. Monthly Trend (Leads Created vs Leads Won over the last 6 months)
-    // We will generate a structured response for the last 6 months dynamically in JavaScript
-    // combining it with actual database records to prevent empty months
     const trendData = [];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const now = new Date();
@@ -90,14 +116,14 @@ router.get('/', verifyToken, async (req, res) => {
       const monthNum = d.getMonth() + 1;
       const yearNum = d.getFullYear();
 
-      // Query database for clients created in this month
+      // Query database for prospects created in this month
       const [leadsCount] = await pool.query(
-        'SELECT COUNT(*) as count FROM clients WHERE MONTH(created_at) = ? AND YEAR(created_at) = ?',
+        'SELECT COUNT(*) as count FROM Prospect WHERE MONTH(createdAt) = ? AND YEAR(createdAt) = ?',
         [monthNum, yearNum]
       );
       
       const [wonCount] = await pool.query(
-        "SELECT COUNT(*) as count FROM clients WHERE MONTH(created_at) = ? AND YEAR(created_at) = ? AND status IN ('Won', 'Done')",
+        "SELECT COUNT(*) as count FROM Prospect WHERE MONTH(createdAt) = ? AND YEAR(createdAt) = ? AND UPPER(status) IN ('WON', 'DONE')",
         [monthNum, yearNum]
       );
 
@@ -109,11 +135,10 @@ router.get('/', verifyToken, async (req, res) => {
     }
 
     // 6. Sales Funnel Calculation
-    // Total Leads -> Proposal -> Proposal Review (Hold) -> Won
-    const [funnelLeads] = await pool.query("SELECT COUNT(*) as count FROM clients");
-    const [funnelProposals] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE status IN ('Proposal', 'Hold', 'Won', 'Done')");
-    const [funnelHold] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE status IN ('Hold', 'Won', 'Done')");
-    const [funnelWon] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE status IN ('Won', 'Done')");
+    const [funnelLeads] = await pool.query("SELECT COUNT(*) as count FROM Prospect");
+    const [funnelProposals] = await pool.query("SELECT COUNT(*) as count FROM Prospect WHERE UPPER(status) IN ('PROPOSAL', 'HOLD', 'WON', 'DONE')");
+    const [funnelHold] = await pool.query("SELECT COUNT(*) as count FROM Prospect WHERE UPPER(status) IN ('HOLD', 'WON', 'DONE')");
+    const [funnelWon] = await pool.query("SELECT COUNT(*) as count FROM Prospect WHERE UPPER(status) IN ('WON', 'DONE')");
 
     const funnelData = [
       { stage: 'Leads (Total)', count: funnelLeads[0].count, percentage: 100 },
@@ -126,10 +151,10 @@ router.get('/', verifyToken, async (req, res) => {
       summary: {
         activeLeads: activeLeads[0].count,
         totalWonCount: totalWon[0].count,
-        totalWonValue: parseFloat(totalWon[0].value),
+        totalWonValue: parseFloat(totalWon[0].value || 0),
         totalLossCount: totalLoss[0].count,
-        totalLossValue: parseFloat(totalLoss[0].value),
-        revenueWon: parseFloat(revenueWon[0].sum)
+        totalLossValue: parseFloat(totalLoss[0].value || 0),
+        revenueWon: parseFloat(revenueWon[0].sum || 0)
       },
       stageDistribution,
       urgentFollowUps,

@@ -349,6 +349,13 @@ export const api = {
     return handleResponse(res);
   },
 
+  getProjectDetails: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/projects/${id}`, {
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
   createProject: async (data) => {
     const res = await fetch(`${API_BASE_URL}/projects`, {
       method: 'POST',
