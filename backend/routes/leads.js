@@ -9,12 +9,48 @@ router.get('/', verifyToken, async (req, res) => {
 
   try {
     let sql = `
-      SELECT c.*, u.name as owner_name, u.avatar_url as owner_avatar,
-             li.notes as last_contact_notes,
-             li.created_by_name as last_contact_name,
-             NULL as last_contact_phone
-      FROM clients c 
-      LEFT JOIN users u ON c.owner_id = u.id
+      SELECT 
+        c.id,
+        c.name as company,
+        c.name,
+        c.contact_pic as name,
+        c.contact_pic,
+        c.contact_phone as phone,
+        c.contact_phone,
+        c.contact_email,
+        c.industry,
+        c.link,
+        c.logo as logo_url,
+        c.logo,
+        c.lead_source as source,
+        c.lead_source,
+        CASE 
+          WHEN UPPER(c.status) = 'LEAD' OR UPPER(c.status) = 'ACTIVE' THEN 'Lead'
+          WHEN UPPER(c.status) = 'PROPOSAL' THEN 'Proposal'
+          WHEN UPPER(c.status) = 'HOLD' THEN 'Hold'
+          WHEN UPPER(c.status) = 'LOSS' OR UPPER(c.status) = 'LOSE' OR UPPER(c.status) = 'REAL_LOSS' THEN 'Lose'
+          WHEN UPPER(c.status) = 'WON' THEN 'Won'
+          WHEN UPPER(c.status) = 'DONE' THEN 'Done'
+          ELSE 'Lead'
+        END as status,
+        c.createdAt as created_at,
+        c.createdAt,
+        c.updatedAt,
+        c.last_contact_date as last_contact,
+        c.last_contact_date,
+        c.is_verified as verified,
+        c.is_verified,
+        0 as value,
+        100 as lead_score,
+        NULL as owner_id,
+        NULL as owner_name,
+        NULL as owner_avatar,
+        NULL as deadline,
+        NULL as notes,
+        li.notes as last_contact_notes,
+        li.created_by_name as last_contact_name,
+        NULL as last_contact_phone
+      FROM Client c 
       LEFT JOIN (
         SELECT li2.lead_id, li2.notes, li2.created_at, u2.name as created_by_name
         FROM lead_interactions li2
@@ -28,24 +64,38 @@ router.get('/', verifyToken, async (req, res) => {
     const params = [];
 
     if (status) {
-      sql += ' AND c.status = ?';
-      params.push(status);
+      if (status === 'Lead') {
+        sql += " AND (UPPER(c.status) = 'LEAD' OR UPPER(c.status) = 'ACTIVE')";
+      } else if (status === 'Proposal') {
+        sql += " AND UPPER(c.status) = 'PROPOSAL'";
+      } else if (status === 'Hold') {
+        sql += " AND UPPER(c.status) = 'HOLD'";
+      } else if (status === 'Lose' || status === 'Loss') {
+        sql += " AND (UPPER(c.status) = 'LOSS' OR UPPER(c.status) = 'LOSE' OR UPPER(c.status) = 'REAL_LOSS')";
+      } else if (status === 'Won') {
+        sql += " AND UPPER(c.status) = 'WON'";
+      } else if (status === 'Done') {
+        sql += " AND UPPER(c.status) = 'DONE'";
+      } else {
+        sql += ' AND c.status = ?';
+        params.push(status);
+      }
     }
     if (industry) {
       sql += ' AND c.industry = ?';
       params.push(industry);
     }
     if (source) {
-      sql += ' AND c.source = ?';
+      sql += ' AND c.lead_source = ?';
       params.push(source);
     }
     if (search) {
-      sql += ' AND (c.name LIKE ? OR c.industry LIKE ? OR c.phone LIKE ?)';
+      sql += ' AND (c.name LIKE ? OR c.contact_pic LIKE ? OR c.industry LIKE ? OR c.contact_phone LIKE ?)';
       const searchParam = `%${search}%`;
-      params.push(searchParam, searchParam, searchParam);
+      params.push(searchParam, searchParam, searchParam, searchParam);
     }
 
-    sql += ' ORDER BY c.lead_score DESC, c.name ASC';
+    sql += ' ORDER BY c.createdAt DESC, c.name ASC';
 
     const [rows] = await pool.query(sql, params);
     res.json(rows);
@@ -58,24 +108,18 @@ router.get('/', verifyToken, async (req, res) => {
 // Get customer segmentation counts & details
 router.get('/segments', verifyToken, async (req, res) => {
   try {
-    // We categorize segments based on logical parameters:
-    // 1. High Score Leads (Score >= 80)
-    // 2. Enterprise Tier (Value >= 200 Million IDR)
-    // 3. Digital Channels Source (Google, Facebook, Instagram, TikTok Ads)
-    // 4. Inactive CRM Leads (Last contact older than 7 days or null)
-    
-    const [highScore] = await pool.query('SELECT COUNT(*) as count FROM clients WHERE lead_score >= 80');
-    const [enterprise] = await pool.query('SELECT COUNT(*) as count FROM clients WHERE value >= 200000000');
-    const [digital] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE source IN ('Google Ads', 'Facebook Ads', 'TikTok Ads', 'Instagram Ads')");
-    const [inactive] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE last_contact < NOW() - INTERVAL 7 DAY OR last_contact IS NULL");
-    const [ptAccounts] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE company LIKE 'PT%' OR company LIKE '% PT %'");
-    const [proposalStage] = await pool.query("SELECT COUNT(*) as count FROM clients WHERE status = 'Proposal'");
+    const [highScore] = await pool.query('SELECT COUNT(*) as count FROM Client WHERE is_verified = 1');
+    const [enterprise] = await pool.query('SELECT COUNT(*) as count FROM Client WHERE 1=0');
+    const [digital] = await pool.query("SELECT COUNT(*) as count FROM Client WHERE lead_source IN ('Google Ads', 'Facebook Ads', 'TikTok Ads', 'Instagram Ads')");
+    const [inactive] = await pool.query("SELECT COUNT(*) as count FROM Client WHERE last_contact_date < NOW() - INTERVAL 7 DAY OR last_contact_date IS NULL");
+    const [ptAccounts] = await pool.query("SELECT COUNT(*) as count FROM Client WHERE name LIKE 'PT%' OR name LIKE '% PT %'");
+    const [proposalStage] = await pool.query("SELECT COUNT(*) as count FROM Client WHERE UPPER(status) = 'PROPOSAL'");
 
     res.json([
       {
         id: 'high-score',
         title: 'High Score Hot Leads',
-        criteria: 'Lead Score >= 80',
+        criteria: 'Lead Terverifikasi',
         count: highScore[0].count,
         color: 'var(--primary-glow)'
       },
@@ -124,8 +168,8 @@ router.get('/segments', verifyToken, async (req, res) => {
 // Get dynamic list of industries and sources for filter dropdowns
 router.get('/meta', verifyToken, async (req, res) => {
   try {
-    const [industries] = await pool.query('SELECT DISTINCT industry FROM clients WHERE industry IS NOT NULL AND industry != ""');
-    const [sources] = await pool.query('SELECT DISTINCT source FROM clients WHERE source IS NOT NULL AND source != ""');
+    const [industries] = await pool.query('SELECT DISTINCT industry FROM Client WHERE industry IS NOT NULL AND industry != ""');
+    const [sources] = await pool.query('SELECT DISTINCT lead_source as source FROM Client WHERE lead_source IS NOT NULL AND lead_source != ""');
     
     res.json({
       industries: industries.map(row => row.industry),
@@ -142,9 +186,46 @@ router.get('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
   try {
     const [leads] = await pool.query(
-      `SELECT c.*, u.name as owner_name, u.email as owner_email, u.avatar_url as owner_avatar
-       FROM clients c 
-       LEFT JOIN users u ON c.owner_id = u.id 
+      `SELECT 
+        c.id,
+        c.name as company,
+        c.name,
+        c.contact_pic as name,
+        c.contact_pic,
+        c.contact_phone as phone,
+        c.contact_phone,
+        c.contact_email,
+        c.industry,
+        c.link,
+        c.logo as logo_url,
+        c.logo,
+        c.lead_source as source,
+        c.lead_source,
+        CASE 
+          WHEN UPPER(c.status) = 'LEAD' OR UPPER(c.status) = 'ACTIVE' THEN 'Lead'
+          WHEN UPPER(c.status) = 'PROPOSAL' THEN 'Proposal'
+          WHEN UPPER(c.status) = 'HOLD' THEN 'Hold'
+          WHEN UPPER(c.status) = 'LOSS' OR UPPER(c.status) = 'LOSE' OR UPPER(c.status) = 'REAL_LOSS' THEN 'Lose'
+          WHEN UPPER(c.status) = 'WON' THEN 'Won'
+          WHEN UPPER(c.status) = 'DONE' THEN 'Done'
+          ELSE 'Lead'
+        END as status,
+        c.createdAt as created_at,
+        c.createdAt,
+        c.updatedAt,
+        c.last_contact_date as last_contact,
+        c.last_contact_date,
+        c.is_verified as verified,
+        c.is_verified,
+        0 as value,
+        100 as lead_score,
+        NULL as owner_id,
+        NULL as owner_name,
+        NULL as owner_email,
+        NULL as owner_avatar,
+        NULL as deadline,
+        NULL as notes
+       FROM Client c 
        WHERE c.id = ?`, 
       [id]
     );
@@ -163,7 +244,18 @@ router.get('/:id', verifyToken, async (req, res) => {
     );
 
     const [contacts] = await pool.query(
-      `SELECT * FROM client_contacts WHERE client_id = ? ORDER BY id ASC`,
+      `SELECT 
+        id, 
+        clientId as client_id, 
+        clientId, 
+        name, 
+        email, 
+        phone, 
+        position, 
+        isPrimary 
+       FROM ClientContact 
+       WHERE clientId = ? 
+       ORDER BY isPrimary DESC, id ASC`,
       [id]
     );
 
@@ -181,13 +273,13 @@ router.get('/:id', verifyToken, async (req, res) => {
 // Add contact to a lead
 router.post('/:id/contacts', verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { name, phone, email } = req.body;
+  const { name, phone, email, position, isPrimary } = req.body;
   if (!name) return res.status(400).json({ message: 'Nama kontak wajib diisi.' });
 
   try {
     await pool.query(
-      'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, ?)',
-      [id, name, phone || '', email || '']
+      'INSERT INTO ClientContact (clientId, name, phone, email, position, isPrimary) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, name, phone || '', email || '', position || null, isPrimary ? 1 : 0]
     );
     res.status(201).json({ message: 'Kontak berhasil ditambahkan.' });
   } catch (err) {
@@ -200,7 +292,7 @@ router.post('/:id/contacts', verifyToken, async (req, res) => {
 router.delete('/contacts/:contactId', verifyToken, async (req, res) => {
   const { contactId } = req.params;
   try {
-    await pool.query('DELETE FROM client_contacts WHERE id = ?', [contactId]);
+    await pool.query('DELETE FROM ClientContact WHERE id = ?', [contactId]);
     res.json({ message: 'Kontak berhasil dihapus.' });
   } catch (err) {
     console.error('Delete contact error:', err);
@@ -226,39 +318,41 @@ router.post('/', verifyToken, async (req, res) => {
   try {
     const defaultLogo = logo_url || `https://logo.clearbit.com/${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
     const clientPhone = phone || contact1_phone || '';
+    
+    // c.name is the company name, c.contact_pic is the contact person name.
+    const final_name = company || name || '';
+    const contactPic = name || '';
+
     const [result] = await pool.query(
-      `INSERT INTO clients 
-       (name, company, industry, source, last_contact, lead_score, status, value, owner_id, verified, phone, logo_url, deadline, notes) 
-       VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO Client 
+       (name, contact_pic, contact_phone, contact_email, industry, link, logo, lead_source, status, last_contact_date, is_verified) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
       [
-        name, 
-        company || '',
+        final_name, 
+        contactPic,
+        clientPhone,
+        '', 
         industry || 'Other', 
-        source || 'Organic', 
-        lead_score || 50, 
-        status || 'Lead', 
-        value || 0.00, 
-        owner_id || req.user.id, 
-        verified ? 1 : 0, 
-        clientPhone, 
+        '', 
         defaultLogo,
-        deadline || null,
-        notes || null
+        source || 'Organic', 
+        status || 'Lead', 
+        verified ? 1 : 0
       ]
     );
 
     const client_id = result.insertId;
 
-    // Automatically save contact 1 (mandatory)
+    // Automatically save contact 1 as primary (mandatory)
     await pool.query(
-      'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+      'INSERT INTO ClientContact (clientId, name, phone, email, isPrimary) VALUES (?, ?, ?, "", 1)',
       [client_id, contact1_name, contact1_phone]
     );
 
-    // Save contact 2 (optional, if name is provided)
+    // Save contact 2 as secondary (optional, if name is provided)
     if (contact2_name && contact2_name.trim() !== '') {
       await pool.query(
-        'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+        'INSERT INTO ClientContact (clientId, name, phone, email, isPrimary) VALUES (?, ?, ?, "", 0)',
         [client_id, contact2_name, contact2_phone || '']
       );
     }
@@ -284,20 +378,20 @@ router.put('/:id/status', verifyToken, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const validStatuses = ['Lead', 'Proposal', 'Hold', 'Loss', 'Won', 'Done'];
+  const validStatuses = ['Lead', 'Proposal', 'Hold', 'Loss', 'Lose', 'Won', 'Done'];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ message: 'Status tidak valid.' });
   }
 
   try {
-    const [oldRows] = await pool.query('SELECT status FROM clients WHERE id = ?', [id]);
+    const [oldRows] = await pool.query('SELECT status FROM Client WHERE id = ?', [id]);
     if (oldRows.length === 0) {
       return res.status(404).json({ message: 'Lead tidak ditemukan.' });
     }
     const oldStatus = oldRows[0].status;
 
     await pool.query(
-      'UPDATE clients SET status = ?, last_contact = NOW() WHERE id = ?',
+      'UPDATE Client SET status = ?, last_contact_date = NOW() WHERE id = ?',
       [status, id]
     );
 
@@ -331,63 +425,64 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 
   try {
-    const [oldRows] = await pool.query('SELECT status FROM clients WHERE id = ?', [id]);
+    const [oldRows] = await pool.query('SELECT status FROM Client WHERE id = ?', [id]);
     if (oldRows.length === 0) {
       return res.status(404).json({ message: 'Lead tidak ditemukan.' });
     }
 
     const defaultLogo = logo_url || `https://logo.clearbit.com/${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
     const clientPhone = phone || contact1_phone || '';
+    
+    // c.name is the company name, c.contact_pic is the contact person name.
+    const final_name = company || name || '';
+    const contactPic = name || '';
 
     await pool.query(
-      `UPDATE clients SET 
-        name = ?, company = ?, industry = ?, source = ?, last_contact = NOW(), 
-        lead_score = ?, status = ?, value = ?, owner_id = ?, 
-        verified = ?, phone = ?, logo_url = ?, deadline = ?, notes = ? 
+      `UPDATE Client SET 
+        name = ?, contact_pic = ?, contact_phone = ?, industry = ?, lead_source = ?, 
+        logo = ?, status = ?, is_verified = ?, last_contact_date = NOW()
        WHERE id = ?`,
       [
-        name, company || '', industry, source, lead_score, status, value, 
-        owner_id || null, verified ? 1 : 0, clientPhone, defaultLogo,
-        deadline || null, notes || null, id
+        final_name, contactPic, clientPhone, industry, source, 
+        defaultLogo, status, verified ? 1 : 0, id
       ]
     );
 
     // Sync client contacts
     const [existingContacts] = await pool.query(
-      'SELECT id FROM client_contacts WHERE client_id = ? ORDER BY id ASC',
+      'SELECT id FROM ClientContact WHERE clientId = ? ORDER BY isPrimary DESC, id ASC',
       [id]
     );
 
-    // 1. Update/Insert contact 1
+    // 1. Update/Insert contact 1 (primary)
     if (existingContacts.length > 0) {
       const contact1_id = existingContacts[0].id;
       await pool.query(
-        'UPDATE client_contacts SET name = ?, phone = ? WHERE id = ?',
+        'UPDATE ClientContact SET name = ?, phone = ?, isPrimary = 1 WHERE id = ?',
         [contact1_name, contact1_phone, contact1_id]
       );
     } else {
       await pool.query(
-        'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+        'INSERT INTO ClientContact (clientId, name, phone, email, isPrimary) VALUES (?, ?, ?, "", 1)',
         [id, contact1_name, contact1_phone]
       );
     }
 
-    // 2. Update/Insert/Delete contact 2
+    // 2. Update/Insert/Delete contact 2 (secondary)
     if (existingContacts.length > 1) {
       const contact2_id = existingContacts[1].id;
       if (contact2_name && contact2_name.trim() !== '') {
         await pool.query(
-          'UPDATE client_contacts SET name = ?, phone = ? WHERE id = ?',
+          'UPDATE ClientContact SET name = ?, phone = ?, isPrimary = 0 WHERE id = ?',
           [contact2_name, contact2_phone || '', contact2_id]
         );
       } else {
-        // If contact 2 was cleared, delete it
-        await pool.query('DELETE FROM client_contacts WHERE id = ?', [contact2_id]);
+        await pool.query('DELETE FROM ClientContact WHERE id = ?', [contact2_id]);
       }
     } else {
       if (contact2_name && contact2_name.trim() !== '') {
         await pool.query(
-          'INSERT INTO client_contacts (client_id, name, phone, email) VALUES (?, ?, ?, "")',
+          'INSERT INTO ClientContact (clientId, name, phone, email, isPrimary) VALUES (?, ?, ?, "", 0)',
           [id, contact2_name, contact2_phone || '']
         );
       }
@@ -404,12 +499,12 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT id FROM clients WHERE id = ?', [id]);
+    const [rows] = await pool.query('SELECT id FROM Client WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Lead tidak ditemukan.' });
     }
 
-    await pool.query('DELETE FROM clients WHERE id = ?', [id]);
+    await pool.query('DELETE FROM Client WHERE id = ?', [id]);
     res.json({ message: 'Lead berhasil dihapus.' });
   } catch (err) {
     console.error('Delete lead error:', err);
@@ -427,7 +522,7 @@ router.post('/:id/interactions', verifyToken, async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query('SELECT id FROM clients WHERE id = ?', [id]);
+    const [rows] = await pool.query('SELECT id FROM Client WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Lead tidak ditemukan.' });
     }
@@ -438,7 +533,7 @@ router.post('/:id/interactions', verifyToken, async (req, res) => {
     );
 
     // Update last_contact on lead
-    await pool.query('UPDATE clients SET last_contact = NOW() WHERE id = ?', [id]);
+    await pool.query('UPDATE Client SET last_contact_date = NOW() WHERE id = ?', [id]);
 
     res.status(201).json({ message: 'Catatan interaksi berhasil ditambahkan.' });
   } catch (err) {
