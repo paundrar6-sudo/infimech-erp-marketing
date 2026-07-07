@@ -5,23 +5,66 @@ const { verifyToken } = require('../middleware/auth');
 
 // Get all projects with client details (mapping Prospect to frontend expected project format)
 router.get('/', verifyToken, async (req, res) => {
+  const { status, search } = req.query;
+
   try {
-    const [rows] = await pool.query(`
+    let sql = `
       SELECT 
         no_project as id, 
         no_project, 
         name_project as name, 
         name_project, 
+        client_name as company,
         client_name, 
         contact_name, 
-        status, 
+        CASE 
+          WHEN UPPER(status) = 'LEAD' THEN 'Lead'
+          WHEN UPPER(status) = 'PROPOSAL' THEN 'Proposal'
+          WHEN UPPER(status) = 'HOLD' THEN 'Hold'
+          WHEN UPPER(status) = 'LOSS' OR UPPER(status) = 'LOSE' OR UPPER(status) = 'REAL_LOSS' THEN 'Lose'
+          WHEN UPPER(status) = 'WON' THEN 'Won'
+          WHEN UPPER(status) = 'DONE' THEN 'Done'
+          ELSE 'Lead'
+        END as status,
+        createdAt as created_at,
         createdAt, 
         updatedAt, 
         \`order\`, 
+        last_contact_date as last_contact,
         last_contact_date
       FROM Prospect
-      ORDER BY createdAt DESC
-    `);
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (status) {
+      if (status === 'Lead') {
+        sql += " AND UPPER(status) = 'LEAD'";
+      } else if (status === 'Proposal') {
+        sql += " AND UPPER(status) = 'PROPOSAL'";
+      } else if (status === 'Hold') {
+        sql += " AND UPPER(status) = 'HOLD'";
+      } else if (status === 'Lose' || status === 'Loss') {
+        sql += " AND (UPPER(status) = 'LOSS' OR UPPER(status) = 'LOSE' OR UPPER(status) = 'REAL_LOSS')";
+      } else if (status === 'Won') {
+        sql += " AND UPPER(status) = 'WON'";
+      } else if (status === 'Done') {
+        sql += " AND UPPER(status) = 'DONE'";
+      } else {
+        sql += ' AND status = ?';
+        params.push(status);
+      }
+    }
+
+    if (search) {
+      sql += ' AND (name_project LIKE ? OR client_name LIKE ? OR contact_name LIKE ? OR no_project LIKE ?)';
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam, searchParam);
+    }
+
+    sql += ' ORDER BY createdAt DESC';
+
+    const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (err) {
     console.error('Fetch projects error:', err);

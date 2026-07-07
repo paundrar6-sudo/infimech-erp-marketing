@@ -389,7 +389,7 @@ export default function App() {
       const params = {};
       if (fuFilterStatus) params.status = fuFilterStatus;
       if (fuSearch) params.search = fuSearch;
-      const data = await api.getLeads(params);
+      const data = await api.getProjects(params);
       setLeads(data);
     } catch (err) {
       console.error(err);
@@ -2737,7 +2737,10 @@ export default function App() {
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                           <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.name}</div>
-                                          {lead.company && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.company}</div>}
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '2px' }}>
+                                            {lead.company && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.company}</div>}
+                                            {lead.no_project && <div style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: 600 }}>{lead.no_project}</div>}
+                                          </div>
                                         </div>
                                         <button className="icon-btn" style={{ flexShrink: 0, opacity: 0.7 }}
                                           onClick={e => { e.stopPropagation(); openFuEditModal(lead); }}>

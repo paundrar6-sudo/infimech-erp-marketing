@@ -340,8 +340,10 @@ export const api = {
   },
 
   // Projects
-  getProjects: async () => {
-    const res = await fetch(`${API_BASE_URL}/projects`, {
+  getProjects: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const url = `${API_BASE_URL}/projects${query ? `?${query}` : ''}`;
+    const res = await fetch(url, {
       headers: getHeaders()
     });
     return handleResponse(res);
