@@ -103,7 +103,7 @@ export default function App() {
 
   // Modals and Forms states
   const [leadModalOpen, setLeadModalOpen] = useState(false);
-  const [leadFormData, setLeadFormData] = useState({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: '', verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '' });
+  const [leadFormData, setLeadFormData] = useState({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: '', verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
   
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [newNoteFormData, setNewNoteFormData] = useState({ type: 'Call', notes: '' });
@@ -1468,6 +1468,7 @@ export default function App() {
                               contact1_phone: leadDetail.contacts && leadDetail.contacts[0] ? leadDetail.contacts[0].phone : '',
                               contact2_name: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].name : '',
                               contact2_phone: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].phone : '',
+                              deadline: leadDetail.lead.deadline ? leadDetail.lead.deadline.substring(0, 10) : ''
                             });
                             setLeadModalOpen(true);
                           }}
@@ -1668,7 +1669,7 @@ export default function App() {
                           className="btn" 
                           style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
                           onClick={() => {
-                            setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '' });
+                            setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
                             setLeadModalOpen(true);
                           }}
                         >
@@ -3492,6 +3493,20 @@ export default function App() {
                       value={leadFormData.contact2_phone || ''} 
                       onChange={(e) => setLeadFormData({ ...leadFormData, contact2_phone: e.target.value })} 
                       placeholder="e.g. +6287766554433" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '6px' }}>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">Deadline / Target Proyek</label>
+                    <input 
+                      type="date" 
+                      className="form-input" 
+                      value={leadFormData.deadline || ''} 
+                      onChange={(e) => setLeadFormData({ ...leadFormData, deadline: e.target.value })} 
                     />
                   </div>
                 </div>

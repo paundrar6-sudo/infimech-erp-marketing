@@ -225,6 +225,7 @@ router.post('/', verifyToken, async (req, res) => {
 
   try {
     const defaultLogo = logo_url || `https://logo.clearbit.com/${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+    const clientPhone = phone || contact1_phone || '';
     const [result] = await pool.query(
       `INSERT INTO clients 
        (name, company, industry, source, last_contact, lead_score, status, value, owner_id, verified, phone, logo_url, deadline, notes) 
@@ -239,7 +240,7 @@ router.post('/', verifyToken, async (req, res) => {
         value || 0.00, 
         owner_id || req.user.id, 
         verified ? 1 : 0, 
-        phone || '', 
+        clientPhone, 
         defaultLogo,
         deadline || null,
         notes || null
@@ -336,6 +337,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 
     const defaultLogo = logo_url || `https://logo.clearbit.com/${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+    const clientPhone = phone || contact1_phone || '';
 
     await pool.query(
       `UPDATE clients SET 
@@ -345,7 +347,7 @@ router.put('/:id', verifyToken, async (req, res) => {
        WHERE id = ?`,
       [
         name, company || '', industry, source, lead_score, status, value, 
-        owner_id || null, verified ? 1 : 0, phone, defaultLogo,
+        owner_id || null, verified ? 1 : 0, clientPhone, defaultLogo,
         deadline || null, notes || null, id
       ]
     );
