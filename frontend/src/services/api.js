@@ -124,11 +124,11 @@ export const api = {
     return handleResponse(res);
   },
 
-  addContact: async (leadId, name, phone, email) => {
+  addContact: async (leadId, name, phone, email, position, isPrimary) => {
     const res = await fetch(`${API_BASE_URL}/leads/${leadId}/contacts`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ name, phone, email })
+      body: JSON.stringify({ name, phone, email, position, isPrimary })
     });
     return handleResponse(res);
   },

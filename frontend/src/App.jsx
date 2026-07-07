@@ -109,7 +109,7 @@ export default function App() {
   const [newNoteFormData, setNewNoteFormData] = useState({ type: 'Call', notes: '' });
   
   const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [contactFormData, setContactFormData] = useState({ name: '', phone: '', email: '' });
+  const [contactFormData, setContactFormData] = useState({ name: '', phone: '', email: '', position: '', isPrimary: false });
 
   const [campaignModalOpen, setCampaignModalOpen] = useState(false);
   const [campaignFormData, setCampaignFormData] = useState({ id: '', name: '', channel: 'Facebook Ads', budget: '', spend: '', conversion: '', revenue: '', status: 'Planned', start_date: '', end_date: '' });
@@ -816,8 +816,8 @@ export default function App() {
     e.preventDefault();
     if (!contactFormData.name) return;
     try {
-      await api.addContact(selectedLeadId, contactFormData.name, contactFormData.phone, contactFormData.email);
-      setContactFormData({ name: '', phone: '', email: '' });
+      await api.addContact(selectedLeadId, contactFormData.name, contactFormData.phone, contactFormData.email, contactFormData.position, contactFormData.isPrimary);
+      setContactFormData({ name: '', phone: '', email: '', position: '', isPrimary: false });
       setContactModalOpen(false);
       fetchLeadDetails(selectedLeadId);
     } catch (err) {
@@ -1678,11 +1678,24 @@ export default function App() {
                                   <Users2 size={16} />
                                 </div>
                                 <div style={{ flexGrow: 1, minWidth: 0 }}>
-                                  <div style={{ fontWeight: 600, fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                                    {(c.isPrimary === 1 || c.isPrimary === true) && (
+                                      <span style={{ fontSize: '9px', background: 'rgba(6, 182, 212, 0.15)', color: 'var(--accent-cyan)', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, textTransform: 'uppercase' }}>Utama</span>
+                                    )}
+                                  </div>
+                                  {c.position && (
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '1px' }}>{c.position}</div>
+                                  )}
                                   <div style={{ fontSize: '11px', color: 'var(--accent-green)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                                     <Phone size={10} />
                                     <span>{c.phone || '-'}</span>
                                   </div>
+                                  {c.email && (
+                                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
+                                      {c.email}
+                                    </div>
+                                  )}
                                 </div>
                                 
                                  {['Superadmin', 'Admin'].includes(user?.role) && (
@@ -3888,6 +3901,16 @@ export default function App() {
                 />
               </div>
               <div className="form-group">
+                <label className="form-label">Jabatan (Position)</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={contactFormData.position || ''} 
+                  onChange={(e) => setContactFormData({ ...contactFormData, position: e.target.value })} 
+                  placeholder="e.g. Manager / PIC" 
+                />
+              </div>
+              <div className="form-group">
                 <label className="form-label">Nomor WhatsApp</label>
                 <input 
                   type="text" 
@@ -3906,6 +3929,16 @@ export default function App() {
                   onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })} 
                   placeholder="e.g. k.seto@company.com" 
                 />
+              </div>
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                <input 
+                  type="checkbox" 
+                  id="contact-is-primary"
+                  checked={contactFormData.isPrimary || false} 
+                  onChange={(e) => setContactFormData({ ...contactFormData, isPrimary: e.target.checked })} 
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <label htmlFor="contact-is-primary" style={{ fontSize: '13px', cursor: 'pointer', userSelect: 'none' }}>Jadikan sebagai Kontak Utama (Primary)</label>
               </div>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setContactModalOpen(false)}>Batal</button>
