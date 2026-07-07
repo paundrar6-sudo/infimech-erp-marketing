@@ -1253,7 +1253,7 @@ export default function App() {
                     }}
                   >
                     <Target size={16} />
-                    <span>Marketing Digital</span>
+                    <span>Marketing Assets</span>
                   </a>
                 </li>
                 <li>
@@ -1311,7 +1311,7 @@ export default function App() {
               <h1 className="header-title">
                 {currentView === 'dashboard' && 'Analytics & Reporting'}
                 {currentView === 'operator-crm' && (selectedLeadId ? `Detail Client • ${leadDetail?.lead?.name || ''}` : 'Marketing Operator')}
-                {currentView === 'digital-marketing' && 'Marketing Digital'}
+                {currentView === 'digital-marketing' && 'Marketing Assets'}
                 {currentView === 'follow-up' && (fuSelectedProspect ? `Prospect Detail • ${fuSelectedProspect?.lead?.name || ''}` : 'Marketing Follow Up')}
               </h1>
               <span className="header-subtitle">
