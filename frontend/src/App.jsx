@@ -118,6 +118,9 @@ export default function App() {
   const [assetFormData, setAssetFormData] = useState({ id: '', name: '', file_type: 'PDF', category: 'CFD/FEA', tags: '', file_url: '', version: '1.0', sharing_status: 'Shared', size: '2.4 MB' });
   const [selectedAssetHistory, setSelectedAssetHistory] = useState(null);
   const [shareModalAsset, setShareModalAsset] = useState(null);
+  const [newVersionFileUrl, setNewVersionFileUrl] = useState('');
+  const [newVersionFileSize, setNewVersionFileSize] = useState('');
+  const [newVersionVal, setNewVersionVal] = useState('');
   const [assetCategoryFilter, setAssetCategoryFilter] = useState('Semua');
   const [assetSearchTerm, setAssetSearchTerm] = useState('');
   const [fuStageFilter, setFuStageFilter] = useState('Semua');
@@ -692,6 +695,68 @@ export default function App() {
     const reader = new FileReader();
     reader.onload = (event) => {
       setFuEditForm(prev => ({ ...prev, logo_url: event.target.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAssetFileUpload = (file) => {
+    if (!file) return;
+    
+    // 1. Calculate file size (MB or KB)
+    let sizeStr = '1.0 MB';
+    if (file.size >= 1024 * 1024) {
+      sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    } else {
+      sizeStr = (file.size / 1024).toFixed(0) + ' KB';
+    }
+
+    // 2. Determine file type based on mime/extension
+    let fileType = 'PDF';
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(ext)) {
+      fileType = 'Image';
+    } else {
+      const templateExts = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
+      if (templateExts.includes(ext)) {
+        fileType = 'Template';
+      } else {
+        const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+        if (videoExts.includes(ext)) {
+          fileType = 'Video';
+        }
+      }
+    }
+
+    // 3. Read file as Base64 Data URL
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAssetFormData(prev => ({
+        ...prev,
+        file_url: event.target.result,
+        size: sizeStr,
+        file_type: fileType,
+        name: prev.name ? prev.name : file.name.substring(0, file.name.lastIndexOf('.')) || file.name
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleVersionFileUpload = (file) => {
+    if (!file) return;
+    
+    // 1. Calculate file size
+    let sizeStr = '1.0 MB';
+    if (file.size >= 1024 * 1024) {
+      sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    } else {
+      sizeStr = (file.size / 1024).toFixed(0) + ' KB';
+    }
+
+    // 2. Convert to Base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setNewVersionFileUrl(event.target.result);
+      setNewVersionFileSize(sizeStr);
     };
     reader.readAsDataURL(file);
   };
@@ -3166,14 +3231,65 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">URL File Materi</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="/assets/files/brosur_cfd.pdf"
-                  value={assetFormData.file_url}
-                  onChange={e => setAssetFormData({ ...assetFormData, file_url: e.target.value })}
-                />
+                <label className="form-label">File Materi (Drag & Drop atau Pilih File/Folder)</label>
+                <div
+                  style={{
+                    border: '2px dashed var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    background: 'rgba(255, 255, 255, 0.01)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'all 0.2s',
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      handleAssetFileUpload(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  onClick={() => document.getElementById('asset-file-input').click()}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                >
+                  <input
+                    type="file"
+                    id="asset-file-input"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleAssetFileUpload(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  {assetFormData.file_url ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '24px' }}>
+                        {assetFormData.file_type === 'PDF' && '📄'}
+                        {assetFormData.file_type === 'Image' && '🖼️'}
+                        {assetFormData.file_type === 'Template' && '📊'}
+                        {assetFormData.file_type === 'Video' && '🎬'}
+                      </span>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'white' }}>
+                        File Berhasil Dikumpulkan
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Ukuran: {assetFormData.size} · Tipe: {assetFormData.file_type}
+                      </div>
+                      {assetFormData.file_url.startsWith('data:') && (
+                        <span style={{ fontSize: '10px', color: 'var(--accent-green)', fontWeight: 600 }}>✓ File terkompresi Base64</span>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)' }}>
+                      <Download size={24} style={{ marginBottom: '6px', color: 'var(--accent-cyan)' }} />
+                      <div style={{ fontSize: '12px', fontWeight: 500 }}>Seret & Taruh file/item di sini, atau klik untuk memilih</div>
+                      <div style={{ fontSize: '10px', marginTop: '2px', color: 'var(--text-muted)' }}>Mendukung PDF, Word, Excel, JPG, PNG, MP4</div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
