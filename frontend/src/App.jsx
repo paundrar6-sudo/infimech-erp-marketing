@@ -3194,109 +3194,199 @@ export default function App() {
       )}
 
       {/* MODAL: VERSION CONTROL HISTORY */}
-      {selectedAssetHistory && (
-        <div className="modal-overlay" onClick={() => setSelectedAssetHistory(null)}>
-          <div className="modal-content" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-              <div>
-                <h3 className="modal-title" style={{ fontSize: '16px', fontWeight: 700 }}>
-                  ⏱️ Version Control & Riwayat Versi
-                </h3>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{selectedAssetHistory.name}</span>
+      {selectedAssetHistory && (() => {
+        let history = [];
+        try {
+          history = JSON.parse(selectedAssetHistory.version_history || '[]');
+          if (!Array.isArray(history)) history = [];
+        } catch (e) {
+          history = [];
+        }
+
+        const autoNextVer = selectedAssetHistory.version ? (() => {
+          const v = selectedAssetHistory.version;
+          const match = v.match(/^(v?)(\d+)\.(\d+)(.*)$/i);
+          if (match) {
+            return `${match[1]}${match[2]}.${parseInt(match[3], 10) + 1}${match[4]}`;
+          }
+          const singleNumMatch = v.match(/^(v?)(\d+)(.*)$/i);
+          if (singleNumMatch) {
+            return `${singleNumMatch[1]}${parseInt(singleNumMatch[2], 10) + 1}${singleNumMatch[3]}`;
+          }
+          return v + '.1';
+        })() : '1.1';
+
+        return (
+          <div className="modal-overlay" onClick={() => {
+            setSelectedAssetHistory(null);
+            setNewVersionFileUrl('');
+            setNewVersionFileSize('');
+            setNewVersionVal('');
+          }}>
+            <div className="modal-content" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
+              <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                <div>
+                  <h3 className="modal-title" style={{ fontSize: '16px', fontWeight: 700 }}>
+                    ⏱️ Version Control & Riwayat Versi
+                  </h3>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{selectedAssetHistory.name}</span>
+                </div>
+                <button className="icon-btn" onClick={() => {
+                  setSelectedAssetHistory(null);
+                  setNewVersionFileUrl('');
+                  setNewVersionFileSize('');
+                  setNewVersionVal('');
+                }}>
+                  <XCircle size={20} />
+                </button>
               </div>
-              <button className="icon-btn" onClick={() => setSelectedAssetHistory(null)}>
-                <XCircle size={20} />
-              </button>
-            </div>
-            
-            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Version History Log Timeline */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderLeft: '2px solid var(--border-color)', paddingLeft: '16px', margin: '8px 0 8px 10px' }}>
-                
-                {/* Current Version */}
-                <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '-25px', top: '2px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--accent-cyan)', border: '4px solid var(--bg-main)' }} />
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--accent-cyan)' }}>
-                    Versi {selectedAssetHistory.version || '1.0'} (Aktif)
+              
+              <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Version History Log Timeline */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderLeft: '2px solid var(--border-color)', paddingLeft: '16px', margin: '8px 0 8px 10px' }}>
+                  
+                  {/* Current Active Version */}
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: '-25px', top: '2px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--accent-cyan)', border: '4px solid var(--bg-main)' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 700, fontSize: '13px', color: 'var(--accent-cyan)' }}>
+                      <span>Versi {selectedAssetHistory.version || '1.0'} (Aktif)</span>
+                      <button
+                        className="btn"
+                        style={{ padding: '2px 8px', fontSize: '10px', height: 'auto', background: 'rgba(6,182,212,0.15)', color: 'var(--accent-cyan)', border: 'none', borderRadius: '4px', fontWeight: 600 }}
+                        onClick={() => window.open(selectedAssetHistory.file_url || '#', '_blank')}
+                      >
+                        Buka File Aktif
+                      </button>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      Ukuran: {selectedAssetHistory.size || '1.5 MB'} · Rilis: {new Date(selectedAssetHistory.created_at).toLocaleDateString('id-ID')}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px' }}>
-                    Pembaruan simulasi CFD/FEA terbaru untuk data Q2 2026.
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    Oleh {selectedAssetHistory.creator_name || 'Siti Sarah'} · {new Date(selectedAssetHistory.created_at).toLocaleDateString('id-ID')}
-                  </div>
+
+                  {/* Legacy Versions */}
+                  {history.map((hist, idx) => (
+                    <div key={idx} style={{ position: 'relative', opacity: 0.75 }}>
+                      <div style={{ position: 'absolute', left: '-25px', top: '2px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--text-muted)', border: '4px solid var(--bg-main)' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
+                        <span>Versi {hist.version}</span>
+                        <button
+                          className="btn"
+                          style={{ padding: '2px 8px', fontSize: '10px', height: 'auto', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', fontWeight: 600 }}
+                          onClick={() => window.open(hist.file_url, '_blank')}
+                        >
+                          Buka File Lama
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Ukuran: {hist.size || '1.5 MB'} · Diupload: {new Date(hist.uploaded_at).toLocaleDateString('id-ID')}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Legacy Version 2 */}
-                <div style={{ position: 'relative', opacity: 0.65 }}>
-                  <div style={{ position: 'absolute', left: '-25px', top: '2px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--text-muted)', border: '4px solid var(--bg-main)' }} />
-                  <div style={{ fontWeight: 700, fontSize: '13px' }}>
-                    Versi 1.1
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px' }}>
-                    Revisi format brosur dan penyesuaian penulisan case study CFD.
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    Oleh Siti Sarah · 2026-06-15
-                  </div>
-                </div>
-
-                {/* Legacy Version 1 */}
-                <div style={{ position: 'relative', opacity: 0.5 }}>
-                  <div style={{ position: 'absolute', left: '-25px', top: '2px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--text-muted)', border: '4px solid var(--bg-main)' }} />
-                  <div style={{ fontWeight: 700, fontSize: '13px' }}>
-                    Versi 1.0 (Rilis Awal)
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px' }}>
-                    Upload perdana materi marketing CFD & FEA.
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    Oleh Siti Sarah · 2026-05-10
-                  </div>
-                </div>
-              </div>
-
-              {/* Version control upgrade form */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '14px', marginTop: '10px' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '10px', color: 'var(--text-primary)' }}>
-                  🚀 Upload Versi Baru (Version Control)
-                </h4>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Versi baru (e.g. 1.3)"
-                    id="new_ver_input"
-                    style={{ width: '140px', height: '36px', fontSize: '12px' }}
-                  />
-                  <button
-                    className="btn btn-primary"
-                    style={{ flex: 1, height: '36px', fontSize: '12px', background: 'var(--accent-cyan)', color: 'black', border: 'none', fontWeight: 700 }}
-                    onClick={async () => {
-                      const input = document.getElementById('new_ver_input');
-                      const val = input ? input.value : '';
-                      if (!val) return alert('Masukkan versi baru!');
-                      try {
-                        await api.updateAsset(selectedAssetHistory.id, {
-                          ...selectedAssetHistory,
-                          version: val
-                        });
-                        alert('Versi berhasil ditingkatkan ke v' + val);
-                        setSelectedAssetHistory(null);
-                        fetchAssets();
-                      } catch (err) {
-                        alert(err.message);
+                {/* Version control upgrade form */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '14px', marginTop: '10px' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '10px', color: 'var(--text-primary)' }}>
+                    🚀 Upload Versi Baru (Version Control)
+                  </h4>
+                  
+                  {/* File Upload Drag & Drop inside Version Control modal */}
+                  <div
+                    style={{
+                      border: '2px dashed var(--border-color)',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                      background: 'rgba(255, 255, 255, 0.01)',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'all 0.2s',
+                      marginBottom: '12px'
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        handleVersionFileUpload(e.dataTransfer.files[0]);
                       }
                     }}
+                    onClick={() => document.getElementById('history-file-input').click()}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
                   >
-                    Tingkatkan Versi
-                  </button>
+                    <input
+                      type="file"
+                      id="history-file-input"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleVersionFileUpload(e.target.files[0]);
+                        }
+                      }}
+                    />
+                    {newVersionFileUrl ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '20px' }}>📄</span>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'white' }}>
+                          File Baru Siap Diunggah
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                          Ukuran: {newVersionFileSize}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ color: 'var(--text-muted)' }}>
+                        <Download size={18} style={{ marginBottom: '4px', color: 'var(--accent-cyan)' }} />
+                        <div style={{ fontSize: '11px', fontWeight: 500 }}>Seret file baru ke sini atau klik untuk memilih</div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder={`Versi baru (e.g. ${autoNextVer})`}
+                      id="new_ver_input"
+                      value={newVersionVal}
+                      onChange={(e) => setNewVersionVal(e.target.value)}
+                      style={{ width: '150px', height: '36px', fontSize: '12px' }}
+                    />
+                    <button
+                      className="btn btn-primary"
+                      style={{ flex: 1, height: '36px', fontSize: '12px', background: 'var(--accent-cyan)', color: 'black', border: 'none', fontWeight: 700 }}
+                      onClick={async () => {
+                        const targetVer = newVersionVal || autoNextVer;
+                        if (!newVersionFileUrl) return alert('Silakan unggah file baru terlebih dahulu!');
+                        try {
+                          await api.updateAsset(selectedAssetHistory.id, {
+                            ...selectedAssetHistory,
+                            version: targetVer,
+                            file_url: newVersionFileUrl,
+                            size: newVersionFileSize
+                          });
+                          showAlert(`Versi berhasil ditingkatkan ke v${targetVer}`, 'Sukses', 'success');
+                          setSelectedAssetHistory(null);
+                          setNewVersionFileUrl('');
+                          setNewVersionFileSize('');
+                          setNewVersionVal('');
+                          fetchAssets();
+                        } catch (err) {
+                          showAlert(err.message, 'Gagal', 'error');
+                        }
+                      }}
+                    >
+                      Unggah & Tingkatkan Versi
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+
 
       {/* MODAL: SHARE WITH SALES */}
       {shareModalAsset && (

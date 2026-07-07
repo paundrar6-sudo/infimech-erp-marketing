@@ -69,7 +69,9 @@ async function initializeDatabase() {
       "ALTER TABLE assets ADD COLUMN IF NOT EXISTS size VARCHAR(50) NOT NULL DEFAULT '2.4 MB'",
       "ALTER TABLE users MODIFY COLUMN role ENUM('Superadmin', 'Admin', 'Digital Marketing', 'Operator') NOT NULL DEFAULT 'Operator'",
       "ALTER TABLE client_contacts CHANGE COLUMN lead_id client_id INT NOT NULL",
-      "ALTER TABLE clients MODIFY COLUMN logo_url MEDIUMTEXT NULL"
+      "ALTER TABLE clients MODIFY COLUMN logo_url MEDIUMTEXT NULL",
+      "ALTER TABLE assets ADD COLUMN IF NOT EXISTS version_history LONGTEXT NULL",
+      "ALTER TABLE assets MODIFY COLUMN file_url LONGTEXT NULL"
     ];
     for (const alt of alterStatements) {
       try { await conn.query(alt); } catch (e) { /* column may already exist */ }

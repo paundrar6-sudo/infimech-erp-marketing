@@ -114,6 +114,26 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
+function incrementVersion(currentVersion) {
+  if (!currentVersion) return '1.1';
+  const match = currentVersion.match(/^(v?)(\d+)\.(\d+)(.*)$/i);
+  if (match) {
+    const prefix = match[1];
+    const major = parseInt(match[2], 10);
+    const minor = parseInt(match[3], 10) + 1;
+    const suffix = match[4];
+    return `${prefix}${major}.${minor}${suffix}`;
+  }
+  const singleNumMatch = currentVersion.match(/^(v?)(\d+)(.*)$/i);
+  if (singleNumMatch) {
+    const prefix = singleNumMatch[1];
+    const num = parseInt(singleNumMatch[2], 10) + 1;
+    const suffix = singleNumMatch[3];
+    return `${prefix}${num}${suffix}`;
+  }
+  return currentVersion + '.1';
+}
+
 // Update asset
 router.put('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
@@ -124,19 +144,48 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 
   try {
-    const [existing] = await pool.query('SELECT id FROM assets WHERE id = ?', [id]);
+    const [existing] = await pool.query('SELECT * FROM assets WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ message: 'Aset tidak ditemukan.' });
     }
 
+    const oldAsset = existing[0];
+    let newVersion = version || oldAsset.version || '1.0';
+    let historyJson = oldAsset.version_history || '[]';
+
+    // If file_url changed, automatically push old version into history and increment version!
+    if (file_url && oldAsset.file_url && file_url !== oldAsset.file_url) {
+      let history = [];
+      try {
+        history = JSON.parse(historyJson);
+        if (!Array.isArray(history)) history = [];
+      } catch (e) {
+        history = [];
+      }
+
+      history.push({
+        version: oldAsset.version || '1.0',
+        file_url: oldAsset.file_url,
+        size: oldAsset.size || '1.5 MB',
+        uploaded_at: oldAsset.updated_at || oldAsset.created_at || new Date()
+      });
+
+      historyJson = JSON.stringify(history);
+      
+      // Auto-increment version if it wasn't explicitly changed to something new in req.body
+      if (!version || version === oldAsset.version) {
+        newVersion = incrementVersion(oldAsset.version || '1.0');
+      }
+    }
+
     await pool.query(
       `UPDATE assets 
-       SET name = ?, file_type = ?, category = ?, tags = ?, file_url = ?, version = ?, sharing_status = ?, size = ? 
+       SET name = ?, file_type = ?, category = ?, tags = ?, file_url = ?, version = ?, sharing_status = ?, size = ?, version_history = ? 
        WHERE id = ?`,
-      [name, file_type, category || 'Brosur', tags, file_url, version || '1.0', sharing_status || 'Private', size || '1.5 MB', id]
+      [name, file_type, category || 'Brosur', tags, file_url, newVersion, sharing_status || 'Private', size || '1.5 MB', historyJson, id]
     );
 
-    res.json({ message: 'Aset berhasil diperbarui.' });
+    res.json({ message: 'Aset berhasil diperbarui.', version: newVersion });
   } catch (err) {
     console.error('Update asset error:', err);
     res.status(500).json({ message: 'Gagal memperbarui aset.' });

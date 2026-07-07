@@ -81,11 +81,12 @@ CREATE TABLE IF NOT EXISTS assets (
   name VARCHAR(255) NOT NULL,
   file_type ENUM('PDF', 'Image', 'Template', 'Video') NOT NULL DEFAULT 'Image',
   tags VARCHAR(255) NULL, -- comma separated tags, e.g. "promo, facebook, summer"
-  file_url VARCHAR(255) NULL,
+  file_url LONGTEXT NULL,
   download_count INT DEFAULT 0,
   created_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  version_history LONGTEXT NULL,
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
