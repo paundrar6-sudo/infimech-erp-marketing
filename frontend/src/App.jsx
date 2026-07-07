@@ -1569,49 +1569,53 @@ export default function App() {
                       </div>
 
                       <div style={{ display: 'flex', flexFlow: 'wrap', gap: '10px', marginTop: '10px' }}>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ flex: 1, justifyContent: 'center', border: '1px solid var(--border-color)' }}
-                          onClick={() => {
-                            setLeadFormData({
-                              id: leadDetail.lead.id,
-                              name: leadDetail.lead.name,
-                              company: leadDetail.lead.company || '',
-                              industry: leadDetail.lead.industry,
-                              source: leadDetail.lead.source,
-                              value: leadDetail.lead.value,
-                              lead_score: leadDetail.lead.lead_score,
-                              owner_id: leadDetail.lead.owner_id,
-                              verified: leadDetail.lead.verified === 1 || leadDetail.lead.verified === true,
-                              phone: leadDetail.lead.phone || '',
-                              logo_url: leadDetail.lead.logo_url || '',
-                              location: leadDetail.lead.location || 'Jakarta',
-                              company_size: leadDetail.lead.company_size || '50-200',
-                              contact1_name: leadDetail.contacts && leadDetail.contacts[0] ? leadDetail.contacts[0].name : '',
-                              contact1_phone: leadDetail.contacts && leadDetail.contacts[0] ? leadDetail.contacts[0].phone : '',
-                              contact2_name: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].name : '',
-                              contact2_phone: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].phone : '',
-                              deadline: leadDetail.lead.deadline ? leadDetail.lead.deadline.substring(0, 10) : ''
-                            });
-                            setLeadModalOpen(true);
-                          }}
-                        >
-                          <Edit3 size={14} />
-                          <span>Edit Client</span>
-                        </button>
-                        
-                        <button 
-                          className="btn btn-danger" 
-                          style={{ background: '#ff1493', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', padding: '10px 14px' }}
-                          onClick={() => deleteLead(leadDetail.lead.id)}
-                          title="Hapus Client"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {['Superadmin', 'Admin'].includes(user?.role) && (
+                          <div style={{ display: 'flex', gap: '8px', flexGrow: 1 }}>
+                            <button 
+                              className="btn btn-secondary" 
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px', flexGrow: 1, justifyContent: 'center' }}
+                              onClick={() => {
+                                setLeadFormData({
+                                  id: leadDetail.lead.id,
+                                  name: leadDetail.lead.name,
+                                  company: leadDetail.lead.company,
+                                  industry: leadDetail.lead.industry,
+                                  source: leadDetail.lead.source,
+                                  value: leadDetail.lead.value,
+                                  lead_score: leadDetail.lead.lead_score,
+                                  owner_id: leadDetail.lead.owner_id,
+                                  verified: leadDetail.lead.verified,
+                                  phone: leadDetail.lead.phone || '',
+                                  logo_url: leadDetail.lead.logo_url || '',
+                                  location: leadDetail.lead.location || 'Jakarta',
+                                  company_size: leadDetail.lead.company_size || '50-200',
+                                  contact1_name: leadDetail.contacts && leadDetail.contacts[0] ? leadDetail.contacts[0].name : '',
+                                  contact1_phone: leadDetail.contacts && leadDetail.contacts[0] ? leadDetail.contacts[0].phone : '',
+                                  contact2_name: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].name : '',
+                                  contact2_phone: leadDetail.contacts && leadDetail.contacts[1] ? leadDetail.contacts[1].phone : '',
+                                  deadline: leadDetail.lead.deadline ? leadDetail.lead.deadline.substring(0, 10) : ''
+                                });
+                                setLeadModalOpen(true);
+                              }}
+                            >
+                              <Edit3 size={14} />
+                              <span>Edit Client</span>
+                            </button>
+                            
+                            <button 
+                              className="btn btn-danger" 
+                              style={{ background: '#ff1493', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', padding: '10px 14px' }}
+                              onClick={() => deleteLead(leadDetail.lead.id)}
+                              title="Hapus Client"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Convert to Project Option */}
-                      {['Won', 'Done'].includes(leadDetail.lead.status) && (
+                      {['Superadmin', 'Admin'].includes(user?.role) && ['Won', 'Done'].includes(leadDetail.lead.status) && (
                         <button 
                           className="btn btn-primary"
                           style={{ width: '100%', justifyContent: 'center' }}
@@ -1643,13 +1647,15 @@ export default function App() {
                             <Users size={16} style={{ color: 'var(--accent-cyan)' }} />
                             <span>Client Contacts</span>
                           </h4>
-                          <button 
-                            className="btn" 
-                            style={{ padding: '6px 12px', fontSize: '11px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
-                            onClick={() => setContactModalOpen(true)}
-                          >
-                            <span>+ Add Contact</span>
-                          </button>
+                          {['Superadmin', 'Admin'].includes(user?.role) && (
+                            <button 
+                              className="btn" 
+                              style={{ padding: '6px 12px', fontSize: '11px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                              onClick={() => setContactModalOpen(true)}
+                            >
+                              <span>+ Add Contact</span>
+                            </button>
+                          )}
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
@@ -1679,27 +1685,29 @@ export default function App() {
                                   </div>
                                 </div>
                                 
-                                <div style={{ position: 'relative' }}>
-                                  <button 
-                                    className="icon-btn" 
-                                    style={{ color: 'var(--text-muted)' }} 
-                                    onClick={() => setActiveContactMenuId(activeContactMenuId === c.id ? null : c.id)}
-                                  >
-                                    <MoreVertical size={14} />
-                                  </button>
+                                 {['Superadmin', 'Admin'].includes(user?.role) && (
+                                  <div style={{ position: 'relative' }}>
+                                    <button 
+                                      className="icon-btn" 
+                                      style={{ color: 'var(--text-muted)' }} 
+                                      onClick={() => setActiveContactMenuId(activeContactMenuId === c.id ? null : c.id)}
+                                    >
+                                      <MoreVertical size={14} />
+                                    </button>
 
-                                  {activeContactMenuId === c.id && (
-                                    <div style={{ position: 'absolute', right: 0, top: '20px', background: 'var(--bg-sidebar)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
-                                      <button 
-                                        className="btn btn-secondary" 
-                                        style={{ padding: '4px 8px', fontSize: '10px', color: 'var(--accent-red)', border: 'none', background: 'transparent' }}
-                                        onClick={() => deleteClientContact(c.id)}
-                                      >
-                                        Delete
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
+                                    {activeContactMenuId === c.id && (
+                                      <div style={{ position: 'absolute', right: 0, top: '20px', background: 'var(--bg-sidebar)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
+                                        <button 
+                                          className="btn btn-secondary" 
+                                          style={{ padding: '4px 8px', fontSize: '10px', color: 'var(--accent-red)', border: 'none', background: 'transparent' }}
+                                          onClick={() => deleteClientContact(c.id)}
+                                        >
+                                          Delete
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             ))
                           ) : (
@@ -1717,16 +1725,18 @@ export default function App() {
                             <FileText size={16} style={{ color: 'var(--accent-cyan)' }} />
                             <span>Interactions & Notes</span>
                           </h4>
-                          <button 
-                            className="btn" 
-                            style={{ padding: '6px 12px', fontSize: '11px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
-                            onClick={() => {
-                              setNewNoteFormData({ type: 'Call', notes: '' });
-                              setNoteModalOpen(true);
-                            }}
-                          >
-                            <span>+ Add Note</span>
-                          </button>
+                          {['Superadmin', 'Admin'].includes(user?.role) && (
+                            <button 
+                              className="btn" 
+                              style={{ padding: '6px 12px', fontSize: '11px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                              onClick={() => {
+                                setNewNoteFormData({ type: 'Call', notes: '' });
+                                setNoteModalOpen(true);
+                              }}
+                            >
+                              <span>+ Add Note</span>
+                            </button>
+                          )}
                         </div>
 
                         {leadDetail.interactions && leadDetail.interactions.length > 0 ? (
@@ -1771,13 +1781,15 @@ export default function App() {
                       <Filter size={16} />
                       <span>Customer Segmentation</span>
                     </button>
-                    <button 
-                      className={`btn ${operatorTab === 'roles' ? 'btn-primary' : 'btn-secondary'}`}
-                      onClick={() => setOperatorTab('roles')}
-                    >
-                      <KeyRound size={16} />
-                      <span>Role & Operators</span>
-                    </button>
+                    {['Superadmin', 'Admin'].includes(user?.role) && (
+                      <button 
+                        className={`btn ${operatorTab === 'roles' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setOperatorTab('roles')}
+                      >
+                        <KeyRound size={16} />
+                        <span>Role & Operators</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* TAB 1: CRM Leads table */}
@@ -1788,16 +1800,18 @@ export default function App() {
                           <h3 style={{ fontSize: '20px', fontWeight: 700 }}>CRM Portal</h3>
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Client Management Hub</span>
                         </div>
-                        <button 
-                          className="btn" 
-                          style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
-                          onClick={() => {
-                            setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
-                            setLeadModalOpen(true);
-                          }}
-                        >
-                          <span>+ New Client</span>
-                        </button>
+                        {['Superadmin', 'Admin'].includes(user?.role) && (
+                          <button 
+                            className="btn" 
+                            style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                            onClick={() => {
+                              setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
+                              setLeadModalOpen(true);
+                            }}
+                          >
+                            <span>+ New Client</span>
+                          </button>
+                        )}
                       </div>
 
                       <div className="table-container">
@@ -4360,6 +4374,7 @@ export default function App() {
                     className="form-select"
                     value={operatorFormData.role}
                     onChange={(e) => setOperatorFormData({ ...operatorFormData, role: e.target.value })}
+                    disabled={user?.role !== 'Superadmin'}
                   >
                     <option value="Operator">Operator</option>
                     <option value="Digital Marketing">Digital Marketing</option>
