@@ -77,6 +77,47 @@ async function initializeDatabase() {
       try { await conn.query(alt); } catch (e) { /* column may already exist */ }
     }
 
+    // 3c. Query and update foreign keys pointing to old 'clients' table to point to 'Client'
+    const tablesToMigrate = ['lead_interactions', 'prospect_subtasks', 'projects', 'ClientContact', 'client_contacts'];
+    for (const tbl of tablesToMigrate) {
+      try {
+        const [constraints] = await conn.query(`
+          SELECT CONSTRAINT_NAME 
+          FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+          WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = ? 
+            AND REFERENCED_TABLE_NAME = 'clients'
+        `, [tbl]);
+
+        for (const row of constraints) {
+          const fkName = row.CONSTRAINT_NAME;
+          try {
+            await conn.query(`ALTER TABLE ${tbl} DROP FOREIGN KEY ${fkName}`);
+            console.log(`✓ Dropped foreign key ${fkName} on table ${tbl}`);
+          } catch (dropErr) {
+            console.log(`⚠️ Failed to drop foreign key ${fkName} on table ${tbl}: ${dropErr.message}`);
+          }
+        }
+
+        // Add the new constraint pointing to Client table
+        const colName = (tbl === 'projects' || tbl === 'client_contacts') ? 'client_id' : (tbl === 'ClientContact' ? 'clientId' : 'lead_id');
+        const newFkName = `fk_${tbl}_Client`;
+        try {
+          await conn.query(`
+            ALTER TABLE ${tbl} 
+            ADD CONSTRAINT ${newFkName} 
+            FOREIGN KEY (${colName}) REFERENCES Client(id) ON DELETE CASCADE
+          `);
+          console.log(`✓ Created constraint ${newFkName} referencing Client(id) on ${tbl}`);
+        } catch (addErr) {
+          // It might already exist
+          console.log(`ℹ️ Constraint ${newFkName} check on ${tbl}: ${addErr.message}`);
+        }
+      } catch (err) {
+        console.log(`⚠️ Failed to migrate foreign keys for table ${tbl}: ${err.message}`);
+      }
+    }
+
     // 4. Seed default data if users table is empty
     const [rows] = await conn.query('SELECT COUNT(*) as count FROM users');
     if (rows[0].count === 0) {
