@@ -135,6 +135,11 @@ export default function App() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileFormData, setProfileFormData] = useState({ name: '', phone: '', password: '', avatar_url: '' });
 
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkCsvText, setBulkCsvText] = useState('');
+  const [bulkImportError, setBulkImportError] = useState('');
+  const [bulkImportLoading, setBulkImportLoading] = useState(false);
+
   // Init theme
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -816,6 +821,81 @@ export default function App() {
         showAlert(err.message, 'Gagal', 'error');
       }
     });
+  };
+
+  const handleBulkImport = async (e) => {
+    e.preventDefault();
+    if (!bulkCsvText.trim()) {
+      setBulkImportError('Konten CSV tidak boleh kosong.');
+      return;
+    }
+
+    setBulkImportLoading(true);
+    setBulkImportError('');
+
+    try {
+      const lines = bulkCsvText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      if (lines.length < 2) {
+        throw new Error('CSV harus berisi baris header dan minimal satu baris data.');
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      
+      const clientsToImport = [];
+      for (let i = 1; i < lines.length; i++) {
+        const currentLine = lines[i];
+        const values = currentLine.split(',').map(v => v.trim());
+        
+        const clientObj = {};
+        headers.forEach((header, index) => {
+          clientObj[header] = values[index] || '';
+        });
+
+        const mappedClient = {
+          company: clientObj.company || '',
+          name: clientObj.pic_name || clientObj.company || 'New Client',
+          industry: clientObj.industry || 'Other',
+          source: clientObj.source || 'Organic',
+          phone: clientObj.pic_phone || '',
+          status: clientObj.status || 'Lead',
+          verified: (clientObj.verified && ['yes', 'true', '1', 'ya'].includes(clientObj.verified.toLowerCase())) ? 1 : 0,
+          contact_name: clientObj.pic_name || '',
+          contact_phone: clientObj.pic_phone || ''
+        };
+
+        if (!mappedClient.company && !mappedClient.name) {
+          continue;
+        }
+        clientsToImport.push(mappedClient);
+      }
+
+      if (clientsToImport.length === 0) {
+        throw new Error('Tidak ada data klien valid yang ditemukan untuk diimpor.');
+      }
+
+      const res = await api.bulkImportLeads(clientsToImport);
+      showAlert(res.message || 'Bulk import berhasil.', 'Sukses', 'success');
+      setBulkModalOpen(false);
+      setBulkCsvText('');
+      fetchLeads();
+      fetchDashboard();
+    } catch (err) {
+      setBulkImportError(err.message || 'Gagal melakukan bulk import.');
+    } finally {
+      setBulkImportLoading(false);
+    }
+  };
+
+  const downloadCsvTemplate = () => {
+    const csvContent = "Company,Industry,Source,PIC_Name,PIC_Phone,Status,Verified\nPT Maju Jaya,Technology,Website,Agus Santoso,+628123456789,Lead,Yes\nCV Kreatif,E-commerce,Instagram Ads,Dewi Lestari,+628998877665,Proposal,No";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "client_import_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Client Contacts
@@ -1821,16 +1901,29 @@ export default function App() {
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Client Management Hub</span>
                         </div>
                         {['Superadmin', 'Admin'].includes(user?.role) && (
-                          <button 
-                            className="btn" 
-                            style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
-                            onClick={() => {
-                              setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
-                              setLeadModalOpen(true);
-                            }}
-                          >
-                            <span>+ New Client</span>
-                          </button>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                              className="btn btn-secondary" 
+                              style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                              onClick={() => {
+                                setBulkCsvText('');
+                                setBulkImportError('');
+                                setBulkModalOpen(true);
+                              }}
+                            >
+                              <span>+ Bulk Import</span>
+                            </button>
+                            <button 
+                              className="btn" 
+                              style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                              onClick={() => {
+                                setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
+                                setLeadModalOpen(true);
+                              }}
+                            >
+                              <span>+ New Client</span>
+                            </button>
+                          </div>
                         )}
                       </div>
 
@@ -1882,20 +1975,35 @@ export default function App() {
                                   )}
                                 </td>
                                 <td>
-                                  <span 
-                                    className="badge" 
-                                    style={{ 
-                                      background: 'transparent',
-                                      border: l.status === 'Won' || l.status === 'Done' ? '1px solid var(--accent-green)' : '1px solid var(--accent-orange)',
-                                      color: l.status === 'Won' || l.status === 'Done' ? 'var(--accent-green)' : 'var(--accent-orange)',
-                                      padding: '3px 8px',
-                                      borderRadius: '4px',
-                                      fontSize: '11px',
-                                      fontWeight: 600
-                                    }}
-                                  >
-                                    {getFigmaStatusText(l.status)}
-                                  </span>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                    <span 
+                                      className="badge" 
+                                      style={{ 
+                                        background: 'transparent',
+                                        border: l.status === 'Won' || l.status === 'Done' ? '1px solid var(--accent-green)' : '1px solid var(--accent-orange)',
+                                        color: l.status === 'Won' || l.status === 'Done' ? 'var(--accent-green)' : 'var(--accent-orange)',
+                                        padding: '3px 8px',
+                                        borderRadius: '4px',
+                                        fontSize: '11px',
+                                        fontWeight: 600
+                                      }}
+                                    >
+                                      {getFigmaStatusText(l.status)}
+                                    </span>
+                                    {['Superadmin', 'Admin'].includes(user?.role) && (
+                                      <button
+                                        className="icon-btn"
+                                        style={{ color: 'var(--accent-red)', opacity: 0.7, padding: '4px' }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteLead(l.id);
+                                        }}
+                                        title="Hapus Klien"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -4027,6 +4135,73 @@ export default function App() {
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setProfileModalOpen(false)}>Batal</button>
                 <button type="submit" className="btn btn-primary">Simpan Perubahan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: BULK IMPORT CLIENTS */}
+      {bulkModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '600px' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Bulk Import Klien</h3>
+              <button className="icon-btn" onClick={() => setBulkModalOpen(false)}>
+                <XCircle size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleBulkImport} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Format CSV: Company, Industry, Source, PIC_Name, PIC_Phone, Status, Verified</span>
+                <button type="button" className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={downloadCsvTemplate}>
+                  Unduh Templat
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Unggah Berkas CSV</label>
+                <input 
+                  type="file" 
+                  accept=".csv"
+                  className="form-input"
+                  style={{ padding: '8px' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (evt) => {
+                        setBulkCsvText(evt.target.result);
+                      };
+                      reader.readAsText(file);
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Atau Tempel / Edit Data CSV Di Sini</label>
+                <textarea 
+                  className="form-input" 
+                  style={{ minHeight: '180px', fontFamily: 'monospace', fontSize: '12px' }}
+                  value={bulkCsvText}
+                  onChange={(e) => setBulkCsvText(e.target.value)}
+                  placeholder="Company,Industry,Source,PIC_Name,PIC_Phone,Status,Verified&#13;PT Maju Jaya,Technology,Website,Agus Santoso,+628123456789,Lead,Yes"
+                  required
+                />
+              </div>
+
+              {bulkImportError && (
+                <div style={{ color: 'var(--accent-red)', fontSize: '13px' }}>
+                  {bulkImportError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setBulkModalOpen(false)}>Batal</button>
+                <button type="submit" className="btn btn-primary" disabled={bulkImportLoading}>
+                  {bulkImportLoading ? 'Mengimpor...' : 'Mulai Impor'}
+                </button>
               </div>
             </form>
           </div>

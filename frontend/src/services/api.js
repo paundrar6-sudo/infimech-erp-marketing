@@ -115,6 +115,15 @@ export const api = {
     return handleResponse(res);
   },
 
+  bulkImportLeads: async (clients) => {
+    const res = await fetch(`${API_BASE_URL}/leads/bulk`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ clients })
+    });
+    return handleResponse(res);
+  },
+
   addInteraction: async (leadId, type, notes) => {
     const res = await fetch(`${API_BASE_URL}/leads/${leadId}/interactions`, {
       method: 'POST',
