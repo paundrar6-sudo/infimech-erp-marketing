@@ -2186,7 +2186,7 @@ export default function App() {
                                     }}>
                                       <Edit3 size={14} />
                                     </button>
-                                    {op.email !== 'admin.@gmail.com' && op.email !== 'baruna.work@gmail.com' && (
+                                    {op.id !== user?.id && (
                                       <button className="icon-btn" style={{ color: 'var(--accent-red)' }} onClick={() => deleteOperator(op.id)}>
                                         <Trash2 size={14} />
                                       </button>
