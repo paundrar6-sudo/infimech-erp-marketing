@@ -363,6 +363,20 @@ router.post('/', verifyToken, async (req, res) => {
       [client_id, req.user.id]
     );
 
+    // Automatically create a corresponding record in the Prospect table for the Follow Up board
+    const projectCode = `PRJ-${client_id}-${Date.now().toString().substr(-4)}`;
+    await pool.query(
+      `INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
+       VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
+      [
+        projectCode,
+        final_name,       // project name is the company name initially
+        final_name,       // client_name is the company name
+        contactPic,       // contact_name is the person name
+        status ? status.toUpperCase() : 'LEAD'
+      ]
+    );
+
     res.status(201).json({
       message: 'Lead berhasil ditambahkan.',
       leadId: client_id
@@ -425,10 +439,11 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 
   try {
-    const [oldRows] = await pool.query('SELECT status FROM Client WHERE id = ?', [id]);
+    const [oldRows] = await pool.query('SELECT name, status FROM Client WHERE id = ?', [id]);
     if (oldRows.length === 0) {
       return res.status(404).json({ message: 'Lead tidak ditemukan.' });
     }
+    const oldClientName = oldRows[0].name;
 
     const defaultLogo = logo_url || `https://logo.clearbit.com/${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
     const clientPhone = phone || contact1_phone || '';
@@ -447,6 +462,25 @@ router.put('/:id', verifyToken, async (req, res) => {
         defaultLogo, status, verified ? 1 : 0, id
       ]
     );
+
+    // Sync Prospect table
+    if (oldClientName) {
+      await pool.query(
+        `UPDATE Prospect SET 
+          name_project = ?, 
+          client_name = ?, 
+          contact_name = ?, 
+          status = ?
+         WHERE client_name = ?`,
+        [
+          final_name,
+          final_name,
+          contactPic,
+          status ? status.toUpperCase() : 'LEAD',
+          oldClientName
+        ]
+      );
+    }
 
     // Sync client contacts
     const [existingContacts] = await pool.query(
@@ -499,12 +533,18 @@ router.put('/:id', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT id FROM Client WHERE id = ?', [id]);
+    const [rows] = await pool.query('SELECT id, name FROM Client WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Lead tidak ditemukan.' });
     }
+    const clientName = rows[0].name;
 
     await pool.query('DELETE FROM Client WHERE id = ?', [id]);
+
+    if (clientName) {
+      await pool.query('DELETE FROM Prospect WHERE client_name = ?', [clientName]);
+    }
+
     res.json({ message: 'Lead berhasil dihapus.' });
   } catch (err) {
     console.error('Delete lead error:', err);
