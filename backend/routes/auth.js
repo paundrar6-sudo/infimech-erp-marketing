@@ -2,23 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/db');
+const { pool, getRoleMap } = require('../config/db');
 const { verifyToken } = require('../middleware/auth');
 require('dotenv').config();
-
-const roleMap = {
-  1: 'Superadmin',
-  2: 'Admin',
-  3: 'Digital Marketing',
-  4: 'Operator'
-};
-
-const roleIdMap = {
-  'Superadmin': 1,
-  'Admin': 2,
-  'Digital Marketing': 3,
-  'Operator': 4
-};
 
 // Login operator (accepts username OR email as identifier)
 router.post('/login', async (req, res) => {
@@ -43,6 +29,9 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Email/Username atau password salah.' });
     }
+
+    // Get dynamic role map
+    const { roleMap } = await getRoleMap();
 
     // Map DB values to frontend expectations
     user.role = roleMap[user.roleId] || 'Operator';
@@ -80,6 +69,7 @@ router.get('/profile', verifyToken, async (req, res) => {
     }
     
     const user = rows[0];
+    const { roleMap } = await getRoleMap();
     user.role = roleMap[user.roleId] || 'Operator';
     user.status = user.is_approved ? 'Active' : 'Inactive';
     
@@ -117,6 +107,7 @@ router.put('/profile', verifyToken, async (req, res) => {
     );
     
     const user = rows[0];
+    const { roleMap } = await getRoleMap();
     user.role = roleMap[user.roleId] || 'Operator';
     user.status = user.is_approved ? 'Active' : 'Inactive';
 

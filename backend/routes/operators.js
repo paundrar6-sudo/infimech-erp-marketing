@@ -1,22 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { pool } = require('../config/db');
+const { pool, getRoleMap } = require('../config/db');
 const { verifyToken, requireRole } = require('../middleware/auth');
-
-const roleMap = {
-  1: 'Superadmin',
-  2: 'Admin',
-  3: 'Digital Marketing',
-  4: 'Operator'
-};
-
-const roleIdMap = {
-  'Superadmin': 1,
-  'Admin': 2,
-  'Digital Marketing': 3,
-  'Operator': 4
-};
 
 // Get all operators and summaries
 router.get('/', verifyToken, async (req, res) => {
@@ -25,6 +11,8 @@ router.get('/', verifyToken, async (req, res) => {
       'SELECT id, username, name, email, roleId, is_approved, createdAt FROM User ORDER BY roleId ASC, name ASC'
     );
     
+    const { roleMap } = await getRoleMap();
+
     // Map roleId and is_approved to strings for frontend compatibility
     const mappedOperators = rows.map(u => ({
       id: u.id,
@@ -78,6 +66,7 @@ router.post('/', verifyToken, requireRole(['Superadmin', 'Admin']), async (req, 
       return res.status(400).json({ message: 'Email atau Username sudah terdaftar.' });
     }
 
+    const { roleIdMap } = await getRoleMap();
     const hashedPassword = await bcrypt.hash(password, 10);
     const roleId = roleIdMap[role] || 4;
 
@@ -116,6 +105,7 @@ router.put('/:id', verifyToken, requireRole(['Superadmin', 'Admin']), async (req
       return res.status(400).json({ message: 'Email atau Username sudah terdaftar pada user lain.' });
     }
 
+    const { roleIdMap } = await getRoleMap();
     const roleId = roleIdMap[role] || 4;
     const isApproved = (status === 'Active') ? 1 : 0;
 

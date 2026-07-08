@@ -42,11 +42,11 @@ app.get('/api/db-check', async (req, res) => {
   const { pool } = require('./config/db');
   try {
     const conn = await pool.getConnection();
-    const [rows] = await conn.query('SELECT COUNT(*) as count FROM users');
+    const [rows] = await conn.query('SELECT COUNT(*) as count FROM User');
     conn.release();
     res.json({
       status: 'connected',
-      message: 'Database connection is successful and users exist.',
+      message: 'Database connection is successful and User table exists.',
       userCount: rows[0].count,
       config: {
         host: process.env.DB_HOST || 'localhost',

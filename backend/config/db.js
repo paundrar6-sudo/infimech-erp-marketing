@@ -298,7 +298,46 @@ async function initializeDatabase() {
   }
 }
 
+async function getRoleMap() {
+  try {
+    const [rows] = await pool.query('SELECT id, name FROM Role');
+    const roleMap = {};
+    const roleIdMap = {};
+    for (const r of rows) {
+      let mappedName = r.name;
+      if (mappedName === 'User') mappedName = 'Operator';
+      roleMap[r.id] = mappedName;
+      roleIdMap[mappedName] = r.id;
+    }
+    // Ensure fallbacks for standard IDs
+    if (!roleMap[3]) { roleMap[3] = 'Superadmin'; roleIdMap['Superadmin'] = 3; }
+    if (!roleMap[4]) { roleMap[4] = 'Admin'; roleIdMap['Admin'] = 4; }
+    if (!roleMap[5]) { roleMap[5] = 'Operator'; roleIdMap['Operator'] = 5; }
+    if (!roleIdMap['Digital Marketing']) { roleIdMap['Digital Marketing'] = 5; }
+    return { roleMap, roleIdMap };
+  } catch (err) {
+    return {
+      roleMap: {
+        3: 'Superadmin',
+        4: 'Admin',
+        5: 'Operator',
+        8: 'Manajemen',
+        10: 'Client'
+      },
+      roleIdMap: {
+        'Superadmin': 3,
+        'Admin': 4,
+        'Operator': 5,
+        'Digital Marketing': 5,
+        'Manajemen': 8,
+        'Client': 10
+      }
+    };
+  }
+}
+
 module.exports = {
   pool,
-  initializeDatabase
+  initializeDatabase,
+  getRoleMap
 };
