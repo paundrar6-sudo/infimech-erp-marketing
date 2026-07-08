@@ -4,26 +4,53 @@ const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 const { verifyToken, requireRole } = require('../middleware/auth');
 
+const roleMap = {
+  1: 'Superadmin',
+  2: 'Admin',
+  3: 'Digital Marketing',
+  4: 'Operator'
+};
+
+const roleIdMap = {
+  'Superadmin': 1,
+  'Admin': 2,
+  'Digital Marketing': 3,
+  'Operator': 4
+};
+
 // Get all operators and summaries
 router.get('/', verifyToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, name, email, phone, role, status, avatar_url, created_at FROM users ORDER BY role ASC, name ASC'
+      'SELECT id, username, name, email, roleId, is_approved, createdAt FROM User ORDER BY roleId ASC, name ASC'
     );
     
-    // Calculate simple stats: active counts and allocation
+    // Map roleId and is_approved to strings for frontend compatibility
+    const mappedOperators = rows.map(u => ({
+      id: u.id,
+      username: u.username,
+      name: u.name || u.username,
+      email: u.email,
+      phone: '', // Placeholder to prevent frontend reference errors
+      role: roleMap[u.roleId] || 'Operator',
+      status: u.is_approved ? 'Active' : 'Inactive',
+      avatar_url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(u.name || u.username)}`,
+      created_at: u.createdAt
+    }));
+
+    // Calculate simple stats
     const stats = {
-      total: rows.length,
-      active: rows.filter(u => u.status === 'Active').length,
-      inactive: rows.filter(u => u.status !== 'Active').length,
-      superadmin: rows.filter(u => u.role === 'Superadmin').length,
-      admin: rows.filter(u => u.role === 'Admin').length,
-      marketing: rows.filter(u => u.role === 'Digital Marketing').length,
-      operator: rows.filter(u => u.role === 'Operator').length
+      total: mappedOperators.length,
+      active: mappedOperators.filter(u => u.status === 'Active').length,
+      inactive: mappedOperators.filter(u => u.status !== 'Active').length,
+      superadmin: mappedOperators.filter(u => u.role === 'Superadmin').length,
+      admin: mappedOperators.filter(u => u.role === 'Admin').length,
+      marketing: mappedOperators.filter(u => u.role === 'Digital Marketing').length,
+      operator: mappedOperators.filter(u => u.role === 'Operator').length
     };
 
     res.json({
-      operators: rows,
+      operators: mappedOperators,
       stats
     });
   } catch (err) {
@@ -34,25 +61,29 @@ router.get('/', verifyToken, async (req, res) => {
 
 // Add operator (Admin only)
 router.post('/', verifyToken, requireRole(['Superadmin', 'Admin']), async (req, res) => {
-  const { name, email, password, phone, role, avatar_url } = req.body;
+  const { name, username, email, password, role } = req.body;
 
-  if (!name || !email || !password || !role) {
-    return res.status(400).json({ message: 'Nama, email, password, dan role wajib diisi.' });
+  const finalUsername = username || email?.split('@')[0] || '';
+  if (!name || !finalUsername || !password || !role) {
+    return res.status(400).json({ message: 'Nama, username, password, dan role wajib diisi.' });
   }
 
   try {
-    // Check if email already exists
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    // Check if email or username already exists
+    const [existing] = await pool.query(
+      'SELECT id FROM User WHERE email = ? OR username = ?', 
+      [email || null, finalUsername]
+    );
     if (existing.length > 0) {
-      return res.status(400).json({ message: 'Email sudah terdaftar.' });
+      return res.status(400).json({ message: 'Email atau Username sudah terdaftar.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const avatar = avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(name)}`;
+    const roleId = roleIdMap[role] || 4;
 
     const [result] = await pool.query(
-      'INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES (?, ?, ?, ?, ?, "Active", ?)',
-      [name, email, hashedPassword, phone || '', role, avatar]
+      'INSERT INTO User (username, name, email, password, roleId, is_approved, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, 1, NOW(3), NOW(3))',
+      [finalUsername, name, email || null, hashedPassword, roleId]
     );
 
     res.status(201).json({
@@ -68,21 +99,28 @@ router.post('/', verifyToken, requireRole(['Superadmin', 'Admin']), async (req, 
 // Update operator status/details (Admin only)
 router.put('/:id', verifyToken, requireRole(['Superadmin', 'Admin']), async (req, res) => {
   const { id } = req.params;
-  const { name, email, phone, role, status, password, avatar_url } = req.body;
+  const { name, username, email, role, status, password } = req.body;
 
-  if (!name || !email || !role || !status) {
-    return res.status(400).json({ message: 'Nama, email, role, dan status wajib diisi.' });
+  const finalUsername = username || email?.split('@')[0] || '';
+  if (!name || !finalUsername || !role || !status) {
+    return res.status(400).json({ message: 'Nama, username, role, dan status wajib diisi.' });
   }
 
   try {
-    // Check email uniqueness for other users
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, id]);
+    // Check uniqueness for other users
+    const [existing] = await pool.query(
+      'SELECT id FROM User WHERE (email = ? OR username = ?) AND id != ?', 
+      [email || null, finalUsername, id]
+    );
     if (existing.length > 0) {
-      return res.status(400).json({ message: 'Email sudah terdaftar pada user lain.' });
+      return res.status(400).json({ message: 'Email atau Username sudah terdaftar pada user lain.' });
     }
 
-    let updateSql = 'UPDATE users SET name = ?, email = ?, phone = ?, role = ?, status = ?, avatar_url = ?';
-    let queryParams = [name, email, phone || '', role, status, avatar_url];
+    const roleId = roleIdMap[role] || 4;
+    const isApproved = (status === 'Active') ? 1 : 0;
+
+    let updateSql = 'UPDATE User SET name = ?, username = ?, email = ?, roleId = ?, is_approved = ?, updatedAt = NOW(3)';
+    let queryParams = [name, finalUsername, email || null, roleId, isApproved];
 
     if (password && password.trim() !== '') {
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -111,7 +149,7 @@ router.delete('/:id', verifyToken, requireRole(['Superadmin', 'Admin']), async (
   }
 
   try {
-    await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    await pool.query('DELETE FROM User WHERE id = ?', [id]);
     res.json({ message: 'Operator berhasil dihapus.' });
   } catch (err) {
     console.error('Delete operator error:', err);

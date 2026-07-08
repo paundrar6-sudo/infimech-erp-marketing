@@ -60,7 +60,7 @@ export default function App() {
 
   // Operator states for Role Management
   const [operatorModalOpen, setOperatorModalOpen] = useState(false);
-  const [operatorFormData, setOperatorFormData] = useState({ id: '', name: '', email: '', password: '', phone: '', role: 'Operator', status: 'Active' });
+  const [operatorFormData, setOperatorFormData] = useState({ id: '', username: '', name: '', email: '', password: '', phone: '', role: 'Operator', status: 'Active' });
 
   // IT Projects view active lead ID for subtask viewing
   const [itActiveLeadId, setItActiveLeadId] = useState('');
@@ -2124,7 +2124,7 @@ export default function App() {
                         <button 
                           className="btn btn-primary"
                           onClick={() => {
-                            setOperatorFormData({ id: '', name: '', email: '', password: '', phone: '', role: 'Operator', status: 'Active' });
+                            setOperatorFormData({ id: '', username: '', name: '', email: '', password: '', phone: '', role: 'Operator', status: 'Active' });
                             setOperatorModalOpen(true);
                           }}
                         >
@@ -2175,6 +2175,7 @@ export default function App() {
                                     <button className="icon-btn" onClick={() => {
                                       setOperatorFormData({
                                         id: op.id,
+                                        username: op.username || '',
                                         name: op.name,
                                         email: op.email,
                                         password: '',
@@ -4563,15 +4564,27 @@ export default function App() {
               </button>
             </div>
             <form onSubmit={saveOperator} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div className="form-group">
-                <label className="form-label">Nama Lengkap</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={operatorFormData.name} 
-                  onChange={(e) => setOperatorFormData({ ...operatorFormData, name: e.target.value })} 
-                  required 
-                />
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">Nama Lengkap</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={operatorFormData.name} 
+                    onChange={(e) => setOperatorFormData({ ...operatorFormData, name: e.target.value })} 
+                    required 
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">Username</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={operatorFormData.username || ''} 
+                    onChange={(e) => setOperatorFormData({ ...operatorFormData, username: e.target.value })} 
+                    required 
+                  />
+                </div>
               </div>
 
               <div className="form-row">

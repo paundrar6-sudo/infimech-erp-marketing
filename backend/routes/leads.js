@@ -54,7 +54,7 @@ router.get('/', verifyToken, async (req, res) => {
       LEFT JOIN (
         SELECT li2.lead_id, li2.notes, li2.created_at, u2.name as created_by_name
         FROM lead_interactions li2
-        LEFT JOIN users u2 ON li2.created_by = u2.id
+        LEFT JOIN User u2 ON li2.created_by = u2.id
         WHERE li2.id = (
           SELECT MAX(li3.id) FROM lead_interactions li3 WHERE li3.lead_id = li2.lead_id
         )
@@ -235,9 +235,9 @@ router.get('/:id', verifyToken, async (req, res) => {
     }
 
     const [interactions] = await pool.query(
-      `SELECT i.*, u.name as creator_name, u.avatar_url as creator_avatar 
+      `SELECT i.*, u.name as creator_name, CONCAT('https://api.dicebear.com/7.x/adventurer/svg?seed=', COALESCE(u.name, u.username, 'Admin')) as creator_avatar 
        FROM lead_interactions i 
-       LEFT JOIN users u ON i.created_by = u.id 
+       LEFT JOIN User u ON i.created_by = u.id 
        WHERE i.lead_id = ? 
        ORDER BY i.created_at DESC`,
       [id]
@@ -297,6 +297,92 @@ router.delete('/contacts/:contactId', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Delete contact error:', err);
     res.status(500).json({ message: 'Gagal menghapus kontak.' });
+  }
+});
+
+// Bulk import leads
+router.post('/bulk', verifyToken, async (req, res) => {
+  const { clients } = req.body;
+  if (!Array.isArray(clients) || clients.length === 0) {
+    return res.status(400).json({ message: 'Data klien tidak valid atau kosong.' });
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    for (const client of clients) {
+      const { name, company, industry, source, phone, status, verified, contact_name, contact_phone } = client;
+      
+      const final_name = company || name || '';
+      const contactPic = contact_name || name || '';
+      const clientPhone = phone || contact_phone || '';
+      const final_status = status || 'Lead';
+      const isVerified = (verified === true || verified === 1 || String(verified).toLowerCase() === 'yes' || String(verified).toLowerCase() === 'true') ? 1 : 0;
+      
+      const defaultLogo = `https://logo.clearbit.com/${final_name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+
+      const [result] = await conn.query(
+        `INSERT INTO Client 
+         (name, contact_pic, contact_phone, contact_email, industry, link, logo, lead_source, status, last_contact_date, is_verified) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+        [
+          final_name,
+          contactPic,
+          clientPhone,
+          '',
+          industry || 'Other',
+          '',
+          defaultLogo,
+          source || 'Organic',
+          final_status,
+          isVerified
+        ]
+      );
+
+      const client_id = result.insertId;
+
+      // Save primary contact
+      const c1_name = contact_pic_name => {
+        if (contact_pic_name) return contact_pic_name;
+        if (contact_name) return contact_name;
+        return 'Primary Contact';
+      };
+      const c1_phone = clientPhone || '-';
+      await conn.query(
+        'INSERT INTO ClientContact (clientId, name, phone, email, isPrimary) VALUES (?, ?, ?, "", 1)',
+        [client_id, c1_name(contactPic), c1_phone]
+      );
+
+      // Create initial interaction log
+      await conn.query(
+        'INSERT INTO lead_interactions (lead_id, type, notes, created_by) VALUES (?, "Note", "Lead baru diimpor via Bulk Import.", ?)',
+        [client_id, req.user.id]
+      );
+
+      // Create matching Prospect record for Follow Up Pipeline
+      const projectCode = `PRJ-${client_id}-${Date.now().toString().substr(-4)}`;
+      await conn.query(
+        `INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
+         VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
+        [
+          projectCode,
+          final_name,
+          final_name,
+          contactPic,
+          final_status.toUpperCase()
+        ]
+      );
+    }
+
+    await conn.commit();
+    res.status(201).json({ message: `${clients.length} klien berhasil diimpor.` });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Bulk import leads error:', err);
+    res.status(500).json({ message: 'Gagal melakukan bulk import klien.' });
+  } finally {
+    conn.release();
   }
 });
 
@@ -593,8 +679,8 @@ router.get('/:id/subtasks', verifyToken, async (req, res) => {
     const [subtasks] = await pool.query(
       `SELECT s.*, u1.name as assigned_name, u2.name as creator_name
        FROM prospect_subtasks s
-       LEFT JOIN users u1 ON s.assigned_to = u1.id
-       LEFT JOIN users u2 ON s.created_by = u2.id
+       LEFT JOIN User u1 ON s.assigned_to = u1.id
+       LEFT JOIN User u2 ON s.created_by = u2.id
        WHERE s.lead_id = ?
        ORDER BY s.created_at DESC`,
       [id]

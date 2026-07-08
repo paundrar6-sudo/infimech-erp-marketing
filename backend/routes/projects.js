@@ -132,11 +132,11 @@ router.get('/:id', verifyToken, async (req, res) => {
     let interactions = [];
     if (lead.client_real_id) {
       const [interactRows] = await pool.query(
-        `SELECT i.*, u.name as creator_name, u.avatar_url as creator_avatar 
-         FROM lead_interactions i 
-         LEFT JOIN users u ON i.created_by = u.id 
-         WHERE i.lead_id = ? 
-         ORDER BY i.created_at DESC`,
+        `SELECT i.*, u.name as creator_name, CONCAT('https://api.dicebear.com/7.x/adventurer/svg?seed=', COALESCE(u.name, u.username, 'Admin')) as creator_avatar 
+          FROM lead_interactions i 
+          LEFT JOIN User u ON i.created_by = u.id 
+          WHERE i.lead_id = ? 
+          ORDER BY i.created_at DESC`,
          [lead.client_real_id]
       );
       interactions = interactRows;

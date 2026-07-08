@@ -50,7 +50,7 @@ router.get('/', verifyToken, async (req, res) => {
     let sql = `
       SELECT a.*, u.name as creator_name 
       FROM assets a 
-      LEFT JOIN users u ON a.created_by = u.id 
+      LEFT JOIN User u ON a.created_by = u.id 
       WHERE 1=1
     `;
     const params = [];
@@ -238,7 +238,7 @@ router.get('/public/:id', async (req, res) => {
     const [rows] = await pool.query(
       `SELECT a.*, u.name as creator_name 
        FROM assets a
-       LEFT JOIN users u ON a.created_by = u.id
+       LEFT JOIN User u ON a.created_by = u.id
        WHERE a.id = ? AND a.sharing_status = 'Shared'`,
       [id]
     );

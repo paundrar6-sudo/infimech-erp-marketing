@@ -118,8 +118,47 @@ async function initializeDatabase() {
       }
     }
 
-    // 4. Seed default data if users table is empty
-    const [rows] = await conn.query('SELECT COUNT(*) as count FROM users');
+    // 3d. Query and update foreign keys pointing to old 'users' table to point to 'User'
+    const tablesToMigrateUsers = ['clients', 'lead_interactions', 'assets', 'prospect_subtasks'];
+    for (const tbl of tablesToMigrateUsers) {
+      try {
+        const [constraints] = await conn.query(`
+          SELECT CONSTRAINT_NAME, COLUMN_NAME 
+          FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+          WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = ? 
+            AND REFERENCED_TABLE_NAME = 'users'
+        `, [tbl]);
+
+        for (const row of constraints) {
+          const fkName = row.CONSTRAINT_NAME;
+          const colName = row.COLUMN_NAME;
+          try {
+            await conn.query(`ALTER TABLE ${tbl} DROP FOREIGN KEY ${fkName}`);
+            console.log(`✓ Dropped foreign key ${fkName} on table ${tbl} pointing to users`);
+          } catch (dropErr) {
+            console.log(`⚠️ Failed to drop foreign key ${fkName} on table ${tbl}: ${dropErr.message}`);
+          }
+          
+          const newFkName = `fk_${tbl}_${colName}_User`;
+          try {
+            await conn.query(`
+              ALTER TABLE ${tbl} 
+              ADD CONSTRAINT ${newFkName} 
+              FOREIGN KEY (${colName}) REFERENCES User(id) ON DELETE SET NULL
+            `);
+            console.log(`✓ Created constraint ${newFkName} referencing User(id) on ${tbl}`);
+          } catch (addErr) {
+            console.log(`ℹ️ Constraint ${newFkName} check on ${tbl}: ${addErr.message}`);
+          }
+        }
+      } catch (err) {
+        console.log(`⚠️ Failed to migrate foreign keys pointing to users for table ${tbl}: ${err.message}`);
+      }
+    }
+
+    // 4. Seed default data if User table is empty
+    const [rows] = await conn.query('SELECT COUNT(*) as count FROM User');
     if (rows[0].count === 0) {
       console.log('🌱 Database is empty. Seeding default operators, leads, and marketing campaigns...');
       
@@ -130,13 +169,14 @@ async function initializeDatabase() {
 
       // Seed Users/Operators
       const insertUserSql = `
-        INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES 
-        ('Super Admin', 'admin.@gmail.com', ?, '+6281122334455', 'Superadmin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=SuperAdmin'),
-        ('Baruna', 'baruna.work@gmail.com', ?, '+6289988776655', 'Admin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Baruna'),
-        ('Siti Sarah', 'marketing@erp.com', ?, '+6289988776655', 'Digital Marketing', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah'),
-        ('Budi Santoso', 'operator@erp.com', ?, '+6287766554433', 'Operator', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Budi')
+        INSERT INTO User (username, name, email, password, roleId, is_approved, createdAt, updatedAt) VALUES 
+        ('admin', 'Super Admin', 'admin@gmail.com', ?, 1, 1, NOW(3), NOW(3)),
+        ('admin_dot', 'Super Admin', 'admin.@gmail.com', ?, 1, 1, NOW(3), NOW(3)),
+        ('baruna', 'Baruna', 'baruna.work@gmail.com', ?, 2, 1, NOW(3), NOW(3)),
+        ('sarah', 'Siti Sarah', 'marketing@erp.com', ?, 3, 1, NOW(3), NOW(3)),
+        ('budi', 'Budi Santoso', 'operator@erp.com', ?, 4, 1, NOW(3), NOW(3))
       `;
-      await conn.query(insertUserSql, [adminPass, barunaPass, marketerPass, operatorPass]);
+      await conn.query(insertUserSql, [adminPass, adminPass, barunaPass, marketerPass, operatorPass]);
 
       // Seed Clients/Leads with deadline, notes, and company
       const insertLeadsSql = `
@@ -216,35 +256,32 @@ async function initializeDatabase() {
     
     // 5. Idempotent check to ensure the new admin and superadmin users exist, and clean up the old admin@erp.com
     try {
-      // Delete old admin@erp.com
-      await conn.query("DELETE FROM users WHERE email = 'admin@erp.com'");
-
       // Ensure admin.@gmail.com exists
-      const [adminCheck] = await conn.query('SELECT id FROM users WHERE email = ?', ['admin.@gmail.com']);
+      const [adminCheck] = await conn.query('SELECT id FROM User WHERE email = ?', ['admin.@gmail.com']);
       const superadminPass = await bcrypt.hash('admin123', 10);
       if (adminCheck.length === 0) {
         await conn.query(
-          "INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES ('Super Admin', 'admin.@gmail.com', ?, '+6281122334455', 'Superadmin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=SuperAdmin')",
+          "INSERT INTO User (username, name, email, password, roleId, is_approved, createdAt, updatedAt) VALUES ('admin_dot', 'Super Admin', 'admin.@gmail.com', ?, 1, 1, NOW(3), NOW(3))",
           [superadminPass]
         );
       } else {
         await conn.query(
-          "UPDATE users SET role = 'Superadmin', password = ? WHERE email = ?",
+          "UPDATE User SET roleId = 1, password = ?, updatedAt = NOW(3) WHERE email = ?",
           [superadminPass, 'admin.@gmail.com']
         );
       }
 
       // Ensure baruna.work@gmail.com exists
-      const [barunaCheck] = await conn.query('SELECT id FROM users WHERE email = ?', ['baruna.work@gmail.com']);
+      const [barunaCheck] = await conn.query('SELECT id FROM User WHERE email = ?', ['baruna.work@gmail.com']);
       const barunaPass = await bcrypt.hash('baruna123', 10);
       if (barunaCheck.length === 0) {
         await conn.query(
-          "INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES ('Baruna', 'baruna.work@gmail.com', ?, '+6289988776655', 'Admin', 'Active', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Baruna')",
+          "INSERT INTO User (username, name, email, password, roleId, is_approved, createdAt, updatedAt) VALUES ('baruna', 'Baruna', 'baruna.work@gmail.com', ?, 2, 1, NOW(3), NOW(3))",
           [barunaPass]
         );
       } else {
         await conn.query(
-          "UPDATE users SET role = 'Admin', password = ? WHERE email = ?",
+          "UPDATE User SET roleId = 2, password = ?, updatedAt = NOW(3) WHERE email = ?",
           [barunaPass, 'baruna.work@gmail.com']
         );
       }
