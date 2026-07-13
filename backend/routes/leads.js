@@ -361,19 +361,43 @@ router.post('/bulk', verifyToken, async (req, res) => {
       );
 
       // Create matching Prospect record for Follow Up Pipeline
-      const [prospectResult] = await conn.query(
+      const numMatch = final_name.trim().match(/^(\d+)\./);
+      let prefixNum = numMatch ? numMatch[1] : null;
+      if (!prefixNum) {
+        const [countRows] = await conn.query('SELECT COUNT(*) as count FROM Prospect');
+        prefixNum = countRows[0].count + 1;
+      }
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+
+      let baseCode = `${prefixNum}.IMX-${year}-${month}-${day}`;
+      let projectCode = baseCode;
+      let check = true;
+      let counter = 1;
+      while (check) {
+        const [existing] = await conn.query('SELECT no_project FROM Prospect WHERE no_project = ?', [projectCode]);
+        if (existing.length === 0) {
+          check = false;
+        } else {
+          counter++;
+          projectCode = `${baseCode}-${counter}`;
+        }
+      }
+
+      await conn.query(
         `INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
-         VALUES ('TEMP', ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
+         VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
         [
+          projectCode,
           final_name,
           final_name,
           contactPic,
           final_status.toUpperCase()
         ]
       );
-      const prospectId = prospectResult.insertId;
-      const projectCode = `${prospectId}.imx-${Date.now().toString().substr(-4)}`;
-      await conn.query('UPDATE Prospect SET no_project = ? WHERE id = ?', [projectCode, prospectId]);
     }
 
     await conn.commit();
@@ -451,19 +475,43 @@ router.post('/', verifyToken, async (req, res) => {
     );
 
     // Automatically create a corresponding record in the Prospect table for the Follow Up board
-    const [prospectResult] = await pool.query(
+    const numMatch = final_name.trim().match(/^(\d+)\./);
+    let prefixNum = numMatch ? numMatch[1] : null;
+    if (!prefixNum) {
+      const [countRows] = await pool.query('SELECT COUNT(*) as count FROM Prospect');
+      prefixNum = countRows[0].count + 1;
+    }
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    let baseCode = `${prefixNum}.IMX-${year}-${month}-${day}`;
+    let projectCode = baseCode;
+    let check = true;
+    let counter = 1;
+    while (check) {
+      const [existing] = await pool.query('SELECT no_project FROM Prospect WHERE no_project = ?', [projectCode]);
+      if (existing.length === 0) {
+        check = false;
+      } else {
+        counter++;
+        projectCode = `${baseCode}-${counter}`;
+      }
+    }
+
+    await pool.query(
       `INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
-       VALUES ('TEMP', ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
+       VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
       [
+        projectCode,
         final_name,       // project name is the company name initially
         final_name,       // client_name is the company name
         contactPic,       // contact_name is the person name
         status ? status.toUpperCase() : 'LEAD'
       ]
     );
-    const prospectId = prospectResult.insertId;
-    const projectCode = `${prospectId}.imx-${Date.now().toString().substr(-4)}`;
-    await pool.query('UPDATE Prospect SET no_project = ? WHERE id = ?', [projectCode, prospectId]);
 
     res.status(201).json({
       message: 'Lead berhasil ditambahkan.',

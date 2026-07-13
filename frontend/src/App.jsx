@@ -456,6 +456,11 @@ export default function App() {
   const saveFuProspectEdit = async (e) => {
     e.preventDefault();
     try {
+      if (!fuEditForm.name.trim().match(/^\d+\./)) {
+        showAlert('Nama prospek/proyek wajib diawali dengan angka dan titik (contoh: 1. Nama Proyek).', 'Peringatan', 'warning');
+        return;
+      }
+
       if (fuEditForm.id) {
         // Edit existing project/prospect
         await api.updateProject(fuEditForm.id, {
@@ -573,6 +578,11 @@ export default function App() {
   const saveProject = async (e) => {
     e.preventDefault();
     try {
+      if (!projectFormData.name_project.trim().match(/^\d+\./)) {
+        showAlert('Nama proyek wajib diawali dengan angka dan titik (contoh: 1. Nama Proyek).', 'Peringatan', 'warning');
+        return;
+      }
+
       if (projectFormData.id) {
         await api.updateProject(projectFormData.id, projectFormData);
         showAlert('Proyek berhasil diperbarui.', 'Sukses', 'success');

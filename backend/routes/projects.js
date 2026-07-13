@@ -168,12 +168,11 @@ router.post('/', verifyToken, async (req, res) => {
     last_contact_date 
   } = req.body;
 
-  const final_no_project = no_project || id || `imx-${Date.now()}`;
   const final_name_project = name_project || name;
   const final_client_name = client_name || client_id;
 
-  if (!final_no_project || !final_name_project || !final_client_name) {
-    return res.status(400).json({ message: 'No proyek, nama proyek, dan nama client wajib diisi.' });
+  if (!final_name_project || !final_client_name) {
+    return res.status(400).json({ message: 'Nama proyek dan nama client wajib diisi.' });
   }
 
   try {
@@ -182,11 +181,39 @@ router.post('/', verifyToken, async (req, res) => {
     const final_order = order || 0;
     const final_last_contact = last_contact_date || null;
 
-    const [result] = await pool.query(`
+    // Parse leading number from project name (e.g. "14. CFD Modelling" -> 14)
+    const numMatch = final_name_project.trim().match(/^(\d+)\./);
+    let prefixNum = numMatch ? numMatch[1] : null;
+    if (!prefixNum) {
+      // Fallback: count how many rows are currently in the Prospect table + 1
+      const [countRows] = await pool.query('SELECT COUNT(*) as count FROM Prospect');
+      prefixNum = countRows[0].count + 1;
+    }
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    let baseCode = `${prefixNum}.IMX-${year}-${month}-${day}`;
+    let computed_no_project = baseCode;
+    let check = true;
+    let counter = 1;
+    while (check) {
+      const [existing] = await pool.query('SELECT no_project FROM Prospect WHERE no_project = ?', [computed_no_project]);
+      if (existing.length === 0) {
+        check = false;
+      } else {
+        counter++;
+        computed_no_project = `${baseCode}-${counter}`;
+      }
+    }
+
+    await pool.query(`
       INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
       VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), ?, ?)
     `, [
-      final_no_project,
+      computed_no_project,
       final_name_project,
       final_client_name,
       final_contact_name,
@@ -194,13 +221,6 @@ router.post('/', verifyToken, async (req, res) => {
       final_order,
       final_last_contact
     ]);
-
-    const newId = result.insertId;
-    let computed_no_project = final_no_project;
-    if (!computed_no_project || computed_no_project.startsWith('PRJ-') || computed_no_project.startsWith('imx-') || computed_no_project.startsWith('IMX-')) {
-      computed_no_project = `${newId}.imx-${Date.now().toString().substr(-4)}`;
-      await pool.query('UPDATE Prospect SET no_project = ? WHERE id = ?', [computed_no_project, newId]);
-    }
 
     res.status(201).json({
       message: 'Proyek berhasil dibuat.',

@@ -71,6 +71,16 @@ app.get('/api/db-check', async (req, res) => {
   }
 });
 
+app.get('/api/describe-prospect', async (req, res) => {
+  const { pool } = require('./config/db');
+  try {
+    const [rows] = await pool.query('DESCRIBE Prospect');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
