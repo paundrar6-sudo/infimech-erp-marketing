@@ -32,16 +32,17 @@ router.get('/', verifyToken, async (req, res) => {
         p.\`order\`, 
         p.last_contact_date as last_contact,
         p.last_contact_date,
-        c.contact_phone as phone,
+        COALESCE(cls.phone, c.contact_phone) as phone,
         c.contact_email as email,
-        c.lead_source as source,
+        COALESCE(cls.source, c.lead_source) as source,
         c.industry,
         c.logo as logo_url,
         c.is_verified as verified,
-        0 as value,
+        COALESCE(cls.value, 0) as value,
         100 as lead_score
       FROM Prospect p
       LEFT JOIN Client c ON p.client_name = c.name
+      LEFT JOIN clients cls ON p.client_name = cls.company
       WHERE 1=1
     `;
     const params = [];
@@ -109,17 +110,18 @@ router.get('/:id', verifyToken, async (req, res) => {
         p.\`order\`, 
         p.last_contact_date as last_contact,
         p.last_contact_date,
-        c.contact_phone as phone,
+        COALESCE(cls.phone, c.contact_phone) as phone,
         c.contact_email as email,
-        c.lead_source as source,
+        COALESCE(cls.source, c.lead_source) as source,
         c.industry,
         c.logo as logo_url,
         c.is_verified as verified,
-        0 as value,
+        COALESCE(cls.value, 0) as value,
         100 as lead_score,
         c.id as client_real_id
       FROM Prospect p
       LEFT JOIN Client c ON p.client_name = c.name
+      LEFT JOIN clients cls ON p.client_name = cls.company
       WHERE p.no_project = ?
     `, [id]);
 
@@ -228,6 +230,20 @@ router.post('/', verifyToken, async (req, res) => {
       );
     }
 
+    // Sync to Client (singular) table
+    const [existingClientSingular] = await pool.query('SELECT id FROM Client WHERE name = ?', [final_client_name]);
+    if (existingClientSingular.length > 0) {
+      await pool.query(
+        `UPDATE Client SET contact_pic = ?, contact_phone = ?, lead_source = ?, status = ? WHERE name = ?`,
+        [final_contact_name, phone || '', source || 'Organic', final_status.toUpperCase(), final_client_name]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO Client (name, contact_pic, contact_phone, lead_source, status) VALUES (?, ?, ?, ?, ?)`,
+        [final_client_name, final_contact_name, phone || '', source || 'Organic', final_status.toUpperCase()]
+      );
+    }
+
     await pool.query(`
       INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
       VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), ?, ?)
@@ -317,6 +333,24 @@ router.put('/:id', verifyToken, async (req, res) => {
       await pool.query(
         `INSERT INTO clients (name, company, phone, value, notes, source, deadline, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [final_contact_name, final_client_name, phone || '', parseFloat(value) || 0, notes || '', source || 'Organic', deadline || null, final_status.toUpperCase()]
+      );
+    }
+
+    // Sync to Client (singular) table
+    const [existingClientSingular] = await pool.query('SELECT * FROM Client WHERE name = ?', [final_client_name]);
+    if (existingClientSingular.length > 0) {
+      const currentClientSingular = existingClientSingular[0];
+      const final_phone_singular = phone !== undefined ? phone : currentClientSingular.contact_phone;
+      const final_source_singular = source !== undefined ? source : currentClientSingular.lead_source;
+
+      await pool.query(
+        `UPDATE Client SET contact_pic = ?, contact_phone = ?, lead_source = ?, status = ? WHERE name = ?`,
+        [final_contact_name, final_phone_singular || '', final_source_singular || 'Organic', final_status.toUpperCase(), final_client_name]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO Client (name, contact_pic, contact_phone, lead_source, status) VALUES (?, ?, ?, ?, ?)`,
+        [final_client_name, final_contact_name, phone || '', source || 'Organic', final_status.toUpperCase()]
       );
     }
 

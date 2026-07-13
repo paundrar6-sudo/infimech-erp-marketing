@@ -360,6 +360,20 @@ router.post('/bulk', verifyToken, async (req, res) => {
         [client_id, req.user.id]
       );
 
+      // Sync to clients table
+      const [existingClient] = await conn.query('SELECT id FROM clients WHERE company = ?', [final_name]);
+      if (existingClient.length > 0) {
+        await conn.query(
+          `UPDATE clients SET name = ?, phone = ?, value = ?, status = ? WHERE company = ?`,
+          [contactPic, clientPhone || '', 0, final_status, final_name]
+        );
+      } else {
+        await conn.query(
+          `INSERT INTO clients (name, company, phone, value, status) VALUES (?, ?, ?, ?, ?)`,
+          [contactPic, final_name, clientPhone || '', 0, final_status]
+        );
+      }
+
       // Create matching Prospect record for Follow Up Pipeline
       const numMatch = final_name.trim().match(/^(\d+)\./);
       let prefixNum = numMatch ? numMatch[1] : null;
@@ -473,6 +487,20 @@ router.post('/', verifyToken, async (req, res) => {
       'INSERT INTO lead_interactions (lead_id, type, notes, created_by) VALUES (?, "Note", "Lead baru ditambahkan ke sistem.", ?)',
       [client_id, req.user.id]
     );
+
+    // Sync to clients table
+    const [existingClient] = await pool.query('SELECT id FROM clients WHERE company = ?', [final_name]);
+    if (existingClient.length > 0) {
+      await pool.query(
+        `UPDATE clients SET name = ?, phone = ?, value = ?, notes = ?, source = ?, status = ? WHERE company = ?`,
+        [contactPic, clientPhone || '', value || 0, notes || '', source || 'Organic', status || 'Lead', final_name]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO clients (name, company, phone, value, notes, source, status) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [contactPic, final_name, clientPhone || '', value || 0, notes || '', source || 'Organic', status || 'Lead']
+      );
+    }
 
     // Automatically create a corresponding record in the Prospect table for the Follow Up board
     const numMatch = final_name.trim().match(/^(\d+)\./);
