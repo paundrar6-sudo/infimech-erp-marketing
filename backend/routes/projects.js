@@ -165,7 +165,12 @@ router.post('/', verifyToken, async (req, res) => {
     contact_name, 
     status, 
     order, 
-    last_contact_date 
+    last_contact_date,
+    value,
+    phone,
+    notes,
+    source,
+    deadline
   } = req.body;
 
   const final_name_project = name_project || name;
@@ -209,6 +214,20 @@ router.post('/', verifyToken, async (req, res) => {
       }
     }
 
+    // Sync to clients table
+    const [existingClient] = await pool.query('SELECT id FROM clients WHERE company = ?', [final_client_name]);
+    if (existingClient.length > 0) {
+      await pool.query(
+        `UPDATE clients SET name = ?, phone = ?, value = ?, notes = ?, source = ?, deadline = ?, status = ? WHERE company = ?`,
+        [final_contact_name, phone || '', parseFloat(value) || 0, notes || '', source || 'Organic', deadline || null, final_status.toUpperCase(), final_client_name]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO clients (name, company, phone, value, notes, source, deadline, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [final_contact_name, final_client_name, phone || '', parseFloat(value) || 0, notes || '', source || 'Organic', deadline || null, final_status.toUpperCase()]
+      );
+    }
+
     await pool.query(`
       INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
       VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), ?, ?)
@@ -243,7 +262,12 @@ router.put('/:id', verifyToken, async (req, res) => {
     contact_name, 
     status, 
     order, 
-    last_contact_date 
+    last_contact_date,
+    value,
+    phone,
+    notes,
+    source,
+    deadline
   } = req.body;
 
   try {
@@ -274,6 +298,27 @@ router.put('/:id', verifyToken, async (req, res) => {
       final_last_contact,
       id
     ]);
+
+    // Fetch existing client info to see current values if they are undefined
+    const [existingClient] = await pool.query('SELECT * FROM clients WHERE company = ?', [final_client_name]);
+    if (existingClient.length > 0) {
+      const currentClient = existingClient[0];
+      const final_phone = phone !== undefined ? phone : currentClient.phone;
+      const final_value = value !== undefined ? value : currentClient.value;
+      const final_notes = notes !== undefined ? notes : currentClient.notes;
+      const final_source = source !== undefined ? source : currentClient.source;
+      const final_deadline = deadline !== undefined ? deadline : currentClient.deadline;
+
+      await pool.query(
+        `UPDATE clients SET name = ?, phone = ?, value = ?, notes = ?, source = ?, deadline = ?, status = ? WHERE company = ?`,
+        [final_contact_name, final_phone || '', parseFloat(final_value) || 0, final_notes || '', final_source || 'Organic', final_deadline || null, final_status.toUpperCase(), final_client_name]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO clients (name, company, phone, value, notes, source, deadline, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [final_contact_name, final_client_name, phone || '', parseFloat(value) || 0, notes || '', source || 'Organic', deadline || null, final_status.toUpperCase()]
+      );
+    }
 
     res.json({ message: 'Proyek berhasil diperbarui.' });
   } catch (err) {

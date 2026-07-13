@@ -467,7 +467,12 @@ export default function App() {
           name_project: fuEditForm.name,
           client_name: fuEditForm.company,
           contact_name: fuEditForm.contact_name || '',
-          status: fuEditForm.status ? fuEditForm.status.toUpperCase() : 'LEAD'
+          status: fuEditForm.status ? fuEditForm.status.toUpperCase() : 'LEAD',
+          value: fuEditForm.value || 0,
+          phone: fuEditForm.phone || '',
+          notes: fuEditForm.notes || '',
+          source: fuEditForm.source || 'Organic',
+          deadline: fuEditForm.deadline || null
         });
         if (fuSelectedProspect && (fuSelectedProspect.lead.id === fuEditForm.id || fuSelectedProspect.lead.no_project === fuEditForm.id)) {
           openFuProspectDetail(fuEditForm.id);
@@ -480,7 +485,12 @@ export default function App() {
           name_project: fuEditForm.name,
           client_name: fuEditForm.company || '',
           contact_name: fuEditForm.contact_name || '',
-          status: fuEditForm.status ? fuEditForm.status.toUpperCase() : 'LEAD'
+          status: fuEditForm.status ? fuEditForm.status.toUpperCase() : 'LEAD',
+          value: fuEditForm.value || 0,
+          phone: fuEditForm.phone || '',
+          notes: fuEditForm.notes || '',
+          source: fuEditForm.source || 'Organic',
+          deadline: fuEditForm.deadline || null
         });
         showAlert('Prospek baru berhasil disimpan.', 'Sukses', 'success');
       }
