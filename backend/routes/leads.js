@@ -361,18 +361,19 @@ router.post('/bulk', verifyToken, async (req, res) => {
       );
 
       // Create matching Prospect record for Follow Up Pipeline
-      const projectCode = `PRJ-${client_id}-${Date.now().toString().substr(-4)}`;
-      await conn.query(
+      const [prospectResult] = await conn.query(
         `INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
-         VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
+         VALUES ('TEMP', ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
         [
-          projectCode,
           final_name,
           final_name,
           contactPic,
           final_status.toUpperCase()
         ]
       );
+      const prospectId = prospectResult.insertId;
+      const projectCode = `${prospectId}.imx-${Date.now().toString().substr(-4)}`;
+      await conn.query('UPDATE Prospect SET no_project = ? WHERE id = ?', [projectCode, prospectId]);
     }
 
     await conn.commit();
@@ -450,18 +451,19 @@ router.post('/', verifyToken, async (req, res) => {
     );
 
     // Automatically create a corresponding record in the Prospect table for the Follow Up board
-    const projectCode = `PRJ-${client_id}-${Date.now().toString().substr(-4)}`;
-    await pool.query(
+    const [prospectResult] = await pool.query(
       `INSERT INTO Prospect (no_project, name_project, client_name, contact_name, status, createdAt, updatedAt, \`order\`, last_contact_date)
-       VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
+       VALUES ('TEMP', ?, ?, ?, ?, NOW(3), NOW(3), 0, NOW(3))`,
       [
-        projectCode,
         final_name,       // project name is the company name initially
         final_name,       // client_name is the company name
         contactPic,       // contact_name is the person name
         status ? status.toUpperCase() : 'LEAD'
       ]
     );
+    const prospectId = prospectResult.insertId;
+    const projectCode = `${prospectId}.imx-${Date.now().toString().substr(-4)}`;
+    await pool.query('UPDATE Prospect SET no_project = ? WHERE id = ?', [projectCode, prospectId]);
 
     res.status(201).json({
       message: 'Lead berhasil ditambahkan.',

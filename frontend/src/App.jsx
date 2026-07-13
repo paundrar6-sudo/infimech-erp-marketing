@@ -471,7 +471,7 @@ export default function App() {
       } else {
         // Create new project/prospect
         await api.createProject({
-          no_project: `PRJ-${Date.now()}`,
+          no_project: `imx-${Date.now()}`,
           name_project: fuEditForm.name,
           client_name: fuEditForm.company || '',
           contact_name: fuEditForm.contact_name || '',
