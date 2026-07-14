@@ -1,35 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './IntroAnimation.css';
 
-// Inline SVG logo placeholder (gear/cog icon matching INFIMECH branding)
-const LogoSVG = () => (
-  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-    <circle cx="32" cy="32" r="28" stroke="#7C93F5" strokeWidth="2" fill="rgba(72,102,213,0.15)" />
-    <circle cx="32" cy="32" r="18" stroke="#5EEAD4" strokeWidth="1.5" fill="none" />
-    <path d="M32 14L35 20H29L32 14Z" fill="#5EEAD4" />
-    <path d="M32 50L29 44H35L32 50Z" fill="#5EEAD4" />
-    <path d="M14 32L20 29V35L14 32Z" fill="#5EEAD4" />
-    <path d="M50 32L44 35V29L50 32Z" fill="#5EEAD4" />
-    <path d="M19 19L24 22L21 25L19 19Z" fill="#7C93F5" />
-    <path d="M45 45L40 42L43 39L45 45Z" fill="#7C93F5" />
-    <path d="M45 19L43 25L40 22L45 19Z" fill="#7C93F5" />
-    <path d="M19 45L21 39L24 42L19 45Z" fill="#7C93F5" />
-    <circle cx="32" cy="32" r="8" fill="#4866D5" />
-    <circle cx="32" cy="32" r="4" fill="#5EEAD4" />
-  </svg>
-);
-
-// Crack lines SVG overlay
-const CracksSVG = () => (
-  <svg className="intro-cracks" viewBox="0 0 52 52">
-    <path d="M26 10 L24 18 L20 22" />
-    <path d="M26 10 L29 16 L34 19" />
-    <path d="M26 42 L28 36 L32 32" />
-    <path d="M10 26 L18 24 L22 20" />
-    <path d="M42 26 L36 28 L32 32" />
-  </svg>
-);
-
 // Helper: render each letter with staggered animation delay
 function AnimatedLetters({ text, baseDelay, className }) {
   return (
@@ -82,17 +53,28 @@ export default function IntroAnimation({ onComplete }) {
   return (
     <div className={`intro-overlay ${hidden ? 'intro-hidden' : ''}`}>
       <div className="intro-stage">
-        {/* Top row: INFI + Logo + MECH */}
+        {/* Top row: INFI + Logo (the logo IS the M, so no MECH text needed) */}
         <div className="intro-top-row">
           {/* Left word: INFI */}
           <AnimatedLetters text="INFI" baseDelay={1.3} className="intro-left-word" />
 
-          {/* Center logo */}
+          {/* Center logo - actual INFIMECH logo (the M shape) */}
           <div className="intro-logo-wrap">
-            <div className="intro-whole">
-              <LogoSVG />
-            </div>
-            <CracksSVG />
+            <img 
+              className="intro-whole" 
+              src="/infimech-logo.png" 
+              alt="INFIMECH Logo"
+            />
+            
+            {/* Crack lines SVG overlay */}
+            <svg className="intro-cracks" viewBox="0 0 52 52">
+              <path d="M26 10 L24 18 L20 22" />
+              <path d="M26 10 L29 16 L34 19" />
+              <path d="M26 42 L28 36 L32 32" />
+              <path d="M10 26 L18 24 L22 20" />
+              <path d="M42 26 L36 28 L32 32" />
+            </svg>
+            
             <div className="intro-flash" />
 
             {/* Stem + MARKETING drop */}
@@ -102,8 +84,7 @@ export default function IntroAnimation({ onComplete }) {
             </div>
           </div>
 
-          {/* Right word: MECH */}
-          <AnimatedLetters text="MECH" baseDelay={1.55} className="intro-right-word" />
+          {/* No right word - logo itself represents the M/MECH */}
         </div>
 
         {/* Sub row: underline + tagline */}

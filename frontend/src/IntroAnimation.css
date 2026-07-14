@@ -39,9 +39,9 @@
 /* ---- Logo unit: whole icon (never splits) ---- */
 .intro-logo-wrap {
   position: relative;
-  width: 52px;
-  height: 52px;
-  margin: 0 6px;
+  width: 64px;
+  height: 64px;
+  margin: 0 10px;
   opacity: 0;
   transform: scale(0.6);
   animation: introPopIn 0.4s ease-out forwards, introSpinFlourish 0.7s ease-in-out forwards;
