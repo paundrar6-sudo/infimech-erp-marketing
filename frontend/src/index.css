@@ -14,9 +14,9 @@
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
 
-  --primary-glow: #6366f1;
-  --primary-glow-hover: #4f46e5;
-  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --primary-glow: #3a86ff;
+  --primary-glow-hover: #2563eb;
+  --primary-gradient: linear-gradient(135deg, #3a86ff 0%, #0096c7 100%);
   --accent-cyan: #06b6d4;
   --accent-green: #10b981;
   --accent-orange: #f97316;
@@ -169,15 +169,15 @@ body {
 .sidebar-item:hover,
 .sidebar-item.active {
   color: var(--text-primary);
-  background-color: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background-color: rgba(58, 134, 255, 0.12);
+  border: 1px solid rgba(58, 134, 255, 0.2);
 }
 
 .sidebar-item.active {
   background: var(--primary-gradient);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 15px rgba(58, 134, 255, 0.35);
 }
 
 .sidebar-footer {
@@ -278,7 +278,7 @@ body {
 
 .search-bar:focus {
   border-color: var(--primary-glow);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
 }
 
 .icon-btn {
@@ -429,12 +429,12 @@ body {
 .btn-primary {
   background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 14px rgba(58, 134, 255, 0.4);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 6px 20px rgba(58, 134, 255, 0.6);
 }
 
 .btn-secondary {

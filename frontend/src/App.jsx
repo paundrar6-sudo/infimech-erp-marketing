@@ -1298,7 +1298,7 @@ export default function App() {
               setSidebarOpen(false);
             }}
           >
-            <Megaphone size={24} style={{ color: '#fff' }} />
+            <img src="/infimech-logo.png" alt="INFIMECH Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
             <span>MarketERP</span>
           </div>
           <button 
