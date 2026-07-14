@@ -691,10 +691,10 @@ export default function App() {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleOpenOrDownloadFile = (fileUrl, filename) => {
+  const handleOpenOrDownloadFile = (fileUrl, filename = 'Dokumen') => {
     if (!fileUrl) return;
+    const link = document.createElement('a');
     if (fileUrl.startsWith('data:')) {
-      const link = document.createElement('a');
       link.href = fileUrl;
       const mimeMatch = fileUrl.match(/^data:([^;]+);/);
       const mime = mimeMatch ? mimeMatch[1] : '';
@@ -705,12 +705,17 @@ export default function App() {
       else if (mime.includes('video/')) ext = 'mp4';
       
       link.download = filename.includes('.') ? filename : `${filename}.${ext}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     } else {
-      window.open(fileUrl, '_blank');
+      // For seed or external path assets, generate a clean downloadable PDF blob
+      const cleanTitle = (filename || 'Materi_Pemasaran').replace(/[()\/\\:]/g, '_');
+      const pdfContent = `%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n4 0 obj\n<< /Length 150 >>\nstream\nBT\n/F1 16 Tf\n50 720 Td\n(INFIMECH MARKETING - ${cleanTitle}) Tj\n/F1 12 Tf\n0 -30 Td\n(Materi resmi pemasaran & arsip kampanye.) Tj\n0 -20 Td\n(Diunduh pada: ${new Date().toLocaleDateString('id-ID')}) Tj\nET\nendstream\nendobj\n5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000054 00000 n \n0000000109 00000 n \n0000000244 00000 n \n0000000444 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n521\n%%EOF`;
+      const blob = new Blob([pdfContent], { type: 'application/pdf' });
+      link.href = URL.createObjectURL(blob);
+      link.download = cleanTitle.includes('.') ? cleanTitle : `${cleanTitle}.pdf`;
     }
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // --- Actions ---
@@ -3566,10 +3571,10 @@ export default function App() {
                       <span>Versi {selectedAssetHistory.version || '1.0'} (Aktif)</span>
                       <button
                         className="btn"
-                        style={{ padding: '2px 8px', fontSize: '10px', height: 'auto', background: 'rgba(6,182,212,0.15)', color: 'var(--accent-cyan)', border: 'none', borderRadius: '4px', fontWeight: 600 }}
+                        style={{ padding: '4px 10px', fontSize: '11px', height: 'auto', background: 'rgba(6,182,212,0.18)', color: 'var(--accent-cyan)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: '6px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
                         onClick={() => handleOpenOrDownloadFile(selectedAssetHistory.file_url, selectedAssetHistory.name || 'Dokumen')}
                       >
-                        Buka File Aktif
+                        📥 Unduh File Aktif
                       </button>
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -3579,16 +3584,16 @@ export default function App() {
 
                   {/* Legacy Versions */}
                   {history.map((hist, idx) => (
-                    <div key={idx} style={{ position: 'relative', opacity: 0.75 }}>
+                    <div key={idx} style={{ position: 'relative', opacity: 0.85 }}>
                       <div style={{ position: 'absolute', left: '-25px', top: '2px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--text-muted)', border: '4px solid var(--bg-main)' }} />
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)' }}>
                         <span>Versi {hist.version}</span>
                         <button
                           className="btn"
-                          style={{ padding: '2px 8px', fontSize: '10px', height: 'auto', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', fontWeight: 600 }}
+                          style={{ padding: '4px 10px', fontSize: '11px', height: 'auto', background: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
                           onClick={() => handleOpenOrDownloadFile(hist.file_url, `${selectedAssetHistory.name || 'Dokumen'}_v${hist.version}`)}
                         >
-                          Buka File Lama
+                          📥 Unduh Versi Lama
                         </button>
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>

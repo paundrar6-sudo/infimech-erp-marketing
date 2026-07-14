@@ -14,9 +14,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // Serve static upload folders (for mock logos or download brochures)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
@@ -71,11 +70,13 @@ app.get('/api/db-check', async (req, res) => {
   }
 });
 
-app.get('/api/describe-prospect', async (req, res) => {
+app.get('/api/diag', async (req, res) => {
   const { pool } = require('./config/db');
   try {
-    const [rows] = await pool.query('DESCRIBE Prospect');
-    res.json(rows);
+    const [prospectDesc] = await pool.query('DESCRIBE Prospect');
+    const [clientDesc] = await pool.query('DESCRIBE Client');
+    const [clientsDesc] = await pool.query('DESCRIBE clients');
+    res.json({ Prospect: prospectDesc, Client: clientDesc, clients: clientsDesc });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
