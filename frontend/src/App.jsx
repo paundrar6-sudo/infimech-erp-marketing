@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import IntroAnimation from './IntroAnimation';
 import { 
   LayoutDashboard, Users, Megaphone, Calendar, FolderHeart, 
   UserSquare, LogOut, Sun, Moon, Search, Bell, Plus, Filter, 
@@ -27,6 +28,7 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [marketingDropdownOpen, setMarketingDropdownOpen] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('introShown'));
 
   // Tab states for sub-views
   const [operatorTab, setOperatorTab] = useState('leads'); // 'leads', 'segments', 'roles'
@@ -1276,6 +1278,13 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {/* Intro Animation Overlay */}
+      {showIntro && (
+        <IntroAnimation onComplete={() => {
+          setShowIntro(false);
+          sessionStorage.setItem('introShown', 'true');
+        }} />
+      )}
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
       
       {/* SIDEBAR NAVIGATION */}

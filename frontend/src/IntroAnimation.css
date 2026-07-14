@@ -1,0 +1,252 @@
+/* ================================================
+   INFIMECH MARKETING — Intro Animation Styles
+   Crack & Drop Logo Animation
+   ================================================ */
+
+/* --- Intro overlay container --- */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0A0E27;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s ease-in, visibility 0.8s ease-in;
+}
+
+.intro-overlay.intro-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.intro-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.intro-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  position: relative;
+}
+
+/* ---- Logo unit: whole icon (never splits) ---- */
+.intro-logo-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  margin: 0 6px;
+  opacity: 0;
+  transform: scale(0.6);
+  animation: introPopIn 0.4s ease-out forwards, introSpinFlourish 0.7s ease-in-out forwards;
+  animation-delay: 0.1s, 2.35s;
+}
+
+@keyframes introPopIn {
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes introSpinFlourish {
+  0%   { transform: rotate(0deg) scale(1); }
+  45%  { transform: rotate(190deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.intro-whole {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: introTremor 0.5s ease-in-out forwards, introSeal 0.35s ease-out forwards;
+  animation-delay: 0.5s, 1.0s;
+}
+
+@keyframes introTremor {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20%      { transform: translate(-1.5px, 1px) rotate(-1deg); }
+  40%      { transform: translate(1.5px, -1px) rotate(1deg); }
+  60%      { transform: translate(-1px, -1.5px) rotate(-1deg); }
+  80%      { transform: translate(1px, 1.5px) rotate(1deg); }
+}
+
+@keyframes introSeal {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Crack lines SVG ---- */
+.intro-cracks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  animation: introCracksIn 0.1s linear forwards, introCracksOut 0.35s ease-in forwards;
+  animation-delay: 0.5s, 1.0s;
+  filter: drop-shadow(0 0 3px rgba(237, 239, 250, 0.9));
+}
+
+@keyframes introCracksIn { to { opacity: 1; } }
+@keyframes introCracksOut { to { opacity: 0; } }
+
+.intro-cracks path {
+  fill: none;
+  stroke: #F5F7FF;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: introCrackDraw 0.45s ease-out forwards;
+}
+
+.intro-cracks path:nth-child(1) { animation-delay: 0.5s; }
+.intro-cracks path:nth-child(2) { animation-delay: 0.57s; }
+.intro-cracks path:nth-child(3) { animation-delay: 0.63s; }
+.intro-cracks path:nth-child(4) { animation-delay: 0.69s; }
+.intro-cracks path:nth-child(5) { animation-delay: 0.75s; }
+
+@keyframes introCrackDraw { to { stroke-dashoffset: 0; } }
+
+/* ---- Flash burst ---- */
+.intro-flash {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(237,239,250,0.95) 0%, rgba(94,234,212,0.4) 40%, transparent 72%);
+  opacity: 0;
+  animation: introFlashBurst 0.45s ease-out forwards;
+  animation-delay: 0.95s;
+}
+
+@keyframes introFlashBurst {
+  0%   { opacity: 0; transform: scale(0.6); }
+  35%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+
+/* ---- INFI / MECH words beside the logo ---- */
+.intro-word {
+  display: flex;
+}
+
+.intro-word span {
+  display: inline-block;
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: clamp(24px, 4.2vw, 32px);
+  letter-spacing: 1px;
+  color: #EDEFFA;
+  opacity: 0;
+}
+
+.intro-left-word span {
+  animation: introLetterFlyL 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.intro-right-word span {
+  animation: introLetterFlyR 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes introLetterFlyL {
+  0%   { opacity: 0; transform: translateX(-26px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes introLetterFlyR {
+  0%   { opacity: 0; transform: translateX(26px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* ---- Stem connecting logo to MARKETING ---- */
+.intro-stem {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  margin-left: -1px;
+  height: 0;
+  background: #7C93F5;
+  animation: introStemGrow 0.22s ease-out forwards;
+  animation-delay: 2.75s;
+}
+
+@keyframes introStemGrow { to { height: 8px; } }
+
+/* ---- MARKETING dropping down ---- */
+.intro-drop-wrap {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) scaleY(0);
+  transform-origin: top center;
+  opacity: 0;
+  animation: introDropDown 0.5s cubic-bezier(0.3, 1.4, 0.4, 1) forwards;
+  animation-delay: 2.9s;
+  white-space: nowrap;
+}
+
+@keyframes introDropDown {
+  0%   { opacity: 0; transform: translateX(-50%) scaleY(0); }
+  60%  { opacity: 1; transform: translateX(-50%) scaleY(1.08); }
+  100% { opacity: 1; transform: translateX(-50%) scaleY(1); }
+}
+
+.intro-market-word {
+  display: flex;
+  justify-content: center;
+}
+
+.intro-market-word span {
+  display: inline-block;
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: clamp(13px, 2vw, 15px);
+  letter-spacing: 5px;
+  color: #5EEAD4;
+  opacity: 0;
+  animation: introLetterFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes introLetterFadeIn { to { opacity: 1; } }
+
+/* ---- Sub row: underline + tagline ---- */
+.intro-sub-row {
+  margin-top: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.intro-underline {
+  width: 0;
+  height: 2px;
+  background: #7C93F5;
+  animation: introDrawLine 0.5s ease-out forwards;
+  animation-delay: 3.55s;
+}
+
+@keyframes introDrawLine { to { width: 200px; } }
+
+.intro-tagline {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #8891C4;
+  letter-spacing: 0.3px;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: introFadeUp 0.6s ease-out forwards;
+  animation-delay: 3.85s;
+}
+
+@keyframes introFadeUp { to { opacity: 1; transform: translateY(0); } }
