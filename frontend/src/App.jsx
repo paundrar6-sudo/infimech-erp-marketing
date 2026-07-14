@@ -136,6 +136,7 @@ export default function App() {
   const [folderFormData, setFolderFormData] = useState({ name: '', category: 'CFD/FEA', description: '', files: [] });
   const [shareFolderModal, setShareFolderModal] = useState(null);
   const [clientPortalFolder, setClientPortalFolder] = useState(null);
+  const [publicFolderLoading, setPublicFolderLoading] = useState(false);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [clientTypeFilter, setClientTypeFilter] = useState('Semua');
 
@@ -383,11 +384,14 @@ export default function App() {
   }, []);
 
   const loadPublicSharedFolder = async (token) => {
+    setPublicFolderLoading(true);
     try {
       const data = await api.getPublicSharedFolder(token);
       setClientPortalFolder(data);
     } catch (err) {
       console.error('Failed to load shared folder:', err);
+    } finally {
+      setPublicFolderLoading(false);
     }
   };
 
@@ -1352,6 +1356,193 @@ export default function App() {
               <p>Materi sharing tidak ditemukan.</p>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // 2. PUBLIC SHARED FOLDER PORTAL (NO LOGIN REQUIRED)
+  if (publicFolderLoading || ((window.location.search.includes('share_token') || window.location.search.includes('share_folder')) && !clientPortalFolder)) {
+    return (
+      <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px' }}>
+        <div className="login-card" style={{ maxWidth: '440px', width: '100%', padding: '36px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ fontSize: '36px', marginBottom: '14px', animation: 'spin 1.5s linear infinite' }}>⏱️</div>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>Memuat Folder Aset Pemasaran...</h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Harap tunggu sebentar, sedang mengambil daftar dokumen brosur & spesifikasi.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (clientPortalFolder && (window.location.search.includes('share_token') || window.location.search.includes('share_folder') || !token)) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'var(--bg-main)',
+        zIndex: 99999,
+        overflowY: 'auto',
+        padding: '24px'
+      }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Top Bar (No Tutup/Kembali button for Client Public View) */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#fff', fontSize: '18px' }}>
+                IMX
+              </div>
+              <div>
+                <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                  INFIMECH MARKETING ERP
+                </h1>
+                <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                  Official Client Asset Download Portal
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Folder Hero Banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(6,182,212,0.18) 0%, rgba(168,85,247,0.25) 100%)',
+            border: '1px solid rgba(6,182,212,0.4)',
+            borderRadius: '20px',
+            padding: '32px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '20px'
+          }}>
+            <div style={{ maxWidth: '65%' }}>
+              <span className="badge" style={{ background: 'var(--accent-cyan)', color: 'black', fontWeight: 800, fontSize: '11px', padding: '4px 12px', borderRadius: '20px', marginBottom: '10px', display: 'inline-block' }}>
+                SHARED MARKETING FOLDER
+              </span>
+              <h2 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', margin: '4px 0 10px' }}>
+                📁 {clientPortalFolder.name}
+              </h2>
+              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: '1.6' }}>
+                {clientPortalFolder.description || 'Berikut adalah daftar lengkap aset pemasaran, brosur spesifikasi teknik, dan dokumen pendukung proyek untuk Anda unduh.'}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '220px', background: 'rgba(0,0,0,0.3)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Aset Tersedia:</div>
+              <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--accent-cyan)' }}>
+                {clientPortalFolder.assets?.length || 0} File Dokumen
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                Akses instan tanpa perlu login.
+              </div>
+            </div>
+          </div>
+
+          {/* Client Search Bar & Filter */}
+          <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '14px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ flex: 1, minWidth: '260px', position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="🔍 Cari file apa yang ingin Anda unduh (nama dokumen, tipe, topik)..."
+                className="form-input"
+                style={{ width: '100%', paddingLeft: '38px', height: '42px', fontSize: '13px' }}
+                value={clientSearchTerm}
+                onChange={e => setClientSearchTerm(e.target.value)}
+              />
+              <span style={{ position: 'absolute', left: '12px', top: '12px', fontSize: '16px' }}>🔍</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {['Semua', 'PDF', 'Template', 'Image', 'Video'].map(type => (
+                <button
+                  key={type}
+                  className="btn"
+                  style={{
+                    padding: '8px 14px',
+                    fontSize: '12px',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    background: clientTypeFilter === type ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.05)',
+                    color: clientTypeFilter === type ? 'black' : 'var(--text-primary)'
+                  }}
+                  onClick={() => setClientTypeFilter(type)}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Client File Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
+            {(clientPortalFolder.assets || [])
+              .filter(a => {
+                if (clientTypeFilter !== 'Semua' && a.file_type !== clientTypeFilter) return false;
+                if (clientSearchTerm) {
+                  const q = clientSearchTerm.toLowerCase();
+                  return (a.name || '').toLowerCase().includes(q) || (a.tags || '').toLowerCase().includes(q);
+                }
+                return true;
+              })
+              .map((a, idx) => (
+                <div
+                  key={a.id || idx}
+                  className="glass-panel"
+                  style={{
+                    padding: '20px',
+                    borderRadius: '16px',
+                    border: '1px solid var(--border-color)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px',
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(6,182,212,0.05) 100%)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'rgba(6,182,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                        {a.file_type === 'PDF' ? '📄' : a.file_type === 'Image' ? '🖼️' : a.file_type === 'Template' ? '📊' : '📁'}
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                          {a.name}
+                        </h4>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {a.file_type} Dokumen · {a.size || '2.4 MB'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="badge" style={{ background: 'rgba(168,85,247,0.15)', color: '#d8b4fe', fontSize: '11px' }}>
+                      Versi {a.version || '1.0'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Siap diunduh langsung
+                    </span>
+                    <button
+                      className="btn btn-primary"
+                      style={{
+                        background: 'var(--accent-cyan)',
+                        color: 'black',
+                        fontWeight: 800,
+                        padding: '8px 18px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(6,182,212,0.35)'
+                      }}
+                      onClick={() => handleOpenOrDownloadFile(a.file_url, a.name || 'Dokumen')}
+                    >
+                      <Download size={15} />
+                      <span>Unduh File</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       </div>
     );
