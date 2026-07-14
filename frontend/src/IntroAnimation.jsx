@@ -53,17 +53,17 @@ export default function IntroAnimation({ onComplete }) {
   return (
     <div className={`intro-overlay ${hidden ? 'intro-hidden' : ''}`}>
       <div className="intro-stage">
-        {/* Top row: INFI + Logo (the logo IS the M, so no MECH text needed) */}
+        {/* Top row: INFI + [Logo replacing M] + ECH */}
         <div className="intro-top-row">
           {/* Left word: INFI */}
           <AnimatedLetters text="INFI" baseDelay={1.3} className="intro-left-word" />
 
-          {/* Center logo - actual INFIMECH logo (the M shape) */}
+          {/* Center logo - replaces the letter "M" in INFIMECH */}
           <div className="intro-logo-wrap">
             <img 
               className="intro-whole" 
               src="/infimech-logo.png" 
-              alt="INFIMECH Logo"
+              alt="M"
             />
             
             {/* Crack lines SVG overlay */}
@@ -75,6 +75,7 @@ export default function IntroAnimation({ onComplete }) {
               <path d="M42 26 L36 28 L32 32" />
             </svg>
             
+            {/* Flash burst effect */}
             <div className="intro-flash" />
 
             {/* Stem + MARKETING drop */}
@@ -84,7 +85,8 @@ export default function IntroAnimation({ onComplete }) {
             </div>
           </div>
 
-          {/* No right word - logo itself represents the M/MECH */}
+          {/* Right word: ECH */}
+          <AnimatedLetters text="ECH" baseDelay={1.55} className="intro-right-word" />
         </div>
 
         {/* Sub row: underline + tagline */}
