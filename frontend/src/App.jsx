@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import IntroAnimation from './IntroAnimation';
 import { 
-  LayoutDashboard, Users, Megaphone, Calendar, FolderHeart, 
+  LayoutDashboard, Users, Megaphone, Calendar, FolderHeart, FolderOpen, Folder,
   UserSquare, LogOut, Sun, Moon, Search, Bell, Plus, Filter, 
   CheckCircle2, XCircle, Clock, Trash2, Edit3, MessageSquare, 
   Download, Share2, Check, ArrowRight, DollarSign, Target, Award,
