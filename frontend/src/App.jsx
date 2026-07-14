@@ -127,8 +127,17 @@ export default function App() {
   const [assetSearchTerm, setAssetSearchTerm] = useState('');
   const [fuStageFilter, setFuStageFilter] = useState('Semua');
   const [publicShareAsset, setPublicShareAsset] = useState(null);
-  const [publicShareLoading, setPublicShareLoading] = useState(false);
   const [publicShareError, setPublicShareError] = useState('');
+
+  // Asset Folders & Client Share Portal State
+  const [assetFolders, setAssetFolders] = useState([]);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [folderModalOpen, setFolderModalOpen] = useState(false);
+  const [folderFormData, setFolderFormData] = useState({ name: '', category: 'CFD/FEA', description: '', files: [] });
+  const [shareFolderModal, setShareFolderModal] = useState(null);
+  const [clientPortalFolder, setClientPortalFolder] = useState(null);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [clientTypeFilter, setClientTypeFilter] = useState('Semua');
 
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [postFormData, setPostFormData] = useState({ id: '', platform: 'Instagram', content: '', media_url: '', schedule_time: '', status: 'Draft' });
@@ -328,8 +337,22 @@ export default function App() {
       const cat = assetCategoryFilter === 'Semua' ? '' : assetCategoryFilter;
       const data = await api.getAssets(assetSearchTerm, '', cat);
       setAssets(data);
+      fetchAssetFolders();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchAssetFolders = async () => {
+    try {
+      const data = await api.getAssetFolders();
+      setAssetFolders(Array.isArray(data) ? data : []);
+      if (selectedFolder) {
+        const updated = (Array.isArray(data) ? data : []).find(f => f.id === selectedFolder.id);
+        if (updated) setSelectedFolder(updated);
+      }
+    } catch (err) {
+      console.error('fetchAssetFolders error:', err);
     }
   };
 
@@ -340,8 +363,15 @@ export default function App() {
     }
   }, [assetSearchTerm, assetCategoryFilter, currentView, token]);
 
-  // Load public asset details on direct load of a secure sharing link
+  // Load public asset or shared folder on direct load
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const folderToken = params.get('share_token') || params.get('share_folder');
+    if (folderToken) {
+      loadPublicSharedFolder(folderToken);
+      return;
+    }
+
     const isShare = window.location.pathname.includes('/share/assets/');
     if (isShare) {
       const parts = window.location.pathname.split('/');
@@ -351,6 +381,15 @@ export default function App() {
       }
     }
   }, []);
+
+  const loadPublicSharedFolder = async (token) => {
+    try {
+      const data = await api.getPublicSharedFolder(token);
+      setClientPortalFolder(data);
+    } catch (err) {
+      console.error('Failed to load shared folder:', err);
+    }
+  };
 
   const loadPublicAsset = async (id) => {
     setPublicShareLoading(true);
@@ -1035,6 +1074,103 @@ export default function App() {
         showAlert(err.message, 'Gagal', 'error');
       }
     });
+  };
+
+  const saveAssetFolder = async (e) => {
+    e.preventDefault();
+    try {
+      await api.createAssetFolder(folderFormData);
+      setFolderModalOpen(false);
+      showAlert('Folder & Aset berhasil dibuat.', 'Sukses', 'success');
+      fetchAssetFolders();
+      fetchAssets();
+    } catch (err) {
+      showAlert(err.message, 'Gagal', 'error');
+    }
+  };
+
+  const deleteAssetFolderHandler = (id) => {
+    showConfirm('Hapus folder ini beserta aset di dalamnya?', async () => {
+      try {
+        await api.deleteAssetFolder(id);
+        if (selectedFolder?.id === id) setSelectedFolder(null);
+        fetchAssetFolders();
+        fetchAssets();
+        showAlert('Folder berhasil dihapus.', 'Sukses', 'success');
+      } catch (err) {
+        showAlert(err.message, 'Gagal', 'error');
+      }
+    });
+  };
+
+  const handleFolderMultiFileUpload = (fileList) => {
+    const arr = Array.from(fileList);
+    arr.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        let sizeStr = '1.0 MB';
+        if (file.size >= 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+        else sizeStr = (file.size / 1024).toFixed(0) + ' KB';
+
+        let fileType = 'PDF';
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext)) fileType = 'Image';
+        else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) fileType = 'Template';
+        else if (['mp4', 'mov', 'webm'].includes(ext)) fileType = 'Video';
+
+        const fileObj = {
+          name: file.name.replace(/\.[^/.]+$/, ''),
+          file_type: fileType,
+          file_url: event.target.result,
+          size: sizeStr,
+          version: '1.0'
+        };
+
+        setFolderFormData(prev => ({
+          ...prev,
+          files: [...(prev.files || []), fileObj]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const uploadMoreToFolderHandler = async (folderId, fileList) => {
+    const arr = Array.from(fileList);
+    const uploadedFiles = [];
+    for (const file of arr) {
+      const resultUrl = await new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = e => resolve(e.target.result);
+        r.readAsDataURL(file);
+      });
+      let sizeStr = '1.0 MB';
+      if (file.size >= 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+      else sizeStr = (file.size / 1024).toFixed(0) + ' KB';
+
+      let fileType = 'PDF';
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext)) fileType = 'Image';
+      else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) fileType = 'Template';
+      else if (['mp4', 'mov', 'webm'].includes(ext)) fileType = 'Video';
+
+      uploadedFiles.push({
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        file_type: fileType,
+        file_url: resultUrl,
+        size: sizeStr,
+        version: '1.0'
+      });
+    }
+
+    try {
+      await api.uploadFolderFiles(folderId, uploadedFiles);
+      showAlert(`${uploadedFiles.length} file berhasil ditambahkan ke folder.`, 'Sukses', 'success');
+      fetchAssetFolders();
+      fetchAssets();
+    } catch (err) {
+      showAlert(err.message, 'Gagal', 'error');
+    }
   };
 
   // Calendar / Social Scheduling
@@ -2485,32 +2621,257 @@ export default function App() {
 
               {digitalTab === 'assets' && (
                 <>
-                  <div className="glass-panel" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Perpustakaan Aset Kreatif</h3>
-                    <button className="btn btn-primary" onClick={() => {
-                      setAssetFormData({ id: '', name: '', file_type: 'Image', tags: '', file_url: '' });
-                      setAssetModalOpen(true);
-                    }}>
-                      <Plus size={16} />
-                      <span>Upload Aset</span>
-                    </button>
-                  </div>
+                  {!selectedFolder ? (
+                    <>
+                      <div className="glass-panel" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(168,85,247,0.08) 100%)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: '14px' }}>
+                        <div>
+                          <h3 style={{ fontSize: '18px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                            <FolderOpen size={22} style={{ color: 'var(--accent-cyan)' }} />
+                            <span>Perpustakaan Folder Aset Pemasaran</span>
+                          </h3>
+                          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                            Kelompokkan materi pemasaran ke dalam folder interaktif dan bagikan ke klien dalam 1 tautan mudah.
+                          </p>
+                        </div>
+                        <button
+                          className="btn btn-primary"
+                          style={{ background: 'linear-gradient(135deg, var(--primary-glow), #a855f7)', border: 'none', fontWeight: 700, padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '10px' }}
+                          onClick={() => {
+                            setFolderFormData({ name: '', category: 'CFD/FEA', description: '', files: [] });
+                            setFolderModalOpen(true);
+                          }}
+                        >
+                          <Plus size={18} />
+                          <span>+ Buat / Upload Folder Baru</span>
+                        </button>
+                      </div>
 
-                  <div className="asset-grid">
-                    {assets.map((a, i) => (
-                      <div key={i} className="asset-card">
-                        <FolderHeart size={28} style={{ color: 'var(--primary-glow)' }} />
-                        <div style={{ fontWeight: 600, fontSize: '14px' }}>{a.name}</div>
-                        <span className="badge" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary-glow)', width: 'fit-content' }}>{a.file_type}</span>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '10px' }}>
-                          <span>{a.download_count} downloads</span>
-                          <button className="icon-btn" onClick={() => triggerDownloadAsset(a)}>
-                            <Download size={14} />
+                      <div className="asset-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                        {assetFolders.map((f, i) => (
+                          <div
+                            key={f.id || i}
+                            className="asset-card glass-panel"
+                            style={{
+                              padding: '20px',
+                              borderRadius: '14px',
+                              border: '1px solid var(--border-color)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '12px',
+                              cursor: 'pointer',
+                              transition: 'all 0.25s ease',
+                              position: 'relative',
+                              background: 'linear-gradient(145deg, rgba(255,255,255,0.02) 0%, rgba(99,102,241,0.04) 100%)'
+                            }}
+                            onClick={() => setSelectedFolder(f)}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.transform = 'translateY(-4px)';
+                              e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.borderColor = 'var(--border-color)';
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(6,182,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(6,182,212,0.3)' }}>
+                                <FolderHeart size={26} style={{ color: 'var(--accent-cyan)' }} />
+                              </div>
+                              <span className="badge" style={{ background: 'rgba(168,85,247,0.15)', color: '#d8b4fe', fontSize: '11px', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                                {f.category || 'CFD/FEA'}
+                              </span>
+                            </div>
+
+                            <div>
+                              <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                                {f.name}
+                              </h4>
+                              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                {f.description || 'Folder materi pemasaran & spesifikasi proyek.'}
+                              </p>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>📦</span>
+                                <span>{f.item_count || f.assets?.length || 0} Aset Tersimpan</span>
+                              </span>
+                              
+                              <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
+                                <button
+                                  className="btn"
+                                  style={{ padding: '6px 12px', fontSize: '11px', background: 'rgba(6,182,212,0.18)', color: 'var(--accent-cyan)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: '6px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                                  onClick={() => setShareFolderModal(f)}
+                                  title="Bagikan Folder ke Klien"
+                                >
+                                  <Share2 size={12} />
+                                  <span>Share</span>
+                                </button>
+                                <button
+                                  className="icon-btn"
+                                  style={{ color: 'var(--accent-red)', opacity: 0.8 }}
+                                  onClick={() => deleteAssetFolderHandler(f.id)}
+                                  title="Hapus Folder"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    /* ====== INTERACTIVE INSIDE FOLDER VIEW ====== */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {/* Top breadcrumb navigation */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <button
+                          className="btn btn-secondary"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px', borderRadius: '8px' }}
+                          onClick={() => setSelectedFolder(null)}
+                        >
+                          <span>← Kembali ke Semua Folder</span>
+                        </button>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          Perpustakaan Aset / <strong style={{ color: 'var(--text-primary)' }}>📁 {selectedFolder.name}</strong>
+                        </div>
+                      </div>
+
+                      {/* Folder Header Hero Card */}
+                      <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(6,182,212,0.1) 0%, rgba(168,85,247,0.15) 100%)', border: '1px solid rgba(6,182,212,0.35)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                        <div style={{ maxWidth: '65%' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <span className="badge" style={{ background: 'var(--accent-cyan)', color: 'black', fontWeight: 700, fontSize: '11px', padding: '3px 10px', borderRadius: '20px' }}>
+                              {selectedFolder.category || 'CFD/FEA'}
+                            </span>
+                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
+                              ID Folder: #{selectedFolder.id}
+                            </span>
+                          </div>
+                          <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+                            📁 {selectedFolder.name}
+                          </h2>
+                          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: '1.5' }}>
+                            {selectedFolder.description || 'Kumpulan brosur, studi kasus, dan spesifikasi proyek resmi.'}
+                          </p>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <button
+                            className="btn btn-primary"
+                            style={{ background: 'var(--accent-cyan)', color: 'black', fontWeight: 700, border: 'none', padding: '10px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => document.getElementById('folder-add-files-input').click()}
+                          >
+                            <Plus size={16} />
+                            <span>+ Upload File ke Folder</span>
+                          </button>
+                          <input
+                            type="file"
+                            id="folder-add-files-input"
+                            multiple
+                            style={{ display: 'none' }}
+                            onChange={e => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                uploadMoreToFolderHandler(selectedFolder.id, e.target.files);
+                              }
+                            }}
+                          />
+
+                          <button
+                            className="btn btn-secondary"
+                            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontWeight: 700, padding: '10px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => setShareFolderModal(selectedFolder)}
+                          >
+                            <Share2 size={16} />
+                            <span>🔗 Share Folder ke Klien</span>
+                          </button>
+
+                          <button
+                            className="btn"
+                            style={{ background: 'rgba(168,85,247,0.25)', border: '1px solid rgba(168,85,247,0.5)', color: '#d8b4fe', fontWeight: 700, padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => setClientPortalFolder(selectedFolder)}
+                          >
+                            <span>👁️ Lihat Halaman Klien</span>
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* Files inside folder table/grid */}
+                      <div className="glass-panel" style={{ padding: '20px', borderRadius: '14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                          <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            Daftar Aset di Folder Ini ({selectedFolder.assets?.length || 0} File)
+                          </h4>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Semua file di folder ini akan otomatis tersedia saat folder dibagikan ke klien.
+                          </span>
+                        </div>
+
+                        {(!selectedFolder.assets || selectedFolder.assets.length === 0) ? (
+                          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                            <FolderHeart size={42} style={{ color: 'var(--border-color)', marginBottom: '10px' }} />
+                            <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>Folder Ini Masih Kosong</div>
+                            <div style={{ fontSize: '12px' }}>Klik tombol "+ Upload File ke Folder" di atas untuk menambahkan brosur atau dokumen.</div>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
+                            {selectedFolder.assets.map((a, idx) => (
+                              <div
+                                key={a.id || idx}
+                                style={{
+                                  background: 'rgba(255,255,255,0.02)',
+                                  border: '1px solid var(--border-color)',
+                                  borderRadius: '10px',
+                                  padding: '14px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '10px'
+                                }}
+                              >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '24px' }}>
+                                    {a.file_type === 'PDF' ? '📄' : a.file_type === 'Image' ? '🖼️' : a.file_type === 'Template' ? '📊' : '📁'}
+                                  </span>
+                                  <span className="badge" style={{ background: 'rgba(6,182,212,0.15)', color: 'var(--accent-cyan)', fontSize: '10px' }}>
+                                    v{a.version || '1.0'}
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)', marginBottom: '3px' }}>
+                                    {a.name}
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                    Tipe: {a.file_type} · Ukuran: {a.size || '2.4 MB'}
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '8px', borderTop: '1px dashed var(--border-color)' }}>
+                                  <button
+                                    className="btn btn-primary"
+                                    style={{ flex: 1, padding: '6px 10px', fontSize: '11px', background: 'var(--accent-cyan)', color: 'black', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                    onClick={() => handleOpenOrDownloadFile(a.file_url, a.name || 'Dokumen')}
+                                  >
+                                    <Download size={12} />
+                                    <span>Unduh File</span>
+                                  </button>
+                                  <button
+                                    className="icon-btn"
+                                    style={{ color: 'var(--accent-red)', opacity: 0.8 }}
+                                    onClick={() => deleteAsset(a.id)}
+                                    title="Hapus file ini"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </>
@@ -3326,6 +3687,378 @@ export default function App() {
         );
       })()}
 
+
+      {/* MODAL: CREATE / UPLOAD FOLDER */}
+      {folderModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '620px' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary-glow) 0%, #a855f7 100%)', margin: '-1px -1px 0', padding: '20px 24px', borderRadius: '14px 14px 0 0' }}>
+              <div>
+                <h3 className="modal-title" style={{ color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FolderOpen size={20} />
+                  <span>Buat & Upload Folder Aset Baru</span>
+                </h3>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', margin: 0 }}>
+                  Buat folder dan langsung upload beberapa file sekaligus ke dalam folder ini.
+                </p>
+              </div>
+              <button className="icon-btn" style={{ color: '#fff', opacity: 0.8 }} onClick={() => setFolderModalOpen(false)}>
+                <XCircle size={22} />
+              </button>
+            </div>
+
+            <form onSubmit={saveAssetFolder} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '24px' }}>
+              <div className="form-group">
+                <label className="form-label">Nama Folder <span style={{ color: 'var(--accent-red)' }}>*</span></label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Contoh: Brosur & Katalog Jasa CFD/FEA 2026"
+                  required
+                  value={folderFormData.name}
+                  onChange={e => setFolderFormData({ ...folderFormData, name: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Kategori Folder</label>
+                <select
+                  className="form-select"
+                  value={folderFormData.category}
+                  onChange={e => setFolderFormData({ ...folderFormData, category: e.target.value })}
+                >
+                  <option value="CFD/FEA">CFD/FEA</option>
+                  <option value="Case Study">Case Study</option>
+                  <option value="Proposal Template">Proposal Template</option>
+                  <option value="Foto Proyek">Foto Proyek</option>
+                  <option value="Whitepaper">Whitepaper</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Deskripsi Folder</label>
+                <textarea
+                  className="form-input"
+                  rows={2}
+                  placeholder="Jelaskan ringkas isi folder agar klien mudah mengerti saat membuka tautan..."
+                  value={folderFormData.description}
+                  onChange={e => setFolderFormData({ ...folderFormData, description: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Upload File ke Dalam Folder (Opsi, Bisa Pilih Banyak File Sekaligus)</label>
+                <div
+                  style={{
+                    border: '2px dashed var(--border-color)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    textAlign: 'center',
+                    background: 'rgba(6,182,212,0.04)',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onClick={() => document.getElementById('new-folder-multi-upload').click()}
+                >
+                  <FolderHeart size={32} style={{ color: 'var(--accent-cyan)', marginBottom: '8px' }} />
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
+                    Klik untuk Memilih Banyak File (PDF, DOCX, Image, Video)
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    Bisa pilih 1 atau lebih file sekaligus hingga 100 MB per file.
+                  </div>
+                  <input
+                    type="file"
+                    id="new-folder-multi-upload"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleFolderMultiFileUpload(e.target.files);
+                      }
+                    }}
+                  />
+                </div>
+
+                {folderFormData.files?.length > 0 && (
+                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '160px', overflowY: 'auto' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                      Siap Diupload ({folderFormData.files.length} File):
+                    </div>
+                    {folderFormData.files.map((file, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '6px', fontSize: '12px' }}>
+                        <span>📄 {file.name}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{file.size}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setFolderModalOpen(false)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ background: 'var(--accent-cyan)', color: 'black', fontWeight: 700 }}>
+                  Simpan Folder
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: SHARE FOLDER TO CLIENT */}
+      {shareFolderModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '540px' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', margin: '-1px -1px 0', padding: '20px 24px', borderRadius: '14px 14px 0 0' }}>
+              <div>
+                <h3 className="modal-title" style={{ color: 'black', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Share2 size={20} />
+                  <span>Bagikan Folder "{shareFolderModal.name}"</span>
+                </h3>
+                <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.75)', margin: 0, fontWeight: 600 }}>
+                  Klien dapat melihat & mengunduh semua aset dalam folder ini tanpa perlu login.
+                </p>
+              </div>
+              <button className="icon-btn" style={{ color: 'black' }} onClick={() => setShareFolderModal(null)}>
+                <XCircle size={22} />
+              </button>
+            </div>
+
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '14px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                  Tautan Publik untuk Klien:
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/?share_token=${shareFolderModal.share_token || shareFolderModal.id}`}
+                    style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 10px', fontSize: '12px', color: 'var(--accent-cyan)' }}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    style={{ background: 'var(--accent-cyan)', color: 'black', fontWeight: 700, padding: '8px 14px', fontSize: '12px' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/?share_token=${shareFolderModal.share_token || shareFolderModal.id}`);
+                      showAlert('Tautan folder berhasil disalin!', 'Sukses', 'success');
+                    }}
+                  >
+                    Salin
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                💡 <strong>Manfaat bagi Klien:</strong> Klien langsung disambut halaman portal eksklusif berisi <strong>{shareFolderModal.item_count || shareFolderModal.assets?.length || 0} file pemasaran</strong>, dilengkapi pencarian instan agar gampang menemukan dan mengunduh brosur/dokumen yang diinginkan.
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ flex: 1, background: 'linear-gradient(135deg, #a855f7, #6366f1)', border: 'none', fontWeight: 700 }}
+                  onClick={() => {
+                    const f = shareFolderModal;
+                    setShareFolderModal(null);
+                    setClientPortalFolder(f);
+                  }}
+                >
+                  👁️ Buka / Simulasi Halaman Klien (Public Portal)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULLSCREEN: CLIENT PUBLIC SHARED FOLDER PORTAL */}
+      {clientPortalFolder && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'var(--bg-main)',
+          zIndex: 99999,
+          overflowY: 'auto',
+          padding: '24px'
+        }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Top Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#fff', fontSize: '18px' }}>
+                  IMX
+                </div>
+                <div>
+                  <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                    INFIMECH MARKETING ERP
+                  </h1>
+                  <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+                    Official Client Asset Download Portal
+                  </span>
+                </div>
+              </div>
+
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '12px', borderRadius: '8px' }}
+                onClick={() => {
+                  setClientPortalFolder(null);
+                  if (window.location.search.includes('share_token')) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                  }
+                }}
+              >
+                Tutup Portal / Kembali
+              </button>
+            </div>
+
+            {/* Folder Hero Banner */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(6,182,212,0.18) 0%, rgba(168,85,247,0.25) 100%)',
+              border: '1px solid rgba(6,182,212,0.4)',
+              borderRadius: '20px',
+              padding: '32px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '20px'
+            }}>
+              <div style={{ maxWidth: '65%' }}>
+                <span className="badge" style={{ background: 'var(--accent-cyan)', color: 'black', fontWeight: 800, fontSize: '11px', padding: '4px 12px', borderRadius: '20px', marginBottom: '10px', display: 'inline-block' }}>
+                  SHARED MARKETING FOLDER
+                </span>
+                <h2 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', margin: '4px 0 10px' }}>
+                  📁 {clientPortalFolder.name}
+                </h2>
+                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: '1.6' }}>
+                  {clientPortalFolder.description || 'Berikut adalah daftar lengkap aset pemasaran, brosur spesifikasi teknik, dan dokumen pendukung proyek untuk Anda unduh.'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '220px', background: 'rgba(0,0,0,0.3)', padding: '18px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Aset Tersedia:</div>
+                <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--accent-cyan)' }}>
+                  {clientPortalFolder.assets?.length || 0} File Dokumen
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Akses instan tanpa perlu login.
+                </div>
+              </div>
+            </div>
+
+            {/* Client Search Bar & Filter */}
+            <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '14px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ flex: 1, minWidth: '260px', position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Cari file apa yang ingin Anda unduh (nama dokumen, tipe, topik)..."
+                  className="form-input"
+                  style={{ width: '100%', paddingLeft: '38px', height: '42px', fontSize: '13px' }}
+                  value={clientSearchTerm}
+                  onChange={e => setClientSearchTerm(e.target.value)}
+                />
+                <span style={{ position: 'absolute', left: '12px', top: '12px', fontSize: '16px' }}>🔍</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {['Semua', 'PDF', 'Template', 'Image', 'Video'].map(type => (
+                  <button
+                    key={type}
+                    className="btn"
+                    style={{
+                      padding: '8px 14px',
+                      fontSize: '12px',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      background: clientTypeFilter === type ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.05)',
+                      color: clientTypeFilter === type ? 'black' : 'var(--text-primary)'
+                    }}
+                    onClick={() => setClientTypeFilter(type)}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Client File Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
+              {(clientPortalFolder.assets || [])
+                .filter(a => {
+                  if (clientTypeFilter !== 'Semua' && a.file_type !== clientTypeFilter) return false;
+                  if (clientSearchTerm) {
+                    const q = clientSearchTerm.toLowerCase();
+                    return (a.name || '').toLowerCase().includes(q) || (a.tags || '').toLowerCase().includes(q);
+                  }
+                  return true;
+                })
+                .map((a, idx) => (
+                  <div
+                    key={a.id || idx}
+                    className="glass-panel"
+                    style={{
+                      padding: '20px',
+                      borderRadius: '16px',
+                      border: '1px solid var(--border-color)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '14px',
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(6,182,212,0.05) 100%)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'rgba(6,182,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                          {a.file_type === 'PDF' ? '📄' : a.file_type === 'Image' ? '🖼️' : a.file_type === 'Template' ? '📊' : '📁'}
+                        </div>
+                        <div>
+                          <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                            {a.name}
+                          </h4>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            {a.file_type} Dokumen · {a.size || '2.4 MB'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="badge" style={{ background: 'rgba(168,85,247,0.15)', color: '#d8b4fe', fontSize: '11px' }}>
+                        Versi {a.version || '1.0'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Siap diunduh langsung
+                      </span>
+                      <button
+                        className="btn btn-primary"
+                        style={{
+                          background: 'var(--accent-cyan)',
+                          color: 'black',
+                          fontWeight: 800,
+                          padding: '8px 18px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 4px 14px rgba(6,182,212,0.35)'
+                        }}
+                        onClick={() => handleOpenOrDownloadFile(a.file_url, a.name || 'Dokumen')}
+                      >
+                        <Download size={15} />
+                        <span>Unduh File</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: UPLOAD/EDIT MATERI (Asset) */}
       {assetModalOpen && (

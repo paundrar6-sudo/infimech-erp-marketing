@@ -39,12 +39,198 @@ async function checkAndSeedAssets() {
   }
 }
 
+async function checkAndSeedFolders() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS asset_folders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100) DEFAULT 'CFD/FEA',
+        description TEXT NULL,
+        share_token VARCHAR(100) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+  } catch (err) {
+    console.error('Create asset_folders table error:', err.message);
+  }
+
+  try {
+    await pool.query('ALTER TABLE assets ADD COLUMN folder_id INT NULL');
+  } catch (err) {
+    // Column already exists
+  }
+
+  try {
+    const [folders] = await pool.query('SELECT COUNT(*) as count FROM asset_folders');
+    if (folders[0].count === 0) {
+      console.log('🌱 Seeding interactive asset folders...');
+      const defaultFolders = [
+        ['Brosur & Katalog Jasa CFD/FEA', 'CFD/FEA', 'Kumpulan brosur resmi layanan simulasi fluida & analisis struktur solid untuk klien industri.', 'cfd-catalog-2026'],
+        ['Studi Kasus & Proyek Unggulan (Case Studies)', 'Case Study', 'Bukti keberhasilan proyek optimasi turbin angin & efisiensi HVAC gedung hijau.', 'case-studies-b2b'],
+        ['Template Proposal & Penawaran Komersial', 'Proposal Template', 'Format standar penawaran jasa konsultasi CAE & simulasi teknik.', 'cae-proposals'],
+        ['Galeri Hasil Render & Aerodinamika', 'Foto Proyek', 'Dokumentasi visual streamline & analisis kontur tekanan aerodinamika CFD.', 'cfd-gallery-aero'],
+        ['Whitepaper & Riset CAE Manufaktur', 'Whitepaper', 'Kajian teknis mendalam penerapan CAE pada industri manufaktur modern.', 'cae-whitepapers']
+      ];
+
+      for (const f of defaultFolders) {
+        await pool.query(
+          'INSERT INTO asset_folders (name, category, description, share_token) VALUES (?, ?, ?, ?)',
+          f
+        );
+      }
+    }
+
+    // Link existing assets to their corresponding folders if folder_id is null
+    const [allFolders] = await pool.query('SELECT id, category FROM asset_folders');
+    for (const folder of allFolders) {
+      await pool.query('UPDATE assets SET folder_id = ? WHERE category = ? AND folder_id IS NULL', [folder.id, folder.category]);
+    }
+  } catch (err) {
+    console.error('Seed asset folders error:', err.message);
+  }
+}
+
+// GET public shared folder portal (No auth required)
+router.get('/folders/share/:token', async (req, res) => {
+  const { token } = req.params;
+  await checkAndSeedAssets();
+  await checkAndSeedFolders();
+
+  try {
+    const [folders] = await pool.query('SELECT * FROM asset_folders WHERE share_token = ? OR id = ?', [token, token]);
+    if (folders.length === 0) {
+      return res.status(404).json({ message: 'Folder tidak ditemukan atau tautan tidak berlaku.' });
+    }
+    const folder = folders[0];
+    const [assets] = await pool.query('SELECT * FROM assets WHERE folder_id = ? OR category = ? ORDER BY created_at DESC', [folder.id, folder.category]);
+    folder.assets = assets;
+    res.json(folder);
+  } catch (err) {
+    console.error('Fetch public shared folder error:', err);
+    res.status(500).json({ message: 'Gagal mengambil data folder yang dibagikan.' });
+  }
+});
+
+// GET all asset folders with file items
+router.get('/folders', verifyToken, async (req, res) => {
+  await checkAndSeedAssets();
+  await checkAndSeedFolders();
+
+  try {
+    const [folders] = await pool.query('SELECT * FROM asset_folders ORDER BY id ASC');
+    const [assets] = await pool.query('SELECT * FROM assets ORDER BY created_at DESC');
+    for (const folder of folders) {
+      folder.assets = assets.filter(a => a.folder_id === folder.id || (!a.folder_id && a.category === folder.category));
+      folder.item_count = folder.assets.length;
+    }
+    res.json(folders);
+  } catch (err) {
+    console.error('Fetch folders error:', err);
+    res.status(500).json({ message: 'Gagal mengambil data folder aset.' });
+  }
+});
+
+// POST create new folder (optionally with initial uploaded files)
+router.post('/folders', verifyToken, async (req, res) => {
+  const { name, category, description, files } = req.body;
+  if (!name) {
+    return res.status(400).json({ message: 'Nama folder wajib diisi.' });
+  }
+
+  try {
+    const shareToken = `fld-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const [result] = await pool.query(
+      'INSERT INTO asset_folders (name, category, description, share_token) VALUES (?, ?, ?, ?)',
+      [name, category || 'CFD/FEA', description || '', shareToken]
+    );
+    const folderId = result.insertId;
+
+    if (Array.isArray(files) && files.length > 0) {
+      for (const file of files) {
+        await pool.query(
+          `INSERT INTO assets (name, file_type, category, tags, file_url, download_count, version, sharing_status, size, created_by, folder_id) 
+           VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
+          [
+            file.name,
+            file.file_type || 'PDF',
+            category || 'CFD/FEA',
+            file.tags || '',
+            file.file_url || '',
+            file.version || '1.0',
+            'Shared',
+            file.size || '1.5 MB',
+            req.user?.id || 1,
+            folderId
+          ]
+        );
+      }
+    }
+
+    res.status(201).json({ message: 'Folder berhasil dibuat.', folderId, shareToken });
+  } catch (err) {
+    console.error('Create folder error:', err);
+    res.status(500).json({ message: 'Gagal membuat folder.' });
+  }
+});
+
+// POST upload files into existing folder
+router.post('/folders/:folderId/files', verifyToken, async (req, res) => {
+  const { folderId } = req.params;
+  const { files } = req.body;
+
+  try {
+    const [folders] = await pool.query('SELECT * FROM asset_folders WHERE id = ?', [folderId]);
+    const folderCat = folders[0]?.category || 'CFD/FEA';
+
+    if (Array.isArray(files) && files.length > 0) {
+      for (const file of files) {
+        await pool.query(
+          `INSERT INTO assets (name, file_type, category, tags, file_url, download_count, version, sharing_status, size, created_by, folder_id) 
+           VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
+          [
+            file.name,
+            file.file_type || 'PDF',
+            folderCat,
+            file.tags || '',
+            file.file_url || '',
+            file.version || '1.0',
+            'Shared',
+            file.size || '1.5 MB',
+            req.user?.id || 1,
+            folderId
+          ]
+        );
+      }
+    }
+
+    res.status(201).json({ message: 'File berhasil ditambahkan ke folder.' });
+  } catch (err) {
+    console.error('Add files to folder error:', err);
+    res.status(500).json({ message: 'Gagal menambahkan file ke folder.' });
+  }
+});
+
+// DELETE folder
+router.delete('/folders/:id', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM assets WHERE folder_id = ?', [id]);
+    await pool.query('DELETE FROM asset_folders WHERE id = ?', [id]);
+    res.json({ message: 'Folder berhasil dihapus.' });
+  } catch (err) {
+    console.error('Delete folder error:', err);
+    res.status(500).json({ message: 'Gagal menghapus folder.' });
+  }
+});
+
 // Get all assets with filter
 router.get('/', verifyToken, async (req, res) => {
   const { search, file_type, category } = req.query;
 
-  // Run seed check first
   await checkAndSeedAssets();
+  await checkAndSeedFolders();
 
   try {
     let sql = `

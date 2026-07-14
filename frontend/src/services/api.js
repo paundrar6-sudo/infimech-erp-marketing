@@ -246,6 +246,44 @@ export const api = {
     return handleResponse(res);
   },
 
+  getAssetFolders: async () => {
+    const res = await fetch(`${API_BASE_URL}/assets/folders`, {
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  createAssetFolder: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/assets/folders`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  uploadFolderFiles: async (folderId, files) => {
+    const res = await fetch(`${API_BASE_URL}/assets/folders/${folderId}/files`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ files })
+    });
+    return handleResponse(res);
+  },
+
+  deleteAssetFolder: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/assets/folders/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  getPublicSharedFolder: async (token) => {
+    const res = await fetch(`${API_BASE_URL}/assets/folders/share/${token}`);
+    return handleResponse(res);
+  },
+
   // Social Content Calendar
   getSocialPosts: async () => {
     const res = await fetch(`${API_BASE_URL}/social`, {
