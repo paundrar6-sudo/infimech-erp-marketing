@@ -140,6 +140,8 @@ router.post('/folders', verifyToken, async (req, res) => {
   }
 
   try {
+    try { await pool.query('SET SESSION max_allowed_packet = 104857600'); } catch (e) {}
+
     const shareToken = `fld-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const [result] = await pool.query(
       'INSERT INTO asset_folders (name, category, description, share_token) VALUES (?, ?, ?, ?)',
@@ -149,22 +151,26 @@ router.post('/folders', verifyToken, async (req, res) => {
 
     if (Array.isArray(files) && files.length > 0) {
       for (const file of files) {
-        await pool.query(
-          `INSERT INTO assets (name, file_type, category, tags, file_url, download_count, version, sharing_status, size, created_by, folder_id) 
-           VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
-          [
-            file.name,
-            file.file_type || 'PDF',
-            category || 'CFD/FEA',
-            file.tags || '',
-            file.file_url || '',
-            file.version || '1.0',
-            'Shared',
-            file.size || '1.5 MB',
-            req.user?.id || 1,
-            folderId
-          ]
-        );
+        try {
+          await pool.query(
+            `INSERT INTO assets (name, file_type, category, tags, file_url, download_count, version, sharing_status, size, created_by, folder_id) 
+             VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
+            [
+              file.name || 'Dokumen',
+              file.file_type || 'PDF',
+              category || 'CFD/FEA',
+              file.tags || '',
+              file.file_url || '',
+              file.version || '1.0',
+              'Shared',
+              file.size || '1.5 MB',
+              req.user?.id || 1,
+              folderId
+            ]
+          );
+        } catch (fileErr) {
+          console.error(`Insert initial file ${file.name} to folder ${folderId} error:`, fileErr.message);
+        }
       }
     }
 
@@ -181,27 +187,33 @@ router.post('/folders/:folderId/files', verifyToken, async (req, res) => {
   const { files } = req.body;
 
   try {
+    try { await pool.query('SET SESSION max_allowed_packet = 104857600'); } catch (e) {}
+
     const [folders] = await pool.query('SELECT * FROM asset_folders WHERE id = ?', [folderId]);
     const folderCat = folders[0]?.category || 'CFD/FEA';
 
     if (Array.isArray(files) && files.length > 0) {
       for (const file of files) {
-        await pool.query(
-          `INSERT INTO assets (name, file_type, category, tags, file_url, download_count, version, sharing_status, size, created_by, folder_id) 
-           VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
-          [
-            file.name,
-            file.file_type || 'PDF',
-            folderCat,
-            file.tags || '',
-            file.file_url || '',
-            file.version || '1.0',
-            'Shared',
-            file.size || '1.5 MB',
-            req.user?.id || 1,
-            folderId
-          ]
-        );
+        try {
+          await pool.query(
+            `INSERT INTO assets (name, file_type, category, tags, file_url, download_count, version, sharing_status, size, created_by, folder_id) 
+             VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
+            [
+              file.name || 'Dokumen',
+              file.file_type || 'PDF',
+              folderCat,
+              file.tags || '',
+              file.file_url || '',
+              file.version || '1.0',
+              'Shared',
+              file.size || '1.5 MB',
+              req.user?.id || 1,
+              folderId
+            ]
+          );
+        } catch (fileErr) {
+          console.error(`Insert file ${file.name} to folder ${folderId} error:`, fileErr.message);
+        }
       }
     }
 

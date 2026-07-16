@@ -1082,14 +1082,32 @@ export default function App() {
 
   const saveAssetFolder = async (e) => {
     e.preventDefault();
+    if (!folderFormData.name) {
+      return showAlert('Nama folder wajib diisi.', 'Perhatian', 'warning');
+    }
     try {
-      await api.createAssetFolder(folderFormData);
+      // 1. Buat folder terlebih dahulu di backend (tanpa payload file yang besar)
+      const { files, ...folderMeta } = folderFormData;
+      const res = await api.createAssetFolder(folderMeta);
+      const newFolderId = res.folderId || res.id;
+
+      // 2. Jika ada file yang dimasukkan ke dalam folder saat pembuatan, upload file satu per satu
+      if (Array.isArray(files) && files.length > 0 && newFolderId) {
+        for (let i = 0; i < files.length; i++) {
+          try {
+            await api.uploadFolderFiles(newFolderId, [files[i]]);
+          } catch (uploadErr) {
+            console.error(`Gagal upload file ${files[i].name}:`, uploadErr);
+          }
+        }
+      }
+
       setFolderModalOpen(false);
       showAlert('Folder & Aset berhasil dibuat.', 'Sukses', 'success');
       fetchAssetFolders();
       fetchAssets();
     } catch (err) {
-      showAlert(err.message, 'Gagal', 'error');
+      showAlert(err.message || 'Gagal membuat folder aset.', 'Gagal', 'error');
     }
   };
 
@@ -1141,39 +1159,45 @@ export default function App() {
 
   const uploadMoreToFolderHandler = async (folderId, fileList) => {
     const arr = Array.from(fileList);
-    const uploadedFiles = [];
+    let successCount = 0;
     for (const file of arr) {
-      const resultUrl = await new Promise(resolve => {
-        const r = new FileReader();
-        r.onload = e => resolve(e.target.result);
-        r.readAsDataURL(file);
-      });
-      let sizeStr = '1.0 MB';
-      if (file.size >= 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-      else sizeStr = (file.size / 1024).toFixed(0) + ' KB';
+      try {
+        const resultUrl = await new Promise(resolve => {
+          const r = new FileReader();
+          r.onload = e => resolve(e.target.result);
+          r.readAsDataURL(file);
+        });
+        let sizeStr = '1.0 MB';
+        if (file.size >= 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+        else sizeStr = (file.size / 1024).toFixed(0) + ' KB';
 
-      let fileType = 'PDF';
-      const ext = file.name.split('.').pop().toLowerCase();
-      if (['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext)) fileType = 'Image';
-      else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) fileType = 'Template';
-      else if (['mp4', 'mov', 'webm'].includes(ext)) fileType = 'Video';
+        let fileType = 'PDF';
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext)) fileType = 'Image';
+        else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) fileType = 'Template';
+        else if (['mp4', 'mov', 'webm'].includes(ext)) fileType = 'Video';
 
-      uploadedFiles.push({
-        name: file.name.replace(/\.[^/.]+$/, ''),
-        file_type: fileType,
-        file_url: resultUrl,
-        size: sizeStr,
-        version: '1.0'
-      });
+        const singleFile = [{
+          name: file.name.replace(/\.[^/.]+$/, ''),
+          file_type: fileType,
+          file_url: resultUrl,
+          size: sizeStr,
+          version: '1.0'
+        }];
+
+        await api.uploadFolderFiles(folderId, singleFile);
+        successCount++;
+      } catch (err) {
+        console.error(`Gagal upload file ${file.name}:`, err);
+      }
     }
 
-    try {
-      await api.uploadFolderFiles(folderId, uploadedFiles);
-      showAlert(`${uploadedFiles.length} file berhasil ditambahkan ke folder.`, 'Sukses', 'success');
+    if (successCount > 0) {
+      showAlert(`${successCount} file berhasil ditambahkan ke folder.`, 'Sukses', 'success');
       fetchAssetFolders();
       fetchAssets();
-    } catch (err) {
-      showAlert(err.message, 'Gagal', 'error');
+    } else {
+      showAlert('Gagal menambahkan file ke folder.', 'Gagal', 'error');
     }
   };
 
