@@ -104,7 +104,13 @@ router.get('/folders/share/:token', async (req, res) => {
       return res.status(404).json({ message: 'Folder tidak ditemukan atau tautan tidak berlaku.' });
     }
     const folder = folders[0];
-    const [assets] = await pool.query('SELECT * FROM assets WHERE folder_id = ? OR category = ? ORDER BY created_at DESC', [folder.id, folder.category]);
+    const [assets] = await pool.query(
+      `SELECT id, name, file_type, category, tags, download_count, version, sharing_status, size, created_by, created_at, updated_at, folder_id,
+              CASE WHEN LENGTH(file_url) > 1000 OR file_url LIKE 'data:%' THEN CONCAT('/api/assets/', id, '/content') ELSE file_url END as file_url,
+              CASE WHEN LENGTH(version_history) > 1000 THEN '[]' ELSE version_history END as version_history
+       FROM assets WHERE folder_id = ? OR category = ? ORDER BY created_at DESC`,
+      [folder.id, folder.category]
+    );
     folder.assets = assets;
     res.json(folder);
   } catch (err) {
@@ -120,7 +126,12 @@ router.get('/folders', verifyToken, async (req, res) => {
 
   try {
     const [folders] = await pool.query('SELECT * FROM asset_folders ORDER BY id ASC');
-    const [assets] = await pool.query('SELECT * FROM assets ORDER BY created_at DESC');
+    const [assets] = await pool.query(
+      `SELECT id, name, file_type, category, tags, download_count, version, sharing_status, size, created_by, created_at, updated_at, folder_id,
+              CASE WHEN LENGTH(file_url) > 1000 OR file_url LIKE 'data:%' THEN CONCAT('/api/assets/', id, '/content') ELSE file_url END as file_url,
+              CASE WHEN LENGTH(version_history) > 1000 THEN '[]' ELSE version_history END as version_history
+       FROM assets ORDER BY created_at DESC`
+    );
     for (const folder of folders) {
       folder.assets = assets.filter(a => a.folder_id === folder.id || (!a.folder_id && a.category === folder.category));
       folder.item_count = folder.assets.length;
@@ -246,7 +257,10 @@ router.get('/', verifyToken, async (req, res) => {
 
   try {
     let sql = `
-      SELECT a.*, u.name as creator_name 
+      SELECT 
+        a.id, a.name, a.file_type, a.category, a.tags, a.download_count, a.version, a.sharing_status, a.size, a.created_by, a.created_at, a.updated_at, a.folder_id, u.name as creator_name,
+        CASE WHEN LENGTH(a.file_url) > 1000 OR a.file_url LIKE 'data:%' THEN CONCAT('/api/assets/', a.id, '/content') ELSE a.file_url END as file_url,
+        CASE WHEN LENGTH(a.version_history) > 1000 THEN '[]' ELSE a.version_history END as version_history
       FROM assets a 
       LEFT JOIN User u ON a.created_by = u.id 
       WHERE 1=1
@@ -274,6 +288,21 @@ router.get('/', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Fetch assets error:', err);
     res.status(500).json({ message: 'Gagal mengambil data aset.' });
+  }
+});
+
+// GET single asset content / base64 (public or authenticated)
+router.get('/:id/content', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT id, name, file_type, file_url, version_history FROM assets WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Aset tidak ditemukan.' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Fetch asset content error:', err);
+    res.status(500).json({ message: 'Gagal mengambil isi file aset.' });
   }
 });
 
@@ -351,8 +380,10 @@ router.put('/:id', verifyToken, async (req, res) => {
     let newVersion = version || oldAsset.version || '1.0';
     let historyJson = oldAsset.version_history || '[]';
 
-    // If file_url changed, automatically push old version into history and increment version!
-    if (file_url && oldAsset.file_url && file_url !== oldAsset.file_url) {
+    const finalFileUrl = (file_url && (file_url.includes('/api/assets/') || file_url.includes('/content'))) ? oldAsset.file_url : (file_url || oldAsset.file_url);
+
+    // If file_url changed to a new data URI, automatically push old version into history and increment version!
+    if (finalFileUrl && oldAsset.file_url && finalFileUrl !== oldAsset.file_url) {
       let history = [];
       try {
         history = JSON.parse(historyJson);
@@ -380,7 +411,7 @@ router.put('/:id', verifyToken, async (req, res) => {
       `UPDATE assets 
        SET name = ?, file_type = ?, category = ?, tags = ?, file_url = ?, version = ?, sharing_status = ?, size = ?, version_history = ? 
        WHERE id = ?`,
-      [name, file_type, category || 'Brosur', tags, file_url, newVersion, sharing_status || 'Private', size || '1.5 MB', historyJson, id]
+      [name, file_type, category || 'Brosur', tags, finalFileUrl, newVersion, sharing_status || 'Private', size || '1.5 MB', historyJson, id]
     );
 
     res.json({ message: 'Aset berhasil diperbarui.', version: newVersion });

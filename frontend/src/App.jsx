@@ -734,8 +734,23 @@ export default function App() {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleOpenOrDownloadFile = (fileUrl, filename = 'Dokumen') => {
+  const handleOpenOrDownloadFile = async (fileUrl, filename = 'Dokumen') => {
     if (!fileUrl) return;
+    if (typeof fileUrl === 'string' && (fileUrl.includes('/api/assets/') || fileUrl.includes('/content'))) {
+      try {
+        const token = localStorage.getItem('token');
+        const fetchUrl = fileUrl.startsWith('http') ? fileUrl : `${API_BASE_URL.replace('/api', '')}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+        const res = await fetch(fetchUrl, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.file_url) {
+            return handleOpenOrDownloadFile(data.file_url, data.name || filename);
+          }
+        }
+      } catch (err) {
+        console.error('Fetch asset content error:', err);
+      }
+    }
     const link = document.createElement('a');
     if (fileUrl.startsWith('data:')) {
       link.href = fileUrl;
