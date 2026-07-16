@@ -10,7 +10,7 @@ import {
   Copy, ExternalLink, ListChecks, CircleDot, Clipboard, PhoneCall, CheckSquare, CalendarDays,
   Menu, X
 } from 'lucide-react';
-import { api } from './services/api';
+import { api, API_BASE_URL } from './services/api';
 
 export default function App() {
   // Auth state
@@ -136,6 +136,7 @@ export default function App() {
   const [folderFormData, setFolderFormData] = useState({ name: '', category: 'CFD/FEA', description: '', files: [] });
   const [shareFolderModal, setShareFolderModal] = useState(null);
   const [clientPortalFolder, setClientPortalFolder] = useState(null);
+  const [previewFileModal, setPreviewFileModal] = useState(null);
   const [publicFolderLoading, setPublicFolderLoading] = useState(false);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [clientTypeFilter, setClientTypeFilter] = useState('Semua');
@@ -739,7 +740,10 @@ export default function App() {
     if (typeof fileUrl === 'string' && (fileUrl.includes('/api/assets/') || fileUrl.includes('/content'))) {
       try {
         const token = localStorage.getItem('token');
-        const fetchUrl = fileUrl.startsWith('http') ? fileUrl : `${API_BASE_URL.replace('/api', '')}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+        const baseUrlHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:5000'
+          : 'https://infimech-marketing-erp-backend-583320051925.asia-southeast1.run.app';
+        const fetchUrl = fileUrl.startsWith('http') ? fileUrl : `${baseUrlHost}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
         const res = await fetch(fetchUrl, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
         if (res.ok) {
           const data = await res.json();
@@ -757,14 +761,24 @@ export default function App() {
       const mimeMatch = fileUrl.match(/^data:([^;]+);/);
       const mime = mimeMatch ? mimeMatch[1] : '';
       let ext = 'pdf';
-      if (mime.includes('image/')) ext = 'png';
-      else if (mime.includes('word') || mime.includes('officedocument') || mime.includes('msword')) ext = 'docx';
-      else if (mime.includes('excel') || mime.includes('sheet') || mime.includes('ms-excel')) ext = 'xlsx';
+      if (mime.includes('image/png')) ext = 'png';
+      else if (mime.includes('image/jpeg') || mime.includes('image/jpg')) ext = 'jpg';
+      else if (mime.includes('image/webp')) ext = 'webp';
+      else if (mime.includes('image/svg')) ext = 'svg';
+      else if (mime.includes('image/')) ext = 'png';
+      else if (mime.includes('word') || mime.includes('officedocument.wordprocessingml') || mime.includes('msword')) ext = 'docx';
+      else if (mime.includes('excel') || mime.includes('officedocument.spreadsheetml') || mime.includes('ms-excel') || mime.includes('sheet')) ext = 'xlsx';
+      else if (mime.includes('powerpoint') || mime.includes('officedocument.presentationml') || mime.includes('ms-powerpoint') || mime.includes('presentation')) ext = 'pptx';
+      else if (mime.includes('video/mp4')) ext = 'mp4';
       else if (mime.includes('video/')) ext = 'mp4';
+      else if (mime.includes('zip') || mime.includes('compressed')) ext = 'zip';
       
       link.download = filename.includes('.') ? filename : `${filename}.${ext}`;
     } else {
-      // For seed or external path assets, generate a clean downloadable PDF blob
+      if (fileUrl.startsWith('http')) {
+        window.open(fileUrl, '_blank');
+        return;
+      }
       const cleanTitle = (filename || 'Materi_Pemasaran').replace(/[()\/\\:]/g, '_');
       const pdfContent = `%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n4 0 obj\n<< /Length 150 >>\nstream\nBT\n/F1 16 Tf\n50 720 Td\n(INFIMECH MARKETING - ${cleanTitle}) Tj\n/F1 12 Tf\n0 -30 Td\n(Materi resmi pemasaran & arsip kampanye.) Tj\n0 -20 Td\n(Diunduh pada: ${new Date().toLocaleDateString('id-ID')}) Tj\nET\nendstream\nendobj\n5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000054 00000 n \n0000000109 00000 n \n0000000244 00000 n \n0000000444 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n521\n%%EOF`;
       const blob = new Blob([pdfContent], { type: 'application/pdf' });
@@ -774,6 +788,34 @@ export default function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handlePreviewFile = async (fileUrl, filename = 'Dokumen', fileType = 'PDF') => {
+    if (!fileUrl) return;
+    if (typeof fileUrl === 'string' && (fileUrl.includes('/api/assets/') || fileUrl.includes('/content'))) {
+      try {
+        const token = localStorage.getItem('token');
+        const baseUrlHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:5000'
+          : 'https://infimech-marketing-erp-backend-583320051925.asia-southeast1.run.app';
+        const fetchUrl = fileUrl.startsWith('http') ? fileUrl : `${baseUrlHost}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+        const res = await fetch(fetchUrl, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.file_url) {
+            return handlePreviewFile(data.file_url, data.name || filename, data.file_type || fileType);
+          }
+        }
+      } catch (err) {
+        console.error('Fetch asset content for preview error:', err);
+      }
+    }
+    setPreviewFileModal({
+      isOpen: true,
+      fileUrl: fileUrl,
+      filename: filename,
+      fileType: fileType
+    });
   };
 
   // --- Actions ---
@@ -1375,15 +1417,25 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Download Button */}
-                <button
-                  className="btn btn-primary"
-                  style={{ width: '100%', height: '46px', fontSize: '14px', fontWeight: 700, background: 'linear-gradient(135deg, var(--primary-glow) 0%, #a855f7 100%)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                  onClick={() => triggerDownloadPublicAsset(a.id, a.file_url)}
-                >
-                  <Download size={16} />
-                  <span>Unduh File Materi</span>
-                </button>
+                {/* Preview and Download Buttons */}
+                <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                  <button
+                    className="btn"
+                    style={{ flex: 1, height: '46px', fontSize: '13px', fontWeight: 700, background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', border: '1px solid rgba(168,85,247,0.4)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    onClick={() => handlePreviewFile(a.file_url, a.name || 'Dokumen', a.file_type)}
+                  >
+                    <Eye size={16} />
+                    <span>Lihat File</span>
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    style={{ flex: 1, height: '46px', fontSize: '13px', fontWeight: 700, background: 'linear-gradient(135deg, var(--primary-glow) 0%, #a855f7 100%)', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    onClick={() => triggerDownloadPublicAsset(a.id, a.file_url)}
+                  >
+                    <Download size={16} />
+                    <span>Unduh File</span>
+                  </button>
+                </div>
 
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   <span>🛡️ Verified Secure by MarketERP Share</span>
@@ -2822,10 +2874,19 @@ export default function App() {
                             </div>
 
                             {/* Actions block */}
-                            <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', gap: '6px', marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+                              <button
+                                className="btn"
+                                style={{ flex: 1, padding: '7px 0', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', border: '1px solid rgba(168,85,247,0.4)' }}
+                                onClick={() => handlePreviewFile(a.file_url, a.name || 'Dokumen', a.file_type)}
+                                title="Lihat / Preview Isi File Asli"
+                              >
+                                <Eye size={12} />
+                                <span>Lihat</span>
+                              </button>
                               <button
                                 className="btn btn-secondary"
-                                style={{ flex: 1, padding: '7px 0', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                                style={{ flex: 1, padding: '7px 0', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                                 onClick={() => setShareModalAsset(a)}
                               >
                                 <Share2 size={12} />
@@ -2833,7 +2894,7 @@ export default function App() {
                               </button>
                               <button
                                 className="btn btn-primary"
-                                style={{ flex: 1, padding: '7px 0', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--primary-glow)', border: 'none' }}
+                                style={{ flex: 1, padding: '7px 0', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', background: 'var(--primary-glow)', border: 'none' }}
                                 onClick={() => triggerDownloadAsset(a)}
                               >
                                 <Download size={12} />
@@ -3077,14 +3138,24 @@ export default function App() {
                                   </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '8px', borderTop: '1px dashed var(--border-color)' }}>
+                                <div style={{ display: 'flex', gap: '6px', marginTop: 'auto', paddingTop: '8px', borderTop: '1px dashed var(--border-color)' }}>
+                                  <button
+                                    className="btn"
+                                    style={{ flex: 1, padding: '6px 8px', fontSize: '11px', background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', border: '1px solid rgba(168,85,247,0.4)', borderRadius: '6px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                    onClick={() => handlePreviewFile(a.file_url, a.name || 'Dokumen', a.file_type)}
+                                    title="Lihat / Preview Isi File Asli"
+                                  >
+                                    <Eye size={12} />
+                                    <span>Lihat</span>
+                                  </button>
                                   <button
                                     className="btn btn-primary"
-                                    style={{ flex: 1, padding: '6px 10px', fontSize: '11px', background: 'var(--accent-cyan)', color: 'black', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                    style={{ flex: 1, padding: '6px 8px', fontSize: '11px', background: 'var(--accent-cyan)', color: 'black', border: 'none', borderRadius: '6px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                                     onClick={() => handleOpenOrDownloadFile(a.file_url, a.name || 'Dokumen')}
+                                    title="Unduh File Asli"
                                   >
                                     <Download size={12} />
-                                    <span>Unduh File</span>
+                                    <span>Unduh</span>
                                   </button>
                                   <button
                                     className="icon-btn"
@@ -4034,6 +4105,92 @@ export default function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PREVIEW ASSET FILE */}
+      {previewFileModal && previewFileModal.isOpen && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ maxWidth: '850px', width: '92%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', margin: '-1px -1px 0', padding: '16px 24px', borderRadius: '14px 14px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '22px' }}>
+                  {previewFileModal.fileType === 'PDF' ? '📄' : previewFileModal.fileType === 'Image' ? '🖼️' : previewFileModal.fileType === 'Video' ? '🎬' : '📑'}
+                </span>
+                <div>
+                  <h3 className="modal-title" style={{ color: 'black', fontWeight: 800, margin: 0, fontSize: '16px' }}>
+                    Preview File Asli: {previewFileModal.filename}
+                  </h3>
+                  <p style={{ fontSize: '11px', color: 'rgba(0,0,0,0.75)', margin: 0, fontWeight: 600 }}>
+                    Memeriksa keaslian isi dokumen & verifikasi bebas corrupt
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  className="btn"
+                  style={{ background: 'black', color: '#fff', fontSize: '12px', fontWeight: 700, padding: '6px 14px', borderRadius: '6px', border: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => handleOpenOrDownloadFile(previewFileModal.fileUrl, previewFileModal.filename)}
+                >
+                  <Download size={14} />
+                  <span>Unduh File Asli</span>
+                </button>
+                <button className="icon-btn" style={{ color: 'black', background: 'rgba(255,255,255,0.3)', borderRadius: '50%', padding: '4px' }} onClick={() => setPreviewFileModal(null)}>
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div style={{ padding: '20px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+              {previewFileModal.fileUrl?.startsWith('data:application/pdf') || previewFileModal.filename?.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={previewFileModal.fileUrl}
+                  style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '8px', background: '#fff' }}
+                  title="PDF Preview"
+                />
+              ) : previewFileModal.fileUrl?.startsWith('data:image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(previewFileModal.filename || '') ? (
+                <img
+                  src={previewFileModal.fileUrl}
+                  alt={previewFileModal.filename}
+                  style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+                />
+              ) : previewFileModal.fileUrl?.startsWith('data:video/') || previewFileModal.filename?.toLowerCase().endsWith('.mp4') ? (
+                <video
+                  src={previewFileModal.fileUrl}
+                  controls
+                  style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '8px' }}
+                />
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 20px', maxWidth: '500px' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📑</div>
+                  <h4 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Preview Langsung Tidak Didukung Browser untuk Format Dokumen Ini
+                  </h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
+                    File ini ({previewFileModal.filename}) merupakan format dokumen Office/khusus (Word, Excel, PowerPoint, ZIP, dll). File asli tersimpan dengan aman dan bebas corrupt di server. Silakan klik tombol di bawah untuk mengunduh dan mengujinya langsung di komputer Anda.
+                  </p>
+                  <button
+                    className="btn btn-primary"
+                    style={{ background: 'var(--accent-cyan)', color: 'black', fontWeight: 800, padding: '12px 24px', borderRadius: '8px', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                    onClick={() => handleOpenOrDownloadFile(previewFileModal.fileUrl, previewFileModal.filename)}
+                  >
+                    <Download size={16} />
+                    <span>Unduh File Asli Sekarang</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '0 0 14px 14px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle2 size={14} />
+                <span>Integritas File Asli Terverifikasi (Original Binary Data)</span>
+              </span>
+              <button className="btn btn-secondary" style={{ padding: '6px 16px', fontSize: '12px' }} onClick={() => setPreviewFileModal(null)}>
+                Tutup Preview
+              </button>
+            </div>
           </div>
         </div>
       )}

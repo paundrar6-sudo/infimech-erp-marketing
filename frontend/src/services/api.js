@@ -1,4 +1,4 @@
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+export const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
   : 'https://infimech-marketing-erp-backend-583320051925.asia-southeast1.run.app/api';
 
@@ -25,6 +25,13 @@ const handleResponse = async (response) => {
 };
 
 export const api = {
+  getAssetContent: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/assets/${id}/content`, {
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
   // Auth
   login: async (email, password) => {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
