@@ -235,6 +235,25 @@ router.post('/folders/:folderId/files', verifyToken, async (req, res) => {
   }
 });
 
+// PUT update folder
+router.put('/folders/:id', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { name, description, category } = req.body;
+  if (!name) {
+    return res.status(400).json({ message: 'Nama folder wajib diisi.' });
+  }
+  try {
+    await pool.query(
+      `UPDATE asset_folders SET name = ?, description = ?, category = ? WHERE id = ?`,
+      [name, description || '', category || 'CFD/FEA', id]
+    );
+    res.json({ message: 'Folder berhasil diperbarui.' });
+  } catch (err) {
+    console.error('Update folder error:', err);
+    res.status(500).json({ message: 'Gagal memperbarui folder.' });
+  }
+});
+
 // DELETE folder
 router.delete('/folders/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
@@ -364,7 +383,7 @@ function incrementVersion(currentVersion) {
 // Update asset
 router.put('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { name, file_type, category, tags, file_url, version, sharing_status, size } = req.body;
+  const { name, file_type, category, tags, file_url, version, sharing_status, size, folder_id } = req.body;
 
   if (!name || !file_type) {
     return res.status(400).json({ message: 'Nama aset dan tipe file wajib diisi.' });
@@ -407,11 +426,13 @@ router.put('/:id', verifyToken, async (req, res) => {
       }
     }
 
+    const finalFolderId = folder_id !== undefined ? folder_id : oldAsset.folder_id;
+
     await pool.query(
       `UPDATE assets 
-       SET name = ?, file_type = ?, category = ?, tags = ?, file_url = ?, version = ?, sharing_status = ?, size = ?, version_history = ? 
+       SET name = ?, file_type = ?, category = ?, tags = ?, file_url = ?, version = ?, sharing_status = ?, size = ?, version_history = ?, folder_id = ? 
        WHERE id = ?`,
-      [name, file_type, category || 'Brosur', tags, finalFileUrl, newVersion, sharing_status || 'Private', size || '1.5 MB', historyJson, id]
+      [name, file_type, category || 'Brosur', tags, finalFileUrl, newVersion, sharing_status || 'Private', size || '1.5 MB', historyJson, finalFolderId || null, id]
     );
 
     res.json({ message: 'Aset berhasil diperbarui.', version: newVersion });

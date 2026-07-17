@@ -348,11 +348,13 @@ export default function App() {
   const fetchAssetFolders = async () => {
     try {
       const data = await api.getAssetFolders();
-      setAssetFolders(Array.isArray(data) ? data : []);
-      if (selectedFolder) {
-        const updated = (Array.isArray(data) ? data : []).find(f => f.id === selectedFolder.id);
-        if (updated) setSelectedFolder(updated);
-      }
+      const folderList = Array.isArray(data) ? data : [];
+      setAssetFolders(folderList);
+      setSelectedFolder(prev => {
+        if (!prev) return null;
+        const updated = folderList.find(f => f.id === prev.id);
+        return updated || prev;
+      });
     } catch (err) {
       console.error('fetchAssetFolders error:', err);
     }
@@ -1108,7 +1110,8 @@ export default function App() {
         showAlert('Aset berhasil ditambahkan.', 'Sukses', 'success');
       }
       setAssetModalOpen(false);
-      fetchAssets();
+      await fetchAssets();
+      await fetchAssetFolders();
     } catch (err) {
       showAlert(err.message, 'Gagal', 'error');
     }
@@ -1130,6 +1133,7 @@ export default function App() {
       try {
         await api.deleteAsset(id);
         fetchAssets();
+        fetchAssetFolders();
         showAlert('Aset berhasil dihapus.', 'Sukses', 'success');
       } catch (err) {
         showAlert(err.message, 'Gagal', 'error');
@@ -1143,6 +1147,19 @@ export default function App() {
       return showAlert('Nama folder wajib diisi.', 'Perhatian', 'warning');
     }
     try {
+      if (folderFormData.id) {
+        await api.updateAssetFolder(folderFormData.id, {
+          name: folderFormData.name,
+          description: folderFormData.description || '',
+          category: folderFormData.category || 'CFD/FEA'
+        });
+        setFolderModalOpen(false);
+        showAlert('Folder berhasil diperbarui.', 'Sukses', 'success');
+        await fetchAssetFolders();
+        await fetchAssets();
+        return;
+      }
+
       // 1. Buat folder terlebih dahulu di backend (tanpa payload file yang besar)
       const { files, ...folderMeta } = folderFormData;
       const res = await api.createAssetFolder(folderMeta);
@@ -1161,8 +1178,8 @@ export default function App() {
 
       setFolderModalOpen(false);
       showAlert('Folder & Aset berhasil dibuat.', 'Sukses', 'success');
-      fetchAssetFolders();
-      fetchAssets();
+      await fetchAssetFolders();
+      await fetchAssets();
     } catch (err) {
       showAlert(err.message || 'Gagal membuat folder aset.', 'Gagal', 'error');
     }
@@ -3000,6 +3017,17 @@ export default function App() {
                                 </button>
                                 <button
                                   className="icon-btn"
+                                  style={{ color: 'var(--text-primary)', opacity: 0.8 }}
+                                  onClick={() => {
+                                    setFolderFormData({ id: f.id, name: f.name, description: f.description || '', category: f.category || 'CFD/FEA', files: [] });
+                                    setFolderModalOpen(true);
+                                  }}
+                                  title="Edit Nama / Keterangan Folder"
+                                >
+                                  <Edit3 size={14} />
+                                </button>
+                                <button
+                                  className="icon-btn"
                                   style={{ color: 'var(--accent-red)', opacity: 0.8 }}
                                   onClick={() => deleteAssetFolderHandler(f.id)}
                                   title="Hapus Folder"
@@ -3076,6 +3104,18 @@ export default function App() {
                           >
                             <Share2 size={16} />
                             <span>🔗 Share Folder ke Klien</span>
+                          </button>
+
+                          <button
+                            className="btn btn-secondary"
+                            style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', fontWeight: 700, padding: '10px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => {
+                              setFolderFormData({ id: selectedFolder.id, name: selectedFolder.name, description: selectedFolder.description || '', category: selectedFolder.category || 'CFD/FEA', files: [] });
+                              setFolderModalOpen(true);
+                            }}
+                          >
+                            <Edit3 size={16} />
+                            <span>✏️ Edit Folder</span>
                           </button>
 
                           <button
@@ -3156,6 +3196,28 @@ export default function App() {
                                   >
                                     <Download size={12} />
                                     <span>Unduh</span>
+                                  </button>
+                                  <button
+                                    className="icon-btn"
+                                    style={{ color: 'var(--text-primary)', opacity: 0.8 }}
+                                    onClick={() => {
+                                      setAssetFormData({
+                                        id: a.id,
+                                        name: a.name,
+                                        file_type: a.file_type,
+                                        category: a.category,
+                                        tags: a.tags || '',
+                                        file_url: a.file_url || '',
+                                        version: a.version || '1.0',
+                                        sharing_status: a.sharing_status || 'Shared',
+                                        size: a.size || '2.4 MB',
+                                        folder_id: a.folder_id
+                                      });
+                                      setAssetModalOpen(true);
+                                    }}
+                                    title="Edit / Rename Aset"
+                                  >
+                                    <Edit3 size={14} />
                                   </button>
                                   <button
                                     className="icon-btn"
@@ -4142,19 +4204,23 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ padding: '20px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+            <div style={{ padding: '20px', flex: 1, overflowY: 'auto', overflowX: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.2)', minHeight: '72vh', maxHeight: '76vh' }}>
               {previewFileModal.fileUrl?.startsWith('data:application/pdf') || previewFileModal.filename?.toLowerCase().endsWith('.pdf') ? (
-                <iframe
-                  src={previewFileModal.fileUrl}
-                  style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '8px', background: '#fff' }}
-                  title="PDF Preview"
-                />
+                <div style={{ width: '100%', height: '72vh', overflow: 'auto', borderRadius: '8px', background: '#fff' }}>
+                  <iframe
+                    src={previewFileModal.fileUrl}
+                    style={{ width: '100%', height: '100%', minHeight: '68vh', border: 'none', display: 'block' }}
+                    title="PDF Preview"
+                  />
+                </div>
               ) : previewFileModal.fileUrl?.startsWith('data:image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(previewFileModal.filename || '') ? (
-                <img
-                  src={previewFileModal.fileUrl}
-                  alt={previewFileModal.filename}
-                  style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
-                />
+                <div style={{ width: '100%', overflow: 'auto', display: 'flex', justifyContent: 'center', padding: '10px' }}>
+                  <img
+                    src={previewFileModal.fileUrl}
+                    alt={previewFileModal.filename}
+                    style={{ maxWidth: '100%', maxHeight: 'none', width: 'auto', height: 'auto', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+                  />
+                </div>
               ) : previewFileModal.fileUrl?.startsWith('data:video/') || previewFileModal.filename?.toLowerCase().endsWith('.mp4') ? (
                 <video
                   src={previewFileModal.fileUrl}

@@ -269,6 +269,15 @@ export const api = {
     return handleResponse(res);
   },
 
+  updateAssetFolder: async (id, data) => {
+    const res = await fetch(`${API_BASE_URL}/assets/folders/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
   uploadFolderFiles: async (folderId, files) => {
     const res = await fetch(`${API_BASE_URL}/assets/folders/${folderId}/files`, {
       method: 'POST',
