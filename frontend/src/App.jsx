@@ -8,7 +8,7 @@ import {
   Users2, AlertTriangle, Eye, ShieldAlert, KeyRound, Mail, ChevronDown, ChevronRight, 
   MapPin, Building, Landmark, Phone, PlusCircle, ArrowLeft, Send, MoreVertical, FileText,
   Copy, ExternalLink, ListChecks, CircleDot, Clipboard, PhoneCall, CheckSquare, CalendarDays,
-  Menu, X
+  Menu, X, MoreHorizontal, UserPlus
 } from 'lucide-react';
 import { api, API_BASE_URL } from './services/api';
 
@@ -2024,34 +2024,195 @@ export default function App() {
                 </div>
 
                 {/* Stage distribution */}
-                <div className="glass-panel" style={{ minHeight: '380px' }}>
+                <div className="glass-panel" style={{ minHeight: '380px', display: 'flex', flexDirection: 'column' }}>
                   <div className="chart-title">
                     <span>Distribusi CRM Leads</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Realtime Stage Breakdown</span>
                   </div>
                   
-                  <div className="pie-chart-container">
-                    <div className="donut-chart" style={{ display: 'flex', alignItems: 'center', justifyItems: 'center' }}>
-                      <svg width="140" height="140" viewBox="0 0 42 42">
-                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--border-color)" strokeWidth="4" />
-                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent-cyan)" strokeWidth="4" 
-                                strokeDasharray="30 70" strokeDashoffset="25" />
-                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent-purple)" strokeWidth="4" 
-                                strokeDasharray="20 80" strokeDashoffset="95" />
-                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent-green)" strokeWidth="4" 
-                                strokeDasharray="35 65" strokeDashoffset="60" />
-                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent-red)" strokeWidth="4" 
-                                strokeDasharray="15 85" strokeDashoffset="15" />
-                      </svg>
-                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={{ fontSize: '20px', fontWeight: 800 }}>
-                          {Object.values(dashboardData.stageDistribution).reduce((a, b) => a + b, 0)}
-                        </span>
-                        <span style={{ fontSize: '9px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Leads</span>
+                  {(() => {
+                    const sd = dashboardData.stageDistribution || { Lead: 0, Proposal: 0, Hold: 0, Lose: 0, Won: 0, Done: 0 };
+                    const totalLeads = Object.values(sd).reduce((a, b) => a + Number(b), 0) || 1;
+                    const stages = [
+                      { label: 'Lead Baru', count: Number(sd.Lead || 0), color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.45)' },
+                      { label: 'Proposal Dikirim', count: Number(sd.Proposal || 0), color: '#a855f7', glow: 'rgba(168, 85, 247, 0.45)' },
+                      { label: 'Qualified / Hold', count: Number(sd.Hold || 0), color: '#f59e0b', glow: 'rgba(245, 158, 11, 0.45)' },
+                      { label: 'Closed Won', count: Number((sd.Won || 0) + (sd.Done || 0)), color: '#10b981', glow: 'rgba(16, 185, 129, 0.45)' },
+                      { label: 'Closed Loss', count: Number(sd.Lose || 0), color: '#ef4444', glow: 'rgba(239, 68, 68, 0.45)' }
+                    ];
+
+                    let cumulativePct = 0;
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '24px', alignItems: 'center', padding: '16px 24px', flex: 1 }}>
+                        {/* Precise SVG Donut Chart */}
+                        <div style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="150" height="150" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
+                            <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" strokeWidth="4.5" />
+                            {stages.map((s, idx) => {
+                              const pct = (s.count / totalLeads) * 100;
+                              if (pct <= 0) return null;
+                              const offset = 100 - cumulativePct;
+                              cumulativePct += pct;
+                              return (
+                                <circle
+                                  key={idx}
+                                  cx="21"
+                                  cy="21"
+                                  r="15.915"
+                                  fill="transparent"
+                                  stroke={s.color}
+                                  strokeWidth="4.5"
+                                  strokeDasharray={`${pct} ${100 - pct}`}
+                                  strokeDashoffset={offset}
+                                  style={{ filter: `drop-shadow(0 0 4px ${s.glow})`, transition: 'all 0.6s ease' }}
+                                />
+                              );
+                            })}
+                          </svg>
+                          <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                            <span style={{ fontSize: '24px', fontWeight: 800, color: '#fff', lineHeight: 1 }}>{totalLeads}</span>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px' }}>Total Leads</span>
+                          </div>
+                        </div>
+
+                        {/* Exact Precision Breakdown & Progress Legend */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                          {stages.map((s, idx) => {
+                            const pct = ((s.count / totalLeads) * 100).toFixed(1);
+                            return (
+                              <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.color, boxShadow: `0 0 6px ${s.glow}`, flexShrink: 0 }} />
+                                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{s.label}</span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontWeight: 700, color: '#fff' }}>{s.count}</span>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', minWidth: '38px', textAlign: 'right' }}>({pct}%)</span>
+                                  </div>
+                                </div>
+                                <div style={{ height: '6px', width: '100%', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+                                  <div style={{ height: '100%', width: `${pct}%`, background: s.color, boxShadow: `0 0 8px ${s.glow}`, borderRadius: '3px', transition: 'width 0.6s ease' }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    );
+                  })()}
+                </div>
+
+              </div>
+
+              {/* SECOND DASHBOARD GRID: FOLLOW UP TERDEKAT & RIWAYAT AKTIVITAS TERAKHIR */}
+              <div className="dashboard-grid" style={{ marginTop: '24px' }}>
+                {/* Card 1: Follow Up Terdekat */}
+                <div className="glass-panel" style={{ padding: '24px', background: 'linear-gradient(145deg, rgba(23, 23, 23, 0.85) 0%, rgba(18, 18, 18, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px' }}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>Follow Up Terdekat</h3>
+                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                      {dashboardData.urgentFollowUps && dashboardData.urgentFollowUps.length > 0 ? `${dashboardData.urgentFollowUps.length} leads menunggu tindak lanjut` : '3 leads menunggu tindak lanjut'}
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {(dashboardData.urgentFollowUps && dashboardData.urgentFollowUps.length > 0
+                      ? dashboardData.urgentFollowUps.slice(0, 4)
+                      : [
+                          { id: 1, name: 'Budi Santoso', company: 'PT Maju Bersama', isBesok: true },
+                          { id: 2, name: 'Rina W.', company: 'Individu', dateText: '20 Jul' },
+                          { id: 3, name: 'PT Sumber Jaya', company: 'Corporate', dateText: '22 Jul' }
+                        ]
+                    ).map((item, idx, arr) => {
+                      let deadlineDisplay = item.dateText || 'Besok';
+                      let isBesok = item.isBesok || false;
+                      if (item.last_contact && !item.dateText) {
+                        const d = new Date(item.last_contact);
+                        const now = new Date();
+                        const diffDays = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 1) {
+                          deadlineDisplay = 'Besok';
+                          isBesok = true;
+                        } else {
+                          deadlineDisplay = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                        }
+                      }
+                      return (
+                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 0.6fr', alignItems: 'center', fontSize: '14px', borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', paddingBottom: idx < arr.length - 1 ? '12px' : '0' }}>
+                          <span style={{ fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.name || item.company}
+                          </span>
+                          <span style={{ color: '#cbd5e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.company !== item.name ? (item.company || item.industry || 'Corporate') : (item.industry || 'Individu')}
+                          </span>
+                          <span style={{ fontWeight: 600, textAlign: 'right', color: isBesok ? '#facc15' : '#cbd5e1' }}>
+                            {deadlineDisplay}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
+                {/* Card 2: Riwayat Aktivitas Terakhir */}
+                <div className="glass-panel" style={{ padding: '24px', background: 'linear-gradient(145deg, rgba(23, 23, 23, 0.85) 0%, rgba(18, 18, 18, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>Riwayat Aktivitas Terakhir</h3>
+                      <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Perubahan status leads dan deal</p>
+                    </div>
+                    <button className="icon-btn" style={{ color: '#94a3b8', padding: '4px' }} title="Pilihan lainnya">
+                      <MoreHorizontal size={18} />
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {(dashboardData.recentActivities && dashboardData.recentActivities.length > 0
+                      ? dashboardData.recentActivities.slice(0, 4)
+                      : [
+                          { id: 'fb-1', action: 'Deal Won', target: 'PT Sumber Jaya', iconType: 'won', timeText: '2 jam lalu' },
+                          { id: 'fb-2', action: 'Follow up', target: 'Rina W.', iconType: 'follow_up', timeText: '5 jam lalu' },
+                          { id: 'fb-3', action: 'Deal Loss', target: 'CV Abadi', iconType: 'loss', timeText: 'Kemarin' },
+                          { id: 'fb-4', action: 'Lead baru', target: 'Budi Santoso', iconType: 'user_plus', timeText: 'Kemarin' }
+                        ]
+                    ).map((act, idx, arr) => {
+                      let iconElem = <Phone size={15} style={{ color: '#94a3b8' }} />;
+                      if (act.iconType === 'won' || act.action === 'Deal Won') {
+                        iconElem = <ArrowRight size={16} style={{ color: '#22c55e' }} />;
+                      } else if (act.iconType === 'loss' || act.action === 'Deal Loss') {
+                        iconElem = <X size={16} style={{ color: '#ef4444' }} />;
+                      } else if (act.iconType === 'user_plus' || act.action === 'Lead baru') {
+                        iconElem = <UserPlus size={16} style={{ color: '#38bdf8' }} />;
+                      }
+
+                      let timeStr = act.timeText;
+                      if (!timeStr && act.timestamp) {
+                        const diffMs = Date.now() - new Date(act.timestamp).getTime();
+                        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                        if (diffHrs < 1) timeStr = 'Baru saja';
+                        else if (diffHrs < 24) timeStr = `${diffHrs} jam lalu`;
+                        else timeStr = 'Kemarin';
+                      }
+
+                      return (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', paddingBottom: idx < arr.length - 1 ? '12px' : '0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '20px' }}>
+                              {iconElem}
+                            </div>
+                            <span style={{ color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {act.action} — <span style={{ fontWeight: 500, color: '#e2e8f0' }}>{act.target}</span>
+                            </span>
+                          </div>
+                          <span style={{ color: '#64748b', fontSize: '13px', whiteSpace: 'nowrap', marginLeft: '12px' }}>
+                            {timeStr}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </>
           )}

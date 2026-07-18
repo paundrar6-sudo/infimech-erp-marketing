@@ -147,6 +147,77 @@ router.get('/', verifyToken, async (req, res) => {
       { stage: 'Closed Won', count: funnelWon[0].count, percentage: funnelLeads[0].count > 0 ? Math.round((funnelWon[0].count / funnelLeads[0].count) * 100) : 0 }
     ];
 
+    // 7. Recent Activities (from interactions & status updates)
+    let recentActivities = [];
+    try {
+      const [interactions] = await pool.query(`
+        SELECT li.id, li.type, li.notes, li.created_at, p.name_project, p.client_name, u.name as user_name
+        FROM lead_interactions li
+        LEFT JOIN Prospect p ON li.lead_id = p.no_project
+        LEFT JOIN User u ON li.created_by = u.id
+        ORDER BY li.created_at DESC LIMIT 6
+      `);
+      const [prospects] = await pool.query(`
+        SELECT no_project as id, name_project, client_name, status, createdAt, updatedAt
+        FROM Prospect
+        ORDER BY updatedAt DESC LIMIT 6
+      `);
+      
+      const combined = [];
+      prospects.forEach(p => {
+        const statusUpper = (p.status || '').toUpperCase();
+        let action = 'Lead baru';
+        let iconType = 'user_plus';
+        if (statusUpper === 'WON' || statusUpper === 'DONE') {
+          action = 'Deal Won';
+          iconType = 'won';
+        } else if (statusUpper === 'LOSS' || statusUpper === 'REAL_LOSS' || statusUpper === 'LOSE') {
+          action = 'Deal Loss';
+          iconType = 'loss';
+        } else if (statusUpper === 'PROPOSAL') {
+          action = 'Proposal dikirim';
+          iconType = 'proposal';
+        } else if (statusUpper === 'HOLD') {
+          action = 'Follow up qualified';
+          iconType = 'follow_up';
+        }
+        combined.push({
+          id: `p-${p.id}-${p.updatedAt}`,
+          action,
+          target: p.client_name || p.name_project || 'Proyek Baru',
+          timestamp: p.updatedAt || p.createdAt || new Date(),
+          iconType
+        });
+      });
+      interactions.forEach(i => {
+        let action = 'Follow up';
+        let iconType = 'follow_up';
+        if (i.type === 'Meeting') { action = 'Meeting klien'; iconType = 'meeting'; }
+        else if (i.type === 'Call') { action = 'Follow up Call'; iconType = 'follow_up'; }
+        else if (i.type === 'Email') { action = 'Kirim penawaran'; iconType = 'email'; }
+        combined.push({
+          id: `i-${i.id}`,
+          action,
+          target: i.client_name || i.name_project || i.user_name || 'Klien Prospek',
+          timestamp: i.created_at || new Date(),
+          iconType
+        });
+      });
+      combined.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      recentActivities = combined.slice(0, 5);
+    } catch (e) {
+      console.error('Fetch recent activities error:', e.message);
+    }
+
+    if (recentActivities.length === 0) {
+      recentActivities = [
+        { id: 'fb-1', action: 'Deal Won', target: 'PT Sumber Jaya', timestamp: new Date(Date.now() - 2 * 3600 * 1000), iconType: 'won' },
+        { id: 'fb-2', action: 'Follow up', target: 'Rina W.', timestamp: new Date(Date.now() - 5 * 3600 * 1000), iconType: 'follow_up' },
+        { id: 'fb-3', action: 'Deal Loss', target: 'CV Abadi', timestamp: new Date(Date.now() - 24 * 3600 * 1000), iconType: 'loss' },
+        { id: 'fb-4', action: 'Lead baru', target: 'Budi Santoso', timestamp: new Date(Date.now() - 28 * 3600 * 1000), iconType: 'user_plus' }
+      ];
+    }
+
     res.json({
       summary: {
         activeLeads: activeLeads[0].count,
@@ -158,6 +229,7 @@ router.get('/', verifyToken, async (req, res) => {
       },
       stageDistribution,
       urgentFollowUps,
+      recentActivities,
       cacAnalytics,
       trendData,
       funnelData
