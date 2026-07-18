@@ -105,32 +105,46 @@ router.get('/', verifyToken, async (req, res) => {
       };
     });
 
-    // 5. Monthly Trend (Leads Created vs Leads Won over the last 6 months)
+    // 5. Monthly Trend (Leads Created vs Leads Won over the last 12 months)
     const trendData = [];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const now = new Date();
 
-    for (let i = 5; i >= 0; i--) {
+    let trendRows = [];
+    try {
+      const [rows] = await pool.query(`
+        SELECT MONTH(createdAt) as m, YEAR(createdAt) as y, UPPER(status) as status_upper, COUNT(*) as cnt
+        FROM Prospect
+        WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY YEAR(createdAt), MONTH(createdAt), UPPER(status)
+      `);
+      trendRows = rows;
+    } catch (err) {
+      console.error('Grouped trend query error:', err.message);
+    }
+
+    for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthLabel = months[d.getMonth()] + ' ' + d.getFullYear().toString().substr(-2);
       const monthNum = d.getMonth() + 1;
       const yearNum = d.getFullYear();
 
-      // Query database for prospects created in this month
-      const [leadsCount] = await pool.query(
-        'SELECT COUNT(*) as count FROM Prospect WHERE MONTH(createdAt) = ? AND YEAR(createdAt) = ?',
-        [monthNum, yearNum]
-      );
-      
-      const [wonCount] = await pool.query(
-        "SELECT COUNT(*) as count FROM Prospect WHERE MONTH(createdAt) = ? AND YEAR(createdAt) = ? AND UPPER(status) IN ('WON', 'DONE')",
-        [monthNum, yearNum]
-      );
+      let leadsCount = 0;
+      let wonCount = 0;
+
+      trendRows.forEach(r => {
+        if (Number(r.m) === monthNum && Number(r.y) === yearNum) {
+          leadsCount += Number(r.cnt);
+          if (r.status_upper === 'WON' || r.status_upper === 'DONE') {
+            wonCount += Number(r.cnt);
+          }
+        }
+      });
 
       trendData.push({
         month: monthLabel,
-        leads: leadsCount[0].count,
-        won: wonCount[0].count
+        leads: leadsCount,
+        won: wonCount
       });
     }
 

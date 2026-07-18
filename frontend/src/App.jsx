@@ -34,6 +34,7 @@ export default function App() {
   const [operatorTab, setOperatorTab] = useState('leads'); // 'leads', 'segments', 'roles'
   const [digitalTab, setDigitalTab] = useState('campaigns'); // 'campaigns', 'assets'
   const [followUpTab, setFollowUpTab] = useState('kanban'); // 'kanban', 'projects', 'project-status', 'it-projects', 'calendar'
+  const [trendTimeframe, setTrendTimeframe] = useState('6m'); // '3m', '6m', '12m'
 
   // Selected Lead Details
   const [selectedLeadId, setSelectedLeadId] = useState(null);
@@ -1977,51 +1978,175 @@ export default function App() {
               <div className="dashboard-grid">
                 
                 {/* Monthly trend chart */}
-                <div className="glass-panel" style={{ minHeight: '380px' }}>
-                  <div className="chart-title">
-                    <span>Jalur Pendaftaran Leads vs Deal Won (Monthly Trend)</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>6 Bulan Terakhir</span>
-                  </div>
+                {(() => {
+                  const sliceCount = trendTimeframe === '3m' ? 3 : trendTimeframe === '12m' ? 12 : 6;
+                  const displayedTrend = (dashboardData.trendData || []).slice(-sliceCount);
+                  const totalTrendLeads = displayedTrend.reduce((acc, curr) => acc + (curr.leads || 0), 0);
+                  const totalTrendWon = displayedTrend.reduce((acc, curr) => acc + (curr.won || 0), 0);
+                  const trendWinRate = totalTrendLeads > 0 ? ((totalTrendWon / totalTrendLeads) * 100).toFixed(1) : '0.0';
                   
-                  <div className="chart-container" style={{ paddingLeft: '40px', paddingRight: '20px' }}>
-                    <div style={{ position: 'absolute', left: 0, top: 20, bottom: 40, width: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', textAlign: 'right' }}>
-                      <span>10</span>
-                      <span>5</span>
-                      <span>0</span>
-                    </div>
+                  const maxYVal = Math.max(...displayedTrend.map(t => Math.max(t.leads || 0, t.won || 0)), 10);
+                  const ceiling = Math.ceil(maxYVal / 5) * 5;
 
-                    {dashboardData.trendData.map((t, idx) => {
-                      const leadHeight = Math.min((t.leads / 10) * 100, 100);
-                      const wonHeight = Math.min((t.won / 10) * 100, 100);
-                      
-                      return (
-                        <div key={idx} className="bar-chart-bar">
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '180px', width: '100%', justifyContent: 'center' }}>
-                            <div 
-                              className="bar-fill" 
-                              style={{ 
-                                height: `${leadHeight}%`, 
-                                background: 'linear-gradient(to top, #6366f1, #3b82f6)',
-                                width: '14px'
-                              }} 
-                              title={`Total Leads: ${t.leads}`}
-                            />
-                            <div 
-                              className="bar-fill" 
-                              style={{ 
-                                height: `${wonHeight}%`, 
-                                background: 'linear-gradient(to top, #10b981, #34d399)',
-                                width: '14px' 
-                              }} 
-                              title={`Won Leads: ${t.won}`}
-                            />
-                          </div>
-                          <span className="bar-label">{t.month}</span>
+                  return (
+                    <div className="glass-panel" style={{ minHeight: '420px', display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px' }}>
+                      {/* Title & Timeframe Selector */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
+                        <div>
+                          <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            Jalur Pendaftaran Leads vs Deal Won (Monthly Trend)
+                          </h3>
+                          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                            Analisis perbandingan prospek masuk dengan tingkat keberhasilan deal secara real-time
+                          </p>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.35)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px', boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
+                            Realtime Sync
+                          </span>
+
+                          <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.03)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.07)' }}>
+                            {[
+                              { key: '3m', label: '3 Bulan' },
+                              { key: '6m', label: '6 Bulan' },
+                              { key: '12m', label: '12 Bulan' }
+                            ].map(btn => (
+                              <button
+                                key={btn.key}
+                                type="button"
+                                onClick={() => setTrendTimeframe(btn.key)}
+                                style={{
+                                  padding: '5px 12px',
+                                  borderRadius: '8px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.25s ease',
+                                  background: trendTimeframe === btn.key ? 'linear-gradient(135deg, #3a86ff, #0096c7)' : 'transparent',
+                                  color: trendTimeframe === btn.key ? '#fff' : 'var(--text-secondary)',
+                                  boxShadow: trendTimeframe === btn.key ? '0 4px 12px rgba(58, 134, 255, 0.3)' : 'none'
+                                }}
+                              >
+                                {btn.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Summary Badges Row */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                        <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Leads ({sliceCount} Bln)</span>
+                          <span style={{ fontSize: '22px', fontWeight: 700, color: '#38bdf8', marginTop: '2px' }}>{totalTrendLeads} <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)' }}>Prospek</span></span>
+                        </div>
+                        <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Deal Won</span>
+                          <span style={{ fontSize: '22px', fontWeight: 700, color: '#34d399', marginTop: '2px' }}>{totalTrendWon} <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)' }}>Berhasil</span></span>
+                        </div>
+                        <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Rasio Konversi ({sliceCount} Bln)</span>
+                          <span style={{ fontSize: '22px', fontWeight: 700, color: '#fbbf24', marginTop: '2px' }}>{trendWinRate}%</span>
+                        </div>
+                        <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: 'linear-gradient(135deg, #38bdf8, #3b82f6)' }} />
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>Leads</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: 'linear-gradient(135deg, #34d399, #10b981)' }} />
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>Deal Won</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bar Chart Container */}
+                      <div style={{ position: 'relative', height: '240px', marginTop: '10px', display: 'flex' }}>
+                        {/* Y-Axis Labels & Grid Lines */}
+                        <div style={{ width: '36px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right', paddingRight: '12px', zIndex: 2 }}>
+                          <span>{ceiling}</span>
+                          <span>{Math.round(ceiling * 0.75)}</span>
+                          <span>{Math.round(ceiling * 0.5)}</span>
+                          <span>{Math.round(ceiling * 0.25)}</span>
+                          <span>0</span>
+                        </div>
+
+                        {/* Horizontal Dashed Grid Lines */}
+                        <div style={{ position: 'absolute', left: '36px', right: '10px', top: 0, bottom: '26px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', zIndex: 1 }}>
+                          <div style={{ borderBottom: '1px dashed rgba(255,255,255,0.07)', width: '100%' }} />
+                          <div style={{ borderBottom: '1px dashed rgba(255,255,255,0.07)', width: '100%' }} />
+                          <div style={{ borderBottom: '1px dashed rgba(255,255,255,0.07)', width: '100%' }} />
+                          <div style={{ borderBottom: '1px dashed rgba(255,255,255,0.07)', width: '100%' }} />
+                          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.15)', width: '100%' }} />
+                        </div>
+
+                        {/* Columns */}
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', paddingBottom: '26px', zIndex: 2 }}>
+                          {displayedTrend.map((t, idx) => {
+                            const leadHeight = Math.min(((t.leads || 0) / ceiling) * 100, 100);
+                            const wonHeight = Math.min(((t.won || 0) / ceiling) * 100, 100);
+                            const barWidth = trendTimeframe === '12m' ? '14px' : '22px';
+                            
+                            return (
+                              <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, height: '100%', justifyContent: 'flex-end', position: 'relative' }}>
+                                <div style={{ display: 'flex', gap: trendTimeframe === '12m' ? '4px' : '8px', alignItems: 'flex-end', height: '100%', justifyContent: 'center' }}>
+                                  {/* Leads Bar */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                                    {t.leads > 0 && (
+                                      <span style={{ fontSize: trendTimeframe === '12m' ? '10px' : '11px', fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>
+                                        {t.leads}
+                                      </span>
+                                    )}
+                                    <div 
+                                      style={{ 
+                                        height: `${leadHeight}%`, 
+                                        minHeight: t.leads > 0 ? '6px' : '0px',
+                                        background: 'linear-gradient(to top, #3b82f6, #38bdf8)',
+                                        width: barWidth,
+                                        borderRadius: '6px 6px 0 0',
+                                        boxShadow: t.leads > 0 ? '0 0 10px rgba(56, 189, 248, 0.25)' : 'none',
+                                        transition: 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                      }} 
+                                      title={`Total Leads: ${t.leads}`}
+                                    />
+                                  </div>
+
+                                  {/* Deal Won Bar */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                                    {t.won > 0 && (
+                                      <span style={{ fontSize: trendTimeframe === '12m' ? '10px' : '11px', fontWeight: 700, color: '#34d399', marginBottom: '4px' }}>
+                                        {t.won}
+                                      </span>
+                                    )}
+                                    <div 
+                                      style={{ 
+                                        height: `${wonHeight}%`, 
+                                        minHeight: t.won > 0 ? '6px' : '0px',
+                                        background: 'linear-gradient(to top, #10b981, #34d399)',
+                                        width: barWidth,
+                                        borderRadius: '6px 6px 0 0',
+                                        boxShadow: t.won > 0 ? '0 0 10px rgba(52, 211, 153, 0.25)' : 'none',
+                                        transition: 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                      }} 
+                                      title={`Won Leads: ${t.won}`}
+                                    />
+                                  </div>
+                                </div>
+
+                                <span style={{ position: 'absolute', bottom: '-22px', fontSize: trendTimeframe === '12m' ? '10px' : '12px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                                  {t.month}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Stage distribution */}
                 <div className="glass-panel" style={{ minHeight: '380px', display: 'flex', flexDirection: 'column' }}>
