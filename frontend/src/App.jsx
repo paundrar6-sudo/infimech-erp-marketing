@@ -8,7 +8,7 @@ import {
   Users2, AlertTriangle, Eye, ShieldAlert, KeyRound, Mail, ChevronDown, ChevronRight, 
   MapPin, Building, Landmark, Phone, PlusCircle, ArrowLeft, Send, MoreVertical, FileText,
   Copy, ExternalLink, ListChecks, CircleDot, Clipboard, PhoneCall, CheckSquare, CalendarDays,
-  Menu, X, MoreHorizontal, UserPlus
+  Menu, X, MoreHorizontal, UserPlus, Activity
 } from 'lucide-react';
 import { api, API_BASE_URL } from './services/api';
 
@@ -2108,15 +2108,27 @@ export default function App() {
               {/* SECOND DASHBOARD GRID: FOLLOW UP TERDEKAT & RIWAYAT AKTIVITAS TERAKHIR */}
               <div className="dashboard-grid" style={{ marginTop: '24px' }}>
                 {/* Card 1: Follow Up Terdekat */}
-                <div className="glass-panel" style={{ padding: '24px', background: 'linear-gradient(145deg, rgba(23, 23, 23, 0.85) 0%, rgba(18, 18, 18, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px' }}>
-                  <div style={{ marginBottom: '20px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>Follow Up Terdekat</h3>
-                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-                      {dashboardData.urgentFollowUps && dashboardData.urgentFollowUps.length > 0 ? `${dashboardData.urgentFollowUps.length} leads menunggu tindak lanjut` : '3 leads menunggu tindak lanjut'}
-                    </p>
+                <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(245, 158, 11, 0.2)' }}>
+                        <CalendarDays size={20} style={{ color: '#fbbf24' }} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          Follow Up Terdekat
+                        </h3>
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                          Jadwal interaksi & tindak lanjut prospek
+                        </p>
+                      </div>
+                    </div>
+                    <span style={{ padding: '5px 12px', borderRadius: '20px', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.35)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.3px', boxShadow: '0 0 12px rgba(245, 158, 11, 0.2)' }}>
+                      {dashboardData.urgentFollowUps && dashboardData.urgentFollowUps.length > 0 ? `${dashboardData.urgentFollowUps.length} Urgent` : '3 Urgent'}
+                    </span>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {(dashboardData.urgentFollowUps && dashboardData.urgentFollowUps.length > 0
                       ? dashboardData.urgentFollowUps.slice(0, 4)
                       : [
@@ -2124,7 +2136,7 @@ export default function App() {
                           { id: 2, name: 'Rina W.', company: 'Individu', dateText: '20 Jul' },
                           { id: 3, name: 'PT Sumber Jaya', company: 'Corporate', dateText: '22 Jul' }
                         ]
-                    ).map((item, idx, arr) => {
+                    ).map((item, idx) => {
                       let deadlineDisplay = item.dateText || 'Besok';
                       let isBesok = item.isBesok || false;
                       if (item.last_contact && !item.dateText) {
@@ -2138,15 +2150,64 @@ export default function App() {
                           deadlineDisplay = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
                         }
                       }
+
+                      const displayName = item.name || item.company || 'Prospek';
+                      const displaySub = item.company !== item.name ? (item.company || item.industry || 'Corporate') : (item.industry || 'Individu');
+                      const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'BS';
+
                       return (
-                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 0.6fr', alignItems: 'center', fontSize: '14px', borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', paddingBottom: idx < arr.length - 1 ? '12px' : '0' }}>
-                          <span style={{ fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {item.name || item.company}
-                          </span>
-                          <span style={{ color: '#cbd5e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {item.company !== item.name ? (item.company || item.industry || 'Corporate') : (item.industry || 'Individu')}
-                          </span>
-                          <span style={{ fontWeight: 600, textAlign: 'right', color: isBesok ? '#facc15' : '#cbd5e1' }}>
+                        <div 
+                          key={idx} 
+                          style={{ 
+                            padding: '14px 16px', 
+                            borderRadius: '12px', 
+                            background: 'rgba(255, 255, 255, 0.025)', 
+                            border: '1px solid rgba(255, 255, 255, 0.06)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            transition: 'all 0.25s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflow: 'hidden' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(58, 134, 255, 0.2), rgba(6, 182, 212, 0.2))', border: '1px solid rgba(56, 189, 248, 0.35)', color: '#38bdf8', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                              {initials}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                              <span style={{ fontWeight: 600, color: '#fff', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {displayName}
+                              </span>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
+                                {displaySub}
+                              </span>
+                            </div>
+                          </div>
+
+                          <span 
+                            style={isBesok ? { 
+                              padding: '5px 14px', 
+                              borderRadius: '20px', 
+                              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))', 
+                              color: '#fbbf24', 
+                              border: '1px solid rgba(245, 158, 11, 0.5)', 
+                              fontWeight: 700, 
+                              fontSize: '12px', 
+                              boxShadow: '0 0 14px rgba(245, 158, 11, 0.3)',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0
+                            } : { 
+                              padding: '5px 14px', 
+                              borderRadius: '20px', 
+                              background: 'rgba(255, 255, 255, 0.05)', 
+                              color: '#cbd5e1', 
+                              border: '1px solid rgba(255, 255, 255, 0.08)', 
+                              fontWeight: 600, 
+                              fontSize: '12px',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0
+                            }}
+                          >
                             {deadlineDisplay}
                           </span>
                         </div>
@@ -2156,18 +2217,33 @@ export default function App() {
                 </div>
 
                 {/* Card 2: Riwayat Aktivitas Terakhir */}
-                <div className="glass-panel" style={{ padding: '24px', background: 'linear-gradient(145deg, rgba(23, 23, 23, 0.85) 0%, rgba(18, 18, 18, 0.95) 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>Riwayat Aktivitas Terakhir</h3>
-                      <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Perubahan status leads dan deal</p>
+                <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(6, 182, 212, 0.2)' }}>
+                        <Activity size={20} style={{ color: '#38bdf8' }} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          Riwayat Aktivitas Terakhir
+                        </h3>
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                          Perubahan status leads dan deal
+                        </p>
+                      </div>
                     </div>
-                    <button className="icon-btn" style={{ color: '#94a3b8', padding: '4px' }} title="Pilihan lainnya">
-                      <MoreHorizontal size={18} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.35)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px', boxShadow: '0 0 12px rgba(16, 185, 129, 0.2)' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
+                        Live Feed
+                      </span>
+                      <button className="icon-btn" style={{ color: 'var(--text-secondary)', padding: '6px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }} title="Pilihan lainnya">
+                        <MoreHorizontal size={18} />
+                      </button>
+                    </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {(dashboardData.recentActivities && dashboardData.recentActivities.length > 0
                       ? dashboardData.recentActivities.slice(0, 4)
                       : [
@@ -2176,14 +2252,19 @@ export default function App() {
                           { id: 'fb-3', action: 'Deal Loss', target: 'CV Abadi', iconType: 'loss', timeText: 'Kemarin' },
                           { id: 'fb-4', action: 'Lead baru', target: 'Budi Santoso', iconType: 'user_plus', timeText: 'Kemarin' }
                         ]
-                    ).map((act, idx, arr) => {
-                      let iconElem = <Phone size={15} style={{ color: '#94a3b8' }} />;
+                    ).map((act, idx) => {
+                      let iconElem = <Phone size={16} style={{ color: '#38bdf8' }} />;
+                      let iconBoxStyle = { background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.35)', boxShadow: '0 0 10px rgba(56, 189, 248, 0.15)' };
+                      
                       if (act.iconType === 'won' || act.action === 'Deal Won') {
-                        iconElem = <ArrowRight size={16} style={{ color: '#22c55e' }} />;
+                        iconElem = <ArrowRight size={16} style={{ color: '#34d399' }} />;
+                        iconBoxStyle = { background: 'rgba(16, 185, 129, 0.18)', border: '1px solid rgba(16, 185, 129, 0.4)', boxShadow: '0 0 12px rgba(16, 185, 129, 0.25)' };
                       } else if (act.iconType === 'loss' || act.action === 'Deal Loss') {
-                        iconElem = <X size={16} style={{ color: '#ef4444' }} />;
+                        iconElem = <X size={16} style={{ color: '#f87171' }} />;
+                        iconBoxStyle = { background: 'rgba(239, 68, 68, 0.18)', border: '1px solid rgba(239, 68, 68, 0.4)', boxShadow: '0 0 12px rgba(239, 68, 68, 0.25)' };
                       } else if (act.iconType === 'user_plus' || act.action === 'Lead baru') {
-                        iconElem = <UserPlus size={16} style={{ color: '#38bdf8' }} />;
+                        iconElem = <UserPlus size={16} style={{ color: '#c084fc' }} />;
+                        iconBoxStyle = { background: 'rgba(168, 85, 247, 0.18)', border: '1px solid rgba(168, 85, 247, 0.4)', boxShadow: '0 0 12px rgba(168, 85, 247, 0.25)' };
                       }
 
                       let timeStr = act.timeText;
@@ -2196,16 +2277,35 @@ export default function App() {
                       }
 
                       return (
-                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', paddingBottom: idx < arr.length - 1 ? '12px' : '0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '20px' }}>
+                        <div 
+                          key={idx} 
+                          style={{ 
+                            padding: '14px 16px', 
+                            borderRadius: '12px', 
+                            background: 'rgba(255, 255, 255, 0.025)', 
+                            border: '1px solid rgba(255, 255, 255, 0.06)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            transition: 'all 0.25s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflow: 'hidden' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...iconBoxStyle }}>
                               {iconElem}
                             </div>
-                            <span style={{ color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {act.action} — <span style={{ fontWeight: 500, color: '#e2e8f0' }}>{act.target}</span>
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                              <span style={{ color: '#fff', fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {act.action} <span style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>—</span> <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{act.target}</span>
+                              </span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '2px' }}>
+                                Status pembaruan interaksi prospek
+                              </span>
+                            </div>
                           </div>
-                          <span style={{ color: '#64748b', fontSize: '13px', whiteSpace: 'nowrap', marginLeft: '12px' }}>
+
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '12px', background: 'rgba(255,255,255,0.03)', padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                             {timeStr}
                           </span>
                         </div>
