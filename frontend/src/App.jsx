@@ -738,14 +738,53 @@ export default function App() {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const getBackendBaseUrl = () => {
+    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:5000'
+      : 'https://infimech-marketing-erp-backend-583320051925.asia-southeast1.run.app';
+  };
+
+  const createValidPdfBlob = (filename = 'Dokumen') => {
+    const cleanTitle = (filename || 'Dokumen Marketing').replace(/[()\/\\]/g, ' ');
+    const contentStream = `BT\n/F1 18 Tf\n50 740 Td\n(${cleanTitle}) Tj\n/F1 12 Tf\n0 -30 Td\n(Dokumen Resmi Marketing ERP - PT Infimech Harmoni Teknologi) Tj\n0 -20 Td\n(Diunduh pada: ${new Date().toLocaleDateString('id-ID')}) Tj\nET\n`;
+    const streamLength = new TextEncoder().encode(contentStream).length;
+
+    let pdf = `%PDF-1.4\n`;
+    const offsets = [];
+
+    offsets[1] = new TextEncoder().encode(pdf).length;
+    pdf += `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`;
+
+    offsets[2] = new TextEncoder().encode(pdf).length;
+    pdf += `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`;
+
+    offsets[3] = new TextEncoder().encode(pdf).length;
+    pdf += `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n`;
+
+    offsets[4] = new TextEncoder().encode(pdf).length;
+    pdf += `4 0 obj\n<< /Length ${streamLength} >>\nstream\n${contentStream}endstream\nendobj\n`;
+
+    offsets[5] = new TextEncoder().encode(pdf).length;
+    pdf += `5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n`;
+
+    const xrefOffset = new TextEncoder().encode(pdf).length;
+    pdf += `xref\n0 6\n0000000000 65535 f \n`;
+    for (let i = 1; i <= 5; i++) {
+      pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+    }
+    pdf += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+
+    return new Blob([new TextEncoder().encode(pdf)], { type: 'application/pdf' });
+  };
+
   const handleOpenOrDownloadFile = async (fileUrl, filename = 'Dokumen') => {
     if (!fileUrl) return;
+
+    // 1. If it's a content proxy endpoint like `/api/assets/:id/content`
     if (typeof fileUrl === 'string' && (fileUrl.includes('/api/assets/') || fileUrl.includes('/content'))) {
       try {
         const token = localStorage.getItem('token');
-        const baseUrlHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? 'http://localhost:5000'
-          : 'https://infimech-marketing-erp-backend-583320051925.asia-southeast1.run.app';
+        const baseUrlHost = getBackendBaseUrl();
         const fetchUrl = fileUrl.startsWith('http') ? fileUrl : `${baseUrlHost}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
         const res = await fetch(fetchUrl, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
         if (res.ok) {
@@ -758,49 +797,107 @@ export default function App() {
         console.error('Fetch asset content error:', err);
       }
     }
+
     const link = document.createElement('a');
-    if (fileUrl.startsWith('data:')) {
+
+    // 2. Data URIs (e.g. data:application/pdf;base64,... or data:image/png;base64,...)
+    if (typeof fileUrl === 'string' && fileUrl.startsWith('data:')) {
+      try {
+        const mimeMatch = fileUrl.match(/^data:([^;]+);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        
+        let ext = 'pdf';
+        if (mime.includes('image/png')) ext = 'png';
+        else if (mime.includes('image/jpeg') || mime.includes('image/jpg')) ext = 'jpg';
+        else if (mime.includes('image/webp')) ext = 'webp';
+        else if (mime.includes('image/svg')) ext = 'svg';
+        else if (mime.includes('image/')) ext = 'png';
+        else if (mime.includes('word') || mime.includes('officedocument.wordprocessingml') || mime.includes('msword')) ext = 'docx';
+        else if (mime.includes('excel') || mime.includes('officedocument.spreadsheetml') || mime.includes('ms-excel') || mime.includes('sheet')) ext = 'xlsx';
+        else if (mime.includes('powerpoint') || mime.includes('officedocument.presentationml') || mime.includes('ms-powerpoint') || mime.includes('presentation')) ext = 'pptx';
+        else if (mime.includes('video/mp4')) ext = 'mp4';
+        else if (mime.includes('video/')) ext = 'mp4';
+        else if (mime.includes('zip') || mime.includes('compressed')) ext = 'zip';
+
+        const base64Data = fileUrl.split(',')[1];
+        if (base64Data) {
+          const binaryStr = atob(base64Data);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], { type: mime });
+          const blobUrl = URL.createObjectURL(blob);
+          link.href = blobUrl;
+          const cleanName = filename.includes('.') ? filename : `${filename}.${ext}`;
+          link.download = cleanName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+          return;
+        }
+      } catch (e) {
+        console.error('Data URI download conversion error:', e);
+      }
+
       link.href = fileUrl;
-      const mimeMatch = fileUrl.match(/^data:([^;]+);/);
-      const mime = mimeMatch ? mimeMatch[1] : '';
-      let ext = 'pdf';
-      if (mime.includes('image/png')) ext = 'png';
-      else if (mime.includes('image/jpeg') || mime.includes('image/jpg')) ext = 'jpg';
-      else if (mime.includes('image/webp')) ext = 'webp';
-      else if (mime.includes('image/svg')) ext = 'svg';
-      else if (mime.includes('image/')) ext = 'png';
-      else if (mime.includes('word') || mime.includes('officedocument.wordprocessingml') || mime.includes('msword')) ext = 'docx';
-      else if (mime.includes('excel') || mime.includes('officedocument.spreadsheetml') || mime.includes('ms-excel') || mime.includes('sheet')) ext = 'xlsx';
-      else if (mime.includes('powerpoint') || mime.includes('officedocument.presentationml') || mime.includes('ms-powerpoint') || mime.includes('presentation')) ext = 'pptx';
-      else if (mime.includes('video/mp4')) ext = 'mp4';
-      else if (mime.includes('video/')) ext = 'mp4';
-      else if (mime.includes('zip') || mime.includes('compressed')) ext = 'zip';
-      
-      link.download = filename.includes('.') ? filename : `${filename}.${ext}`;
-    } else {
-      if (fileUrl.startsWith('http')) {
-        window.open(fileUrl, '_blank');
+      link.download = filename.includes('.') ? filename : `${filename}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // 3. Absolute HTTP(S) URLs or Relative Server Paths (/assets/files/...)
+    let fullUrl = fileUrl;
+    if (typeof fileUrl === 'string' && !fileUrl.startsWith('http') && !fileUrl.startsWith('blob:')) {
+      const baseUrlHost = getBackendBaseUrl();
+      fullUrl = `${baseUrlHost}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+    }
+
+    try {
+      const res = await fetch(fullUrl);
+      if (res.ok) {
+        const blob = await res.blob();
+        if (blob.type.includes('text/html') || blob.size < 50) {
+          throw new Error('Server returned HTML or empty response instead of file blob');
+        }
+        const blobUrl = URL.createObjectURL(blob);
+        link.href = blobUrl;
+        let ext = fileUrl.split('.').pop().toLowerCase();
+        if (!ext || ext.length > 5 || ext.includes('/')) ext = 'pdf';
+        const cleanName = filename.includes('.') ? filename : `${filename}.${ext}`;
+        link.download = cleanName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
         return;
       }
-      const cleanTitle = (filename || 'Materi_Pemasaran').replace(/[()\/\\:]/g, '_');
-      const pdfContent = `%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n4 0 obj\n<< /Length 150 >>\nstream\nBT\n/F1 16 Tf\n50 720 Td\n(INFIMECH MARKETING - ${cleanTitle}) Tj\n/F1 12 Tf\n0 -30 Td\n(Materi resmi pemasaran & arsip kampanye.) Tj\n0 -20 Td\n(Diunduh pada: ${new Date().toLocaleDateString('id-ID')}) Tj\nET\nendstream\nendobj\n5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000054 00000 n \n0000000109 00000 n \n0000000244 00000 n \n0000000444 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n521\n%%EOF`;
-      const blob = new Blob([pdfContent], { type: 'application/pdf' });
-      link.href = URL.createObjectURL(blob);
-      link.download = cleanTitle.includes('.') ? cleanTitle : `${cleanTitle}.pdf`;
+    } catch (err) {
+      console.warn('Fetch binary blob failed, trying direct link or fallback PDF:', err.message);
     }
+
+    // Fallback: If URL download is unavailable, generate 100% syntactically valid PDF blob
+    const cleanTitle = (filename || 'Materi_Pemasaran').replace(/[()\/\\:]/g, '_');
+    const pdfBlob = createValidPdfBlob(cleanTitle);
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    link.href = blobUrl;
+    link.download = cleanTitle.includes('.') ? cleanTitle : `${cleanTitle}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
   };
 
   const handlePreviewFile = async (fileUrl, filename = 'Dokumen', fileType = 'PDF') => {
     if (!fileUrl) return;
+    let resolvedUrl = fileUrl;
     if (typeof fileUrl === 'string' && (fileUrl.includes('/api/assets/') || fileUrl.includes('/content'))) {
       try {
         const token = localStorage.getItem('token');
-        const baseUrlHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? 'http://localhost:5000'
-          : 'https://infimech-marketing-erp-backend-583320051925.asia-southeast1.run.app';
+        const baseUrlHost = getBackendBaseUrl();
         const fetchUrl = fileUrl.startsWith('http') ? fileUrl : `${baseUrlHost}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
         const res = await fetch(fetchUrl, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
         if (res.ok) {
@@ -812,10 +909,14 @@ export default function App() {
       } catch (err) {
         console.error('Fetch asset content for preview error:', err);
       }
+    } else if (typeof fileUrl === 'string' && !fileUrl.startsWith('http') && !fileUrl.startsWith('data:') && !fileUrl.startsWith('blob:')) {
+      const baseUrlHost = getBackendBaseUrl();
+      resolvedUrl = `${baseUrlHost}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
     }
+
     setPreviewFileModal({
       isOpen: true,
-      fileUrl: fileUrl,
+      fileUrl: resolvedUrl,
       filename: filename,
       fileType: fileType
     });
