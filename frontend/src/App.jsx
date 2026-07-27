@@ -744,6 +744,15 @@ export default function App() {
       : 'https://infimech-marketing-erp-backend-583320051925.asia-southeast1.run.app';
   };
 
+  const ensureFileExtension = (filename, defaultExt = 'pdf') => {
+    if (!filename) return `Dokumen.${defaultExt}`;
+    const hasExtension = /\.(pdf|docx?|xlsx?|pptx?|png|jpe?g|webp|gif|svg|zip|rar|mp4|webm|csv|txt)$/i.test(filename);
+    if (hasExtension) {
+      return filename;
+    }
+    return `${filename}.${defaultExt}`;
+  };
+
   const createValidPdfBlob = (filename = 'Dokumen') => {
     const cleanTitle = (filename || 'Dokumen Marketing').replace(/[()\/\\]/g, ' ');
     const contentStream = `BT\n/F1 18 Tf\n50 740 Td\n(${cleanTitle}) Tj\n/F1 12 Tf\n0 -30 Td\n(Dokumen Resmi Marketing ERP - PT Infimech Harmoni Teknologi) Tj\n0 -20 Td\n(Diunduh pada: ${new Date().toLocaleDateString('id-ID')}) Tj\nET\n`;
@@ -829,7 +838,7 @@ export default function App() {
           const blob = new Blob([bytes], { type: mime });
           const blobUrl = URL.createObjectURL(blob);
           link.href = blobUrl;
-          const cleanName = filename.includes('.') ? filename : `${filename}.${ext}`;
+          const cleanName = ensureFileExtension(filename, ext);
           link.download = cleanName;
           document.body.appendChild(link);
           link.click();
@@ -842,7 +851,7 @@ export default function App() {
       }
 
       link.href = fileUrl;
-      link.download = filename.includes('.') ? filename : `${filename}.pdf`;
+      link.download = ensureFileExtension(filename, 'pdf');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -867,7 +876,7 @@ export default function App() {
         link.href = blobUrl;
         let ext = fileUrl.split('.').pop().toLowerCase();
         if (!ext || ext.length > 5 || ext.includes('/')) ext = 'pdf';
-        const cleanName = filename.includes('.') ? filename : `${filename}.${ext}`;
+        const cleanName = ensureFileExtension(filename, ext);
         link.download = cleanName;
         document.body.appendChild(link);
         link.click();
@@ -884,7 +893,7 @@ export default function App() {
     const pdfBlob = createValidPdfBlob(cleanTitle);
     const blobUrl = URL.createObjectURL(pdfBlob);
     link.href = blobUrl;
-    link.download = cleanTitle.includes('.') ? cleanTitle : `${cleanTitle}.pdf`;
+    link.download = ensureFileExtension(cleanTitle, 'pdf');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
