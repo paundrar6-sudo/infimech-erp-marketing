@@ -2278,7 +2278,7 @@ export default function App() {
 
                     let cumulativePct = 0;
                     return (
-                      <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '24px', alignItems: 'center', padding: '16px 24px', flex: 1 }}>
+                      <div className="responsive-donut-grid">
                         {/* Precise SVG Donut Chart */}
                         <div style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <svg width="150" height="150" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
@@ -2573,7 +2573,7 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '24px', alignItems: 'start' }}>
+                  <div className="responsive-two-col">
                     {/* Left Card: Company Profile specs */}
                     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', background: 'rgba(15, 23, 42, 0.4)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
@@ -3194,7 +3194,7 @@ export default function App() {
               {digitalTab === 'campaigns' && (
                 <>
                   {/* Stats summary panel */}
-                  <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '28px' }}>
+                  <div className="kpi-grid responsive-kpi-3col">
                     <div className="kpi-card cyan">
                       <div className="kpi-header">
                         <span>Total Materi Pemasaran</span>
@@ -3795,7 +3795,7 @@ export default function App() {
                 <>
                   {fuSelectedProspect ? (
                     /* ---- PROSPECT DETAIL VIEW (split 2 columns) ---- */
-                    <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', alignItems: 'flex-start' }}>
+                    <div className="responsive-two-col-sidebar">
                       {/* LEFT: Prospect Info */}
                       <div>
                         <button
@@ -4505,7 +4505,7 @@ export default function App() {
                 )}
 
                 {/* Engagement stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                <div className="responsive-quick-stats">
                   {[
                     { label: 'Likes', value: p.engagement_likes || 0, icon: '❤️', color: '#ef4444' },
                     { label: 'Comments', value: p.engagement_comments || 0, icon: '💬', color: '#3b82f6' },
