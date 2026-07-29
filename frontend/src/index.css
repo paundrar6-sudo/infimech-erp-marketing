@@ -1264,8 +1264,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     animation: fadeIn 0.2s ease-out;
   }
 }
-}
-}
 
 @media (max-width: 768px) {
   h1 {
