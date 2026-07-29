@@ -2344,7 +2344,7 @@ export default function App() {
               <div className="dashboard-grid" style={{ marginTop: '24px' }}>
                 {/* Card 1: Follow Up Terdekat */}
                 <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="dashboard-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(245, 158, 11, 0.2)' }}>
                         <CalendarDays size={20} style={{ color: '#fbbf24' }} />
@@ -2393,17 +2393,7 @@ export default function App() {
                       return (
                         <div 
                           key={idx} 
-                          style={{ 
-                            padding: '14px 16px', 
-                            borderRadius: '12px', 
-                            background: 'rgba(255, 255, 255, 0.025)', 
-                            border: '1px solid rgba(255, 255, 255, 0.06)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'space-between',
-                            gap: '12px',
-                            transition: 'all 0.25s ease'
-                          }}
+                          className="dashboard-item-row"
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflow: 'hidden' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(58, 134, 255, 0.2), rgba(6, 182, 212, 0.2))', border: '1px solid rgba(56, 189, 248, 0.35)', color: '#38bdf8', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
@@ -2453,7 +2443,7 @@ export default function App() {
 
                 {/* Card 2: Riwayat Aktivitas Terakhir */}
                 <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="dashboard-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(6, 182, 212, 0.2)' }}>
                         <Activity size={20} style={{ color: '#38bdf8' }} />
@@ -2514,17 +2504,7 @@ export default function App() {
                       return (
                         <div 
                           key={idx} 
-                          style={{ 
-                            padding: '14px 16px', 
-                            borderRadius: '12px', 
-                            background: 'rgba(255, 255, 255, 0.025)', 
-                            border: '1px solid rgba(255, 255, 255, 0.06)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'space-between',
-                            gap: '12px',
-                            transition: 'all 0.25s ease'
-                          }}
+                          className="dashboard-item-row"
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflow: 'hidden' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...iconBoxStyle }}>

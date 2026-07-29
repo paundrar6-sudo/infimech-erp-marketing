@@ -1372,4 +1372,41 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding: 8px 12px;
     font-size: 13px;
   }
+
+  .dashboard-card-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-card-header > span,
+  .dashboard-card-header > div:last-child {
+    align-self: flex-start;
+  }
+
+  .dashboard-item-row {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+}
+
+/* --- Dashboard Cards Responsive Classes --- */
+.dashboard-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dashboard-item-row {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.25s ease;
 }
