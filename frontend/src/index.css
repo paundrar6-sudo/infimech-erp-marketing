@@ -43,12 +43,10 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease;
 }
 
-html, body {
+body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   overflow-x: hidden;
-  max-width: 100%;
-  width: 100%;
 }
 
 /* --- Scrollbar styling --- */
@@ -111,10 +109,7 @@ html, body {
 .app-container {
   display: flex;
   min-height: 100vh;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
+  width: 100vw;
 }
 
 /* --- Sidebar --- */
@@ -1198,64 +1193,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
 }
 
-/* --- Responsive Mobile & Tablet Helper Classes --- */
-.responsive-donut-grid {
-  display: grid;
-  grid-template-columns: 150px 1fr;
-  gap: 24px;
-  align-items: center;
-  padding: 16px 24px;
-  flex: 1;
-}
-
-.responsive-two-col {
-  display: grid;
-  grid-template-columns: 1.2fr 1.8fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.responsive-two-col-sidebar {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.responsive-kpi-3col {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 28px;
-}
-
-.responsive-quick-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.responsive-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.responsive-trend-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-@media (max-width: 900px) {
-  .responsive-trend-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-}
-
 @media (max-width: 768px) {
+
   /* Layout changes */
   .app-container {
     flex-direction: column;
@@ -1267,7 +1206,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .header-subtitle {
-    display: none; /* Hide date/subtitle on mobile to save space */
+    display: none;
+    /* Hide date/subtitle on mobile to save space */
   }
 
   .header-actions {
@@ -1275,62 +1215,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .search-bar-wrapper {
-    width: 140px; /* Make search bar smaller on mobile */
+    width: 140px;
+    /* Make search bar smaller on mobile */
   }
 
   .content-body {
-    padding: 14px 10px !important;
-  }
-
-  /* Responsive layout overrides */
-  .responsive-donut-grid {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    gap: 18px;
-    padding: 12px 8px;
-  }
-
-  .responsive-two-col,
-  .responsive-two-col-sidebar {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .responsive-kpi-3col {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .responsive-quick-stats {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .responsive-card-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .glass-panel {
-    padding: 14px 12px !important;
-    margin-bottom: 16px !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .kpi-card {
     padding: 16px;
-  }
-
-  .kpi-value {
-    font-size: 22px;
-  }
-
-  .modal-content {
-    padding: 20px;
-    width: 94%;
-    max-height: 90vh;
   }
 
   /* Sidebar transition and overlay styles */
@@ -1374,17 +1264,40 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     animation: fadeIn 0.2s ease-out;
   }
 }
+}
+}
 
 @media (max-width: 768px) {
-  h1 { font-size: 20px !important; }
-  h2 { font-size: 18px !important; }
-  h3 { font-size: 15px !important; }
-  h4 { font-size: 13px !important; }
-  
-  .header-title { font-size: 17px !important; }
-  .kpi-value { font-size: 20px !important; }
-  .chart-title { font-size: 14px !important; flex-wrap: wrap; gap: 4px; }
-  
+  h1 {
+    font-size: 20px !important;
+  }
+
+  h2 {
+    font-size: 18px !important;
+  }
+
+  h3 {
+    font-size: 15px !important;
+  }
+
+  h4 {
+    font-size: 13px !important;
+  }
+
+  .header-title {
+    font-size: 17px !important;
+  }
+
+  .kpi-value {
+    font-size: 20px !important;
+  }
+
+  .chart-title {
+    font-size: 14px !important;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
   .chart-header-actions {
     display: flex;
     align-items: center;
@@ -1406,10 +1319,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 @media (max-width: 480px) {
-  h3 { font-size: 14px !important; }
-  .header-title { font-size: 15px !important; }
-  .kpi-value { font-size: 18px !important; }
-  .kpi-card { padding: 12px 10px !important; }
+  h3 {
+    font-size: 14px !important;
+  }
+
+  .header-title {
+    font-size: 15px !important;
+  }
+
+  .kpi-value {
+    font-size: 18px !important;
+  }
+
+  .kpi-card {
+    padding: 12px 10px !important;
+  }
 
   .responsive-kpi-3col {
     grid-template-columns: 1fr;
@@ -1439,8 +1363,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     gap: 8px !important;
   }
 
-  .dashboard-card-header > span,
-  .dashboard-card-header > div:last-child {
+  .dashboard-card-header>span,
+  .dashboard-card-header>div:last-child {
     align-self: flex-start;
   }
 

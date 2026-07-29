@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import IntroAnimation from './IntroAnimation';
-import { 
+import {
   LayoutDashboard, Users, Megaphone, Calendar, FolderHeart, FolderOpen, Folder,
-  UserSquare, LogOut, Sun, Moon, Search, Bell, Plus, Filter, 
-  CheckCircle2, XCircle, Clock, Trash2, Edit3, MessageSquare, 
+  UserSquare, LogOut, Sun, Moon, Search, Bell, Plus, Filter,
+  CheckCircle2, XCircle, Clock, Trash2, Edit3, MessageSquare,
   Download, Share2, Check, ArrowRight, DollarSign, Target, Award,
-  Users2, AlertTriangle, Eye, ShieldAlert, KeyRound, Mail, ChevronDown, ChevronRight, 
+  Users2, AlertTriangle, Eye, ShieldAlert, KeyRound, Mail, ChevronDown, ChevronRight,
   MapPin, Building, Landmark, Phone, PlusCircle, ArrowLeft, Send, MoreVertical, FileText,
   Copy, ExternalLink, ListChecks, CircleDot, Clipboard, PhoneCall, CheckSquare, CalendarDays,
   Menu, X, MoreHorizontal, UserPlus, Activity
@@ -107,10 +107,10 @@ export default function App() {
   // Modals and Forms states
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [leadFormData, setLeadFormData] = useState({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: '', verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
-  
+
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [newNoteFormData, setNewNoteFormData] = useState({ type: 'Call', notes: '' });
-  
+
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactFormData, setContactFormData] = useState({ name: '', phone: '', email: '', position: '', isPrimary: false });
 
@@ -814,7 +814,7 @@ export default function App() {
       try {
         const mimeMatch = fileUrl.match(/^data:([^;]+);/);
         const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-        
+
         let ext = 'pdf';
         if (mime.includes('image/png')) ext = 'png';
         else if (mime.includes('image/jpeg') || mime.includes('image/jpg')) ext = 'jpg';
@@ -953,7 +953,7 @@ export default function App() {
 
   const handleAssetFileUpload = (file) => {
     if (!file) return;
-    
+
     // 1. Calculate file size (MB or KB)
     let sizeStr = '1.0 MB';
     if (file.size >= 1024 * 1024) {
@@ -995,7 +995,7 @@ export default function App() {
 
   const handleVersionFileUpload = (file) => {
     if (!file) return;
-    
+
     // 1. Calculate file size
     let sizeStr = '1.0 MB';
     if (file.size >= 1024 * 1024) {
@@ -1080,12 +1080,12 @@ export default function App() {
       }
 
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      
+
       const clientsToImport = [];
       for (let i = 1; i < lines.length; i++) {
         const currentLine = lines[i];
         const values = currentLine.split(',').map(v => v.trim());
-        
+
         const clientObj = {};
         headers.forEach((header, index) => {
           clientObj[header] = values[index] || '';
@@ -1435,7 +1435,7 @@ export default function App() {
     const lastContact = new Date(lastContactStr);
     const diffTime = Math.abs(new Date() - lastContact);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays >= 7) return 'days-urgent';
     if (diffDays >= 3) return 'days-warning';
     return 'days-safe';
@@ -1786,14 +1786,14 @@ export default function App() {
               <label className="form-label">Email Operator</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
-                <input 
-                  type="email" 
-                  className="form-input" 
-                  style={{ paddingLeft: '38px' }} 
-                  placeholder="admin.@gmail.com" 
-                  value={loginEmail} 
-                  onChange={(e) => setLoginEmail(e.target.value)} 
-                  required 
+                <input
+                  type="email"
+                  className="form-input"
+                  style={{ paddingLeft: '38px' }}
+                  placeholder="admin.@gmail.com"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -1801,14 +1801,14 @@ export default function App() {
               <label className="form-label">Kata Sandi</label>
               <div style={{ position: 'relative' }}>
                 <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
-                <input 
-                  type="password" 
-                  className="form-input" 
-                  style={{ paddingLeft: '38px' }} 
-                  placeholder="••••••••" 
-                  value={loginPassword} 
-                  onChange={(e) => setLoginPassword(e.target.value)} 
-                  required 
+                <input
+                  type="password"
+                  className="form-input"
+                  style={{ paddingLeft: '38px' }}
+                  placeholder="••••••••"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -1837,11 +1837,11 @@ export default function App() {
         }} />
       )}
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
-      
+
       {/* SIDEBAR NAVIGATION */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand" style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <div 
+          <div
             style={{ display: 'flex', alignItems: 'center', gap: '12px', flexGrow: 1 }}
             onClick={() => {
               setCurrentView('dashboard');
@@ -1852,8 +1852,8 @@ export default function App() {
             <img src="/infimech-logo.png" alt="INFIMECH Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
             <span>MarketERP</span>
           </div>
-          <button 
-            className="icon-btn mobile-close-btn" 
+          <button
+            className="icon-btn mobile-close-btn"
             onClick={(e) => {
               e.stopPropagation();
               setSidebarOpen(false);
@@ -1862,10 +1862,10 @@ export default function App() {
             <X size={20} />
           </button>
         </div>
-        
+
         <ul className="sidebar-menu">
           <li>
-            <a 
+            <a
               className={`sidebar-item ${currentView === 'dashboard' ? 'active' : ''}`}
               onClick={() => {
                 setCurrentView('dashboard');
@@ -1877,10 +1877,10 @@ export default function App() {
               <span>Dashboard</span>
             </a>
           </li>
-          
+
           {/* Collapsible Marketing category */}
           <li>
-            <div 
+            <div
               className={`sidebar-item ${['operator-crm', 'digital-marketing', 'follow-up'].includes(currentView) ? 'active' : ''}`}
               style={{ justifyContent: 'space-between', cursor: 'pointer' }}
               onClick={() => setMarketingDropdownOpen(!marketingDropdownOpen)}
@@ -1891,11 +1891,11 @@ export default function App() {
               </div>
               {marketingDropdownOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </div>
-            
+
             {marketingDropdownOpen && (
               <ul style={{ listStyle: 'none', paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                 <li>
-                  <a 
+                  <a
                     className={`sidebar-item ${currentView === 'operator-crm' ? 'active' : ''}`}
                     style={{ fontSize: '13px', padding: '8px 12px' }}
                     onClick={() => {
@@ -1910,7 +1910,7 @@ export default function App() {
                   </a>
                 </li>
                 <li>
-                  <a 
+                  <a
                     className={`sidebar-item ${currentView === 'digital-marketing' ? 'active' : ''}`}
                     style={{ fontSize: '13px', padding: '8px 12px' }}
                     onClick={() => {
@@ -1924,7 +1924,7 @@ export default function App() {
                   </a>
                 </li>
                 <li>
-                  <a 
+                  <a
                     className={`sidebar-item ${currentView === 'follow-up' ? 'active' : ''}`}
                     style={{ fontSize: '13px', padding: '8px 12px' }}
                     onClick={() => {
@@ -1946,10 +1946,10 @@ export default function App() {
         <div className="sidebar-footer">
           {user && (
             <>
-              <img 
-                src={user.avatar_url || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Ahmad'} 
-                alt="Avatar" 
-                className="user-avatar" 
+              <img
+                src={user.avatar_url || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Ahmad'}
+                alt="Avatar"
+                className="user-avatar"
                 onClick={() => setProfileModalOpen(true)}
                 style={{ cursor: 'pointer' }}
               />
@@ -1967,7 +1967,7 @@ export default function App() {
 
       {/* WORKSPACE CONTENT AREA */}
       <main className="main-content">
-        
+
         {/* HEADER BAR */}
         <header className="main-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -1991,10 +1991,10 @@ export default function App() {
             {((currentView === 'operator-crm' && !selectedLeadId) || currentView === 'digital-marketing') && (
               <div className="search-bar-wrapper">
                 <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)' }} />
-                <input 
-                  type="text" 
-                  className="search-bar" 
-                  placeholder="Search clients by name or industry..." 
+                <input
+                  type="text"
+                  className="search-bar"
+                  placeholder="Search clients by name or industry..."
                   value={globalSearch}
                   onChange={(e) => setGlobalSearch(e.target.value)}
                 />
@@ -2030,7 +2030,7 @@ export default function App() {
 
         {/* WORKSPACE VIEW ROUTER */}
         <div className="content-body">
-          
+
           {/* VIEW: DASHBOARD */}
           {currentView === 'dashboard' && dashboardData && (
             <>
@@ -2086,7 +2086,7 @@ export default function App() {
 
               {/* DASHBOARD CHARTS & TABLES BLOCK */}
               <div className="dashboard-grid">
-                
+
                 {/* Monthly trend chart */}
                 {(() => {
                   const sliceCount = trendTimeframe === '3m' ? 3 : trendTimeframe === '12m' ? 12 : 6;
@@ -2094,12 +2094,12 @@ export default function App() {
                   const totalTrendLeads = displayedTrend.reduce((acc, curr) => acc + (curr.leads || 0), 0);
                   const totalTrendWon = displayedTrend.reduce((acc, curr) => acc + (curr.won || 0), 0);
                   const trendWinRate = totalTrendLeads > 0 ? ((totalTrendWon / totalTrendLeads) * 100).toFixed(1) : '0.0';
-                  
+
                   const maxYVal = Math.max(...displayedTrend.map(t => Math.max(t.leads || 0, t.won || 0)), 10);
                   const ceiling = Math.ceil(maxYVal / 5) * 5;
 
                   return (
-                    <div className="glass-panel" style={{ minHeight: '420px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="glass-panel" style={{ minHeight: '420px', display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px' }}>
                       {/* Title & Timeframe Selector */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
                         <div>
@@ -2110,8 +2110,8 @@ export default function App() {
                             Analisis perbandingan prospek masuk dengan tingkat keberhasilan deal secara real-time
                           </p>
                         </div>
-                        
-                        <div className="chart-header-actions">
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.35)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px', boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)' }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
                             Realtime Sync
@@ -2148,7 +2148,7 @@ export default function App() {
                       </div>
 
                       {/* Summary Badges Row */}
-                      <div className="responsive-trend-summary-grid">
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                         <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Leads ({sliceCount} Bln)</span>
                           <span style={{ fontSize: '22px', fontWeight: 700, color: '#38bdf8', marginTop: '2px' }}>{totalTrendLeads} <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)' }}>Prospek</span></span>
@@ -2194,12 +2194,12 @@ export default function App() {
                         </div>
 
                         {/* Columns */}
-                        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', paddingBottom: '26px', paddingLeft: '36px', paddingRight: '16px', zIndex: 2 }}>
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', paddingBottom: '26px', zIndex: 2 }}>
                           {displayedTrend.map((t, idx) => {
                             const leadHeight = Math.min(((t.leads || 0) / ceiling) * 100, 100);
                             const wonHeight = Math.min(((t.won || 0) / ceiling) * 100, 100);
                             const barWidth = trendTimeframe === '12m' ? '14px' : '22px';
-                            
+
                             return (
                               <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, height: '100%', justifyContent: 'flex-end', position: 'relative' }}>
                                 <div style={{ display: 'flex', gap: trendTimeframe === '12m' ? '4px' : '8px', alignItems: 'flex-end', height: '100%', justifyContent: 'center' }}>
@@ -2210,16 +2210,16 @@ export default function App() {
                                         {t.leads}
                                       </span>
                                     )}
-                                    <div 
-                                      style={{ 
-                                        height: `${leadHeight}%`, 
+                                    <div
+                                      style={{
+                                        height: `${leadHeight}%`,
                                         minHeight: t.leads > 0 ? '6px' : '0px',
                                         background: 'linear-gradient(to top, #3b82f6, #38bdf8)',
                                         width: barWidth,
                                         borderRadius: '6px 6px 0 0',
                                         boxShadow: t.leads > 0 ? '0 0 10px rgba(56, 189, 248, 0.25)' : 'none',
                                         transition: 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                                      }} 
+                                      }}
                                       title={`Total Leads: ${t.leads}`}
                                     />
                                   </div>
@@ -2231,16 +2231,16 @@ export default function App() {
                                         {t.won}
                                       </span>
                                     )}
-                                    <div 
-                                      style={{ 
-                                        height: `${wonHeight}%`, 
+                                    <div
+                                      style={{
+                                        height: `${wonHeight}%`,
                                         minHeight: t.won > 0 ? '6px' : '0px',
                                         background: 'linear-gradient(to top, #10b981, #34d399)',
                                         width: barWidth,
                                         borderRadius: '6px 6px 0 0',
                                         boxShadow: t.won > 0 ? '0 0 10px rgba(52, 211, 153, 0.25)' : 'none',
                                         transition: 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                                      }} 
+                                      }}
                                       title={`Won Leads: ${t.won}`}
                                     />
                                   </div>
@@ -2264,7 +2264,7 @@ export default function App() {
                     <span>Distribusi CRM Leads</span>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Realtime Stage Breakdown</span>
                   </div>
-                  
+
                   {(() => {
                     const sd = dashboardData.stageDistribution || { Lead: 0, Proposal: 0, Hold: 0, Lose: 0, Won: 0, Done: 0 };
                     const totalLeads = Object.values(sd).reduce((a, b) => a + Number(b), 0) || 1;
@@ -2278,9 +2278,9 @@ export default function App() {
 
                     let cumulativePct = 0;
                     return (
-                      <div className="responsive-donut-grid">
+                      <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '24px', alignItems: 'center', padding: '16px 24px', flex: 1 }}>
                         {/* Precise SVG Donut Chart */}
-                        <div className="donut-chart-wrapper" style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                        <div style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <svg width="150" height="150" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
                             <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" strokeWidth="4.5" />
                             {stages.map((s, idx) => {
@@ -2311,7 +2311,7 @@ export default function App() {
                         </div>
 
                         {/* Exact Precision Breakdown & Progress Legend */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
                           {stages.map((s, idx) => {
                             const pct = ((s.count / totalLeads) * 100).toFixed(1);
                             return (
@@ -2343,8 +2343,8 @@ export default function App() {
               {/* SECOND DASHBOARD GRID: FOLLOW UP TERDEKAT & RIWAYAT AKTIVITAS TERAKHIR */}
               <div className="dashboard-grid" style={{ marginTop: '24px' }}>
                 {/* Card 1: Follow Up Terdekat */}
-                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div className="dashboard-card-header">
+                <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(245, 158, 11, 0.2)' }}>
                         <CalendarDays size={20} style={{ color: '#fbbf24' }} />
@@ -2367,10 +2367,10 @@ export default function App() {
                     {(dashboardData.urgentFollowUps && dashboardData.urgentFollowUps.length > 0
                       ? dashboardData.urgentFollowUps.slice(0, 4)
                       : [
-                          { id: 1, name: 'Budi Santoso', company: 'PT Maju Bersama', isBesok: true },
-                          { id: 2, name: 'Rina W.', company: 'Individu', dateText: '20 Jul' },
-                          { id: 3, name: 'PT Sumber Jaya', company: 'Corporate', dateText: '22 Jul' }
-                        ]
+                        { id: 1, name: 'Budi Santoso', company: 'PT Maju Bersama', isBesok: true },
+                        { id: 2, name: 'Rina W.', company: 'Individu', dateText: '20 Jul' },
+                        { id: 3, name: 'PT Sumber Jaya', company: 'Corporate', dateText: '22 Jul' }
+                      ]
                     ).map((item, idx) => {
                       let deadlineDisplay = item.dateText || 'Besok';
                       let isBesok = item.isBesok || false;
@@ -2391,9 +2391,19 @@ export default function App() {
                       const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'BS';
 
                       return (
-                        <div 
-                          key={idx} 
-                          className="dashboard-item-row"
+                        <div
+                          key={idx}
+                          style={{
+                            padding: '14px 16px',
+                            borderRadius: '12px',
+                            background: 'rgba(255, 255, 255, 0.025)',
+                            border: '1px solid rgba(255, 255, 255, 0.06)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            transition: 'all 0.25s ease'
+                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflow: 'hidden' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(58, 134, 255, 0.2), rgba(6, 182, 212, 0.2))', border: '1px solid rgba(56, 189, 248, 0.35)', color: '#38bdf8', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
@@ -2409,25 +2419,25 @@ export default function App() {
                             </div>
                           </div>
 
-                          <span 
-                            style={isBesok ? { 
-                              padding: '5px 14px', 
-                              borderRadius: '20px', 
-                              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))', 
-                              color: '#fbbf24', 
-                              border: '1px solid rgba(245, 158, 11, 0.5)', 
-                              fontWeight: 700, 
-                              fontSize: '12px', 
+                          <span
+                            style={isBesok ? {
+                              padding: '5px 14px',
+                              borderRadius: '20px',
+                              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))',
+                              color: '#fbbf24',
+                              border: '1px solid rgba(245, 158, 11, 0.5)',
+                              fontWeight: 700,
+                              fontSize: '12px',
                               boxShadow: '0 0 14px rgba(245, 158, 11, 0.3)',
                               whiteSpace: 'nowrap',
                               flexShrink: 0
-                            } : { 
-                              padding: '5px 14px', 
-                              borderRadius: '20px', 
-                              background: 'rgba(255, 255, 255, 0.05)', 
-                              color: '#cbd5e1', 
-                              border: '1px solid rgba(255, 255, 255, 0.08)', 
-                              fontWeight: 600, 
+                            } : {
+                              padding: '5px 14px',
+                              borderRadius: '20px',
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              color: '#cbd5e1',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              fontWeight: 600,
                               fontSize: '12px',
                               whiteSpace: 'nowrap',
                               flexShrink: 0
@@ -2442,8 +2452,8 @@ export default function App() {
                 </div>
 
                 {/* Card 2: Riwayat Aktivitas Terakhir */}
-                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div className="dashboard-card-header">
+                <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(6, 182, 212, 0.2)' }}>
                         <Activity size={20} style={{ color: '#38bdf8' }} />
@@ -2472,15 +2482,15 @@ export default function App() {
                     {(dashboardData.recentActivities && dashboardData.recentActivities.length > 0
                       ? dashboardData.recentActivities.slice(0, 4)
                       : [
-                          { id: 'fb-1', action: 'Deal Won', target: 'PT Sumber Jaya', iconType: 'won', timeText: '2 jam lalu' },
-                          { id: 'fb-2', action: 'Follow up', target: 'Rina W.', iconType: 'follow_up', timeText: '5 jam lalu' },
-                          { id: 'fb-3', action: 'Deal Loss', target: 'CV Abadi', iconType: 'loss', timeText: 'Kemarin' },
-                          { id: 'fb-4', action: 'Lead baru', target: 'Budi Santoso', iconType: 'user_plus', timeText: 'Kemarin' }
-                        ]
+                        { id: 'fb-1', action: 'Deal Won', target: 'PT Sumber Jaya', iconType: 'won', timeText: '2 jam lalu' },
+                        { id: 'fb-2', action: 'Follow up', target: 'Rina W.', iconType: 'follow_up', timeText: '5 jam lalu' },
+                        { id: 'fb-3', action: 'Deal Loss', target: 'CV Abadi', iconType: 'loss', timeText: 'Kemarin' },
+                        { id: 'fb-4', action: 'Lead baru', target: 'Budi Santoso', iconType: 'user_plus', timeText: 'Kemarin' }
+                      ]
                     ).map((act, idx) => {
                       let iconElem = <Phone size={16} style={{ color: '#38bdf8' }} />;
                       let iconBoxStyle = { background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.35)', boxShadow: '0 0 10px rgba(56, 189, 248, 0.15)' };
-                      
+
                       if (act.iconType === 'won' || act.action === 'Deal Won') {
                         iconElem = <ArrowRight size={16} style={{ color: '#34d399' }} />;
                         iconBoxStyle = { background: 'rgba(16, 185, 129, 0.18)', border: '1px solid rgba(16, 185, 129, 0.4)', boxShadow: '0 0 12px rgba(16, 185, 129, 0.25)' };
@@ -2502,9 +2512,19 @@ export default function App() {
                       }
 
                       return (
-                        <div 
-                          key={idx} 
-                          className="dashboard-item-row"
+                        <div
+                          key={idx}
+                          style={{
+                            padding: '14px 16px',
+                            borderRadius: '12px',
+                            background: 'rgba(255, 255, 255, 0.025)',
+                            border: '1px solid rgba(255, 255, 255, 0.06)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            transition: 'all 0.25s ease'
+                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', overflow: 'hidden' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...iconBoxStyle }}>
@@ -2539,8 +2559,8 @@ export default function App() {
                 /* CLIENT DETAIL VIEW */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <button 
-                      className="icon-btn" 
+                    <button
+                      className="icon-btn"
                       style={{ padding: '8px', color: 'var(--text-primary)', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}
                       onClick={() => {
                         setSelectedLeadId(null);
@@ -2553,7 +2573,7 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div className="responsive-two-col">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '24px', alignItems: 'start' }}>
                     {/* Left Card: Company Profile specs */}
                     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', background: 'rgba(15, 23, 42, 0.4)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
@@ -2603,8 +2623,8 @@ export default function App() {
                       <div style={{ display: 'flex', flexFlow: 'wrap', gap: '10px', marginTop: '10px' }}>
                         {['Superadmin', 'Admin'].includes(user?.role) && (
                           <div style={{ display: 'flex', gap: '8px', flexGrow: 1 }}>
-                            <button 
-                              className="btn btn-secondary" 
+                            <button
+                              className="btn btn-secondary"
                               style={{ display: 'flex', alignItems: 'center', gap: '6px', flexGrow: 1, justifyContent: 'center' }}
                               onClick={() => {
                                 setLeadFormData({
@@ -2633,9 +2653,9 @@ export default function App() {
                               <Edit3 size={14} />
                               <span>Edit Client</span>
                             </button>
-                            
-                            <button 
-                              className="btn btn-danger" 
+
+                            <button
+                              className="btn btn-danger"
                               style={{ background: '#ff1493', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', padding: '10px 14px' }}
                               onClick={() => deleteLead(leadDetail.lead.id)}
                               title="Hapus Client"
@@ -2648,7 +2668,7 @@ export default function App() {
 
                       {/* Convert to Project Option */}
                       {['Superadmin', 'Admin'].includes(user?.role) && ['Won', 'Done'].includes(leadDetail.lead.status) && (
-                        <button 
+                        <button
                           className="btn btn-primary"
                           style={{ width: '100%', justifyContent: 'center' }}
                           onClick={() => {
@@ -2680,8 +2700,8 @@ export default function App() {
                             <span>Client Contacts</span>
                           </h4>
                           {['Superadmin', 'Admin'].includes(user?.role) && (
-                            <button 
-                              className="btn" 
+                            <button
+                              className="btn"
                               style={{ padding: '6px 12px', fontSize: '11px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
                               onClick={() => setContactModalOpen(true)}
                             >
@@ -2693,12 +2713,12 @@ export default function App() {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                           {leadDetail.contacts && leadDetail.contacts.length > 0 ? (
                             leadDetail.contacts.map((c, idx) => (
-                              <div 
-                                key={idx} 
-                                style={{ 
-                                  padding: '14px', 
-                                  background: 'rgba(255,255,255,0.02)', 
-                                  border: '1px solid var(--border-color)', 
+                              <div
+                                key={idx}
+                                style={{
+                                  padding: '14px',
+                                  background: 'rgba(255,255,255,0.02)',
+                                  border: '1px solid var(--border-color)',
                                   borderRadius: 'var(--radius-md)',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -2729,12 +2749,12 @@ export default function App() {
                                     </div>
                                   )}
                                 </div>
-                                
-                                 {['Superadmin', 'Admin'].includes(user?.role) && (
+
+                                {['Superadmin', 'Admin'].includes(user?.role) && (
                                   <div style={{ position: 'relative' }}>
-                                    <button 
-                                      className="icon-btn" 
-                                      style={{ color: 'var(--text-muted)' }} 
+                                    <button
+                                      className="icon-btn"
+                                      style={{ color: 'var(--text-muted)' }}
                                       onClick={() => setActiveContactMenuId(activeContactMenuId === c.id ? null : c.id)}
                                     >
                                       <MoreVertical size={14} />
@@ -2742,8 +2762,8 @@ export default function App() {
 
                                     {activeContactMenuId === c.id && (
                                       <div style={{ position: 'absolute', right: 0, top: '20px', background: 'var(--bg-sidebar)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
-                                        <button 
-                                          className="btn btn-secondary" 
+                                        <button
+                                          className="btn btn-secondary"
                                           style={{ padding: '4px 8px', fontSize: '10px', color: 'var(--accent-red)', border: 'none', background: 'transparent' }}
                                           onClick={() => deleteClientContact(c.id)}
                                         >
@@ -2771,8 +2791,8 @@ export default function App() {
                             <span>Interactions & Notes</span>
                           </h4>
                           {['Superadmin', 'Admin'].includes(user?.role) && (
-                            <button 
-                              className="btn" 
+                            <button
+                              className="btn"
                               style={{ padding: '6px 12px', fontSize: '11px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
                               onClick={() => {
                                 setNewNoteFormData({ type: 'Call', notes: '' });
@@ -2812,14 +2832,14 @@ export default function App() {
                 <>
                   {/* Top tabs */}
                   <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                    <button 
+                    <button
                       className={`btn ${operatorTab === 'leads' ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => setOperatorTab('leads')}
                     >
                       <Users size={16} />
                       <span>Lead Management</span>
                     </button>
-                    <button 
+                    <button
                       className={`btn ${operatorTab === 'segments' ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => setOperatorTab('segments')}
                     >
@@ -2827,7 +2847,7 @@ export default function App() {
                       <span>Customer Segmentation</span>
                     </button>
                     {['Superadmin', 'Admin'].includes(user?.role) && (
-                      <button 
+                      <button
                         className={`btn ${operatorTab === 'roles' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setOperatorTab('roles')}
                       >
@@ -2847,8 +2867,8 @@ export default function App() {
                         </div>
                         {['Superadmin', 'Admin'].includes(user?.role) && (
                           <div style={{ display: 'flex', gap: '10px' }}>
-                            <button 
-                              className="btn btn-secondary" 
+                            <button
+                              className="btn btn-secondary"
                               style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
                               onClick={() => {
                                 setBulkCsvText('');
@@ -2858,8 +2878,8 @@ export default function App() {
                             >
                               <span>+ Bulk Import</span>
                             </button>
-                            <button 
-                              className="btn" 
+                            <button
+                              className="btn"
                               style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600, border: 'none', borderRadius: '6px' }}
                               onClick={() => {
                                 setLeadFormData({ id: '', name: '', company: '', industry: 'Technology', source: 'Organic', value: '', lead_score: 50, owner_id: user.id, verified: false, phone: '', logo_url: '', location: 'Jakarta', company_size: '50-200', contact1_name: '', contact1_phone: '', contact2_name: '', contact2_phone: '', deadline: '' });
@@ -2921,9 +2941,9 @@ export default function App() {
                                 </td>
                                 <td>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                                    <span 
-                                      className="badge" 
-                                      style={{ 
+                                    <span
+                                      className="badge"
+                                      style={{
                                         background: 'transparent',
                                         border: l.status === 'Won' || l.status === 'Done' ? '1px solid var(--accent-green)' : '1px solid var(--accent-orange)',
                                         color: l.status === 'Won' || l.status === 'Done' ? 'var(--accent-green)' : 'var(--accent-orange)',
@@ -2987,11 +3007,11 @@ export default function App() {
                           }
 
                           return (
-                            <div 
-                              key={idx} 
-                              className="glass-panel" 
-                              style={{ 
-                                cursor: 'pointer', 
+                            <div
+                              key={idx}
+                              className="glass-panel"
+                              style={{
+                                cursor: 'pointer',
                                 borderLeft: `4px solid ${seg.color}`,
                                 padding: '20px',
                                 display: 'flex',
@@ -3041,7 +3061,7 @@ export default function App() {
                                     </table>
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'center', marginTop: '15px' }}>
-                                    <button 
+                                    <button
                                       className="btn btn-primary"
                                       onClick={() => alert(`Mengirim pesan blast ke segment [${seg.title}]...`)}
                                     >
@@ -3066,7 +3086,7 @@ export default function App() {
                           <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Operator & Role Directory</h3>
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Kelola akses pengguna dan operator ERP Marketing</span>
                         </div>
-                        <button 
+                        <button
                           className="btn btn-primary"
                           onClick={() => {
                             setOperatorFormData({ id: '', username: '', name: '', email: '', password: '', phone: '', role: 'Operator', status: 'Active' });
@@ -3140,14 +3160,14 @@ export default function App() {
                                   </div>
                                 </td>
                               </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    )}
-                  </>
-                )}
+                    </div>
+                  )}
+                </>
+              )}
             </>
           )}
 
@@ -3155,14 +3175,14 @@ export default function App() {
           {currentView === 'digital-marketing' && (
             <>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                <button 
+                <button
                   className={`btn ${digitalTab === 'campaigns' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => setDigitalTab('campaigns')}
                 >
                   <FolderHeart size={16} />
                   <span>Manajemen Konten & Aset</span>
                 </button>
-                <button 
+                <button
                   className={`btn ${digitalTab === 'assets' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => setDigitalTab('assets')}
                 >
@@ -3174,7 +3194,7 @@ export default function App() {
               {digitalTab === 'campaigns' && (
                 <>
                   {/* Stats summary panel */}
-                  <div className="kpi-grid responsive-kpi-3col">
+                  <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '28px' }}>
                     <div className="kpi-card cyan">
                       <div className="kpi-header">
                         <span>Total Materi Pemasaran</span>
@@ -3480,7 +3500,7 @@ export default function App() {
                                 <span>📦</span>
                                 <span>{f.item_count || f.assets?.length || 0} Aset Tersimpan</span>
                               </span>
-                              
+
                               <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
                                 <button
                                   className="btn"
@@ -3775,7 +3795,7 @@ export default function App() {
                 <>
                   {fuSelectedProspect ? (
                     /* ---- PROSPECT DETAIL VIEW (split 2 columns) ---- */
-                    <div className="responsive-two-col-sidebar">
+                    <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', alignItems: 'flex-start' }}>
                       {/* LEFT: Prospect Info */}
                       <div>
                         <button
@@ -3801,7 +3821,7 @@ export default function App() {
                             <h2 style={{ fontSize: '22px', fontWeight: 800, lineHeight: 1.2, marginBottom: '4px' }}>{fuSelectedProspect.lead?.name}</h2>
                             <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{fuSelectedProspect.lead?.company || '-'}</div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', fontFamily: 'monospace' }}>
-                              {fuSelectedProspect.lead?.id && `ID-${String(fuSelectedProspect.lead.id).padStart(3,'0')}`}
+                              {fuSelectedProspect.lead?.id && `ID-${String(fuSelectedProspect.lead.id).padStart(3, '0')}`}
                             </div>
                           </div>
 
@@ -3811,7 +3831,7 @@ export default function App() {
                             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>{fuSelectedProspect.lead?.phone || '-'}</div>
                             {fuSelectedProspect.lead?.phone && (
                               <a
-                                href={`https://wa.me/${(fuSelectedProspect.lead.phone || '').replace(/\D/g,'')}`}
+                                href={`https://wa.me/${(fuSelectedProspect.lead.phone || '').replace(/\D/g, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{ fontSize: '12px', color: '#25D366', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600 }}
@@ -4048,101 +4068,101 @@ export default function App() {
                           { stage: 'Won', color: '#10b981' },
                           { stage: 'Done', color: '#06b6d4' }
                         ].filter(col => fuStageFilter === 'Semua' || col.stage === fuStageFilter)
-                         .map(({ stage, color }) => {
-                          const colLeads = (Array.isArray(leads) ? leads : []).filter(l => l.status === stage);
-                          return (
-                            <div key={stage} style={{ 
-                              minWidth: fuStageFilter === 'Semua' ? '215px' : '360px', 
-                              flex: fuStageFilter === 'Semua' ? '0 0 215px' : '0 0 360px', 
-                              display: 'flex', flexDirection: 'column' 
-                            }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '8px 8px 0 0', background: `${color}18`, borderBottom: `3px solid ${color}`, marginBottom: '10px' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color }}>{stage}</span>
-                                <span style={{ fontSize: '12px', fontWeight: 700, background: `${color}30`, color, width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{colLeads.length}</span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {colLeads.map(lead => {
-                                  const urgencyDays = lead.deadline ? Math.ceil((new Date(lead.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
-                                  const isOverdue = urgencyDays !== null && urgencyDays < 0;
-                                  const isToday = urgencyDays === 0;
-                                  const isTomorrow = urgencyDays === 1;
-                                  const sourceColors = { 'Instagram Ads': '#e1306c', 'Google Ads': '#4285F4', 'Facebook Ads': '#1877F2', 'TikTok Ads': '#69C9D0', 'LinkedIn': '#0A66C2', 'Referral': '#8b5cf6', 'Organic': '#10b981', 'Cold Call': '#f59e0b' };
-                                  const srcColor = sourceColors[lead.source] || '#06b6d4';
+                          .map(({ stage, color }) => {
+                            const colLeads = (Array.isArray(leads) ? leads : []).filter(l => l.status === stage);
+                            return (
+                              <div key={stage} style={{
+                                minWidth: fuStageFilter === 'Semua' ? '215px' : '360px',
+                                flex: fuStageFilter === 'Semua' ? '0 0 215px' : '0 0 360px',
+                                display: 'flex', flexDirection: 'column'
+                              }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '8px 8px 0 0', background: `${color}18`, borderBottom: `3px solid ${color}`, marginBottom: '10px' }}>
+                                  <span style={{ fontSize: '13px', fontWeight: 700, color }}>{stage}</span>
+                                  <span style={{ fontSize: '12px', fontWeight: 700, background: `${color}30`, color, width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{colLeads.length}</span>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                  {colLeads.map(lead => {
+                                    const urgencyDays = lead.deadline ? Math.ceil((new Date(lead.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                                    const isOverdue = urgencyDays !== null && urgencyDays < 0;
+                                    const isToday = urgencyDays === 0;
+                                    const isTomorrow = urgencyDays === 1;
+                                    const sourceColors = { 'Instagram Ads': '#e1306c', 'Google Ads': '#4285F4', 'Facebook Ads': '#1877F2', 'TikTok Ads': '#69C9D0', 'LinkedIn': '#0A66C2', 'Referral': '#8b5cf6', 'Organic': '#10b981', 'Cold Call': '#f59e0b' };
+                                    const srcColor = sourceColors[lead.source] || '#06b6d4';
 
-                                  // Generate avatar initials and gradient
-                                  const words = (lead.name || '').split(' ');
-                                  const initials = (words[0]?.[0] || '') + (words[1]?.[0] || words[0]?.[1] || '');
-                                  const avatarColors = ['#3b82f6','#8b5cf6','#06b6d4','#10b981','#f59e0b','#e1306c','#ec4899'];
-                                  const avatarColor = avatarColors[lead.id % avatarColors.length] || '#3b82f6';
+                                    // Generate avatar initials and gradient
+                                    const words = (lead.name || '').split(' ');
+                                    const initials = (words[0]?.[0] || '') + (words[1]?.[0] || words[0]?.[1] || '');
+                                    const avatarColors = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#e1306c', '#ec4899'];
+                                    const avatarColor = avatarColors[lead.id % avatarColors.length] || '#3b82f6';
 
-                                  return (
-                                    <div key={lead.id} className="kanban-card"
-                                      style={{ cursor: 'pointer', padding: '12px 14px', background: 'rgba(15,23,42,0.7)', borderRadius: '10px', border: '1px solid var(--border-color)' }}
-                                      onClick={() => openFuProspectDetail(lead.id)}
-                                    >
-                                      {/* Top row: avatar + name/company + edit */}
-                                      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '10px' }}>
-                                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: `linear-gradient(135deg, ${avatarColor}, ${avatarColor}99)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800, color: '#fff', flexShrink: 0, textTransform: 'uppercase' }}>
-                                          {initials || '??'}
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                          <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.name}</div>
-                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '2px' }}>
-                                            {lead.company && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.company}</div>}
-                                            {lead.no_project && <div style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: 600 }}>{lead.no_project}</div>}
+                                    return (
+                                      <div key={lead.id} className="kanban-card"
+                                        style={{ cursor: 'pointer', padding: '12px 14px', background: 'rgba(15,23,42,0.7)', borderRadius: '10px', border: '1px solid var(--border-color)' }}
+                                        onClick={() => openFuProspectDetail(lead.id)}
+                                      >
+                                        {/* Top row: avatar + name/company + edit */}
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '10px' }}>
+                                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: `linear-gradient(135deg, ${avatarColor}, ${avatarColor}99)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800, color: '#fff', flexShrink: 0, textTransform: 'uppercase' }}>
+                                            {initials || '??'}
                                           </div>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.name}</div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '2px' }}>
+                                              {lead.company && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.company}</div>}
+                                              {lead.no_project && <div style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: 600 }}>{lead.no_project}</div>}
+                                            </div>
+                                          </div>
+                                          <button className="icon-btn" style={{ flexShrink: 0, opacity: 0.7 }}
+                                            onClick={e => { e.stopPropagation(); openFuEditModal(lead); }}>
+                                            <Edit3 size={12} />
+                                          </button>
                                         </div>
-                                        <button className="icon-btn" style={{ flexShrink: 0, opacity: 0.7 }}
-                                          onClick={e => { e.stopPropagation(); openFuEditModal(lead); }}>
-                                          <Edit3 size={12} />
-                                        </button>
-                                      </div>
 
-                                      {/* Source + Value row */}
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                        <span style={{ fontSize: '11px', fontWeight: 600, color: srcColor }}>{lead.source || 'Organic'}</span>
-                                        {lead.value && parseFloat(lead.value) > 0 && (
-                                          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                            Rp {(parseFloat(lead.value) / 1e6).toFixed(0)}jt
-                                          </span>
+                                        {/* Source + Value row */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                          <span style={{ fontSize: '11px', fontWeight: 600, color: srcColor }}>{lead.source || 'Organic'}</span>
+                                          {lead.value && parseFloat(lead.value) > 0 && (
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                              Rp {(parseFloat(lead.value) / 1e6).toFixed(0)}jt
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* Phone */}
+                                        {lead.phone && (
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                            <Phone size={10} /> {lead.phone}
+                                          </div>
+                                        )}
+
+                                        {/* Deadline badge */}
+                                        {urgencyDays !== null && (
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 600, color: isOverdue ? '#ef4444' : isToday ? '#ef4444' : isTomorrow ? '#f59e0b' : 'var(--text-muted)', marginBottom: lead.last_contact ? '8px' : '0' }}>
+                                            <Clock size={10} />
+                                            {isOverdue ? `${Math.abs(urgencyDays)}h terlambat` : isToday ? 'Hari Ini!' : isTomorrow ? 'Besok (H-1)' : `${urgencyDays}h lagi`}
+                                          </div>
+                                        )}
+
+                                        {/* Terakhir Kontak box — shown only if last_contact exists */}
+                                        {lead.last_contact && (
+                                          <div style={{ marginTop: '8px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '6px', padding: '7px 10px' }}>
+                                            <div style={{ fontSize: '10px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.5px', marginBottom: '3px' }}>Terakhir Kontak</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                              {lead.last_contact_phone && <span>{lead.last_contact_phone}</span>}
+                                            </div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                              {lead.last_contact_name && <span>{lead.last_contact_name} · </span>}
+                                              {new Date(lead.last_contact).toISOString().split('T')[0]}
+                                            </div>
+                                          </div>
                                         )}
                                       </div>
-
-                                      {/* Phone */}
-                                      {lead.phone && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                                          <Phone size={10} /> {lead.phone}
-                                        </div>
-                                      )}
-
-                                      {/* Deadline badge */}
-                                      {urgencyDays !== null && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 600, color: isOverdue ? '#ef4444' : isToday ? '#ef4444' : isTomorrow ? '#f59e0b' : 'var(--text-muted)', marginBottom: lead.last_contact ? '8px' : '0' }}>
-                                          <Clock size={10} />
-                                          {isOverdue ? `${Math.abs(urgencyDays)}h terlambat` : isToday ? 'Hari Ini!' : isTomorrow ? 'Besok (H-1)' : `${urgencyDays}h lagi`}
-                                        </div>
-                                      )}
-
-                                      {/* Terakhir Kontak box — shown only if last_contact exists */}
-                                      {lead.last_contact && (
-                                        <div style={{ marginTop: '8px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '6px', padding: '7px 10px' }}>
-                                          <div style={{ fontSize: '10px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.5px', marginBottom: '3px' }}>Terakhir Kontak</div>
-                                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                                            {lead.last_contact_phone && <span>{lead.last_contact_phone}</span>}
-                                          </div>
-                                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                            {lead.last_contact_name && <span>{lead.last_contact_name} · </span>}
-                                            {new Date(lead.last_contact).toISOString().split('T')[0]}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                       </div>
                     </>
                   )}
@@ -4296,8 +4316,8 @@ export default function App() {
             </>
           )}
 
-    </div>
-  </main>
+        </div>
+      </main>
 
       {/* --- MODALS BLOCK --- */}
 
@@ -4485,7 +4505,7 @@ export default function App() {
                 )}
 
                 {/* Engagement stats */}
-                <div className="responsive-quick-stats">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
                   {[
                     { label: 'Likes', value: p.engagement_likes || 0, icon: '❤️', color: '#ef4444' },
                     { label: 'Comments', value: p.engagement_comments || 0, icon: '💬', color: '#3b82f6' },
@@ -4513,7 +4533,7 @@ export default function App() {
                     style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                     onClick={() => {
                       setSelectedPost(null);
-                      setPostFormData({ id: p.id, platform: p.platform, content: p.content, media_url: p.media_url || '', schedule_time: p.schedule_time ? p.schedule_time.slice(0,16) : '', status: p.status });
+                      setPostFormData({ id: p.id, platform: p.platform, content: p.content, media_url: p.media_url || '', schedule_time: p.schedule_time ? p.schedule_time.slice(0, 16) : '', status: p.status });
                       setPostModalOpen(true);
                     }}
                   >
@@ -5221,11 +5241,11 @@ export default function App() {
                   <XCircle size={20} />
                 </button>
               </div>
-              
+
               <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {/* Version History Log Timeline */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', borderLeft: '2px solid var(--border-color)', paddingLeft: '16px', margin: '8px 0 8px 10px' }}>
-                  
+
                   {/* Current Active Version */}
                   <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '-25px', top: '2px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--accent-cyan)', border: '4px solid var(--bg-main)' }} />
@@ -5270,7 +5290,7 @@ export default function App() {
                   <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '10px', color: 'var(--text-primary)' }}>
                     🚀 Upload Versi Baru (Version Control)
                   </h4>
-                  
+
                   {/* File Upload Drag & Drop inside Version Control modal */}
                   <div
                     style={{
@@ -5384,7 +5404,7 @@ export default function App() {
                 <XCircle size={20} />
               </button>
             </div>
-            
+
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '10px', padding: '14px' }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
@@ -5457,20 +5477,20 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Nama Perusahaan (PT)</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={leadFormData.company || ''} 
-                    onChange={(e) => setLeadFormData({ ...leadFormData, company: e.target.value, name: e.target.value })} 
-                    placeholder="e.g. PT Maju Bersama" 
-                    required 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={leadFormData.company || ''}
+                    onChange={(e) => setLeadFormData({ ...leadFormData, company: e.target.value, name: e.target.value })}
+                    placeholder="e.g. PT Maju Bersama"
+                    required
                   />
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Logo Perusahaan (PT)</label>
-                <div 
+                <div
                   style={{
                     border: '2px dashed var(--border-color)',
                     borderRadius: '8px',
@@ -5492,11 +5512,11 @@ export default function App() {
                   onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
                   onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
                 >
-                  <input 
-                    type="file" 
-                    id="logo-file-input" 
-                    accept="image/*" 
-                    style={{ display: 'none' }} 
+                  <input
+                    type="file"
+                    id="logo-file-input"
+                    accept="image/*"
+                    style={{ display: 'none' }}
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         handleLogoUpload(e.target.files[0]);
@@ -5505,14 +5525,14 @@ export default function App() {
                   />
                   {leadFormData.logo_url ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                      <img 
-                        src={leadFormData.logo_url} 
-                        alt="Logo PT" 
-                        style={{ height: '50px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain' }} 
+                      <img
+                        src={leadFormData.logo_url}
+                        alt="Logo PT"
+                        style={{ height: '50px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain' }}
                       />
-                      <button 
-                        type="button" 
-                        className="btn" 
+                      <button
+                        type="button"
+                        className="btn"
                         style={{ padding: '3px 8px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', fontSize: '10px', border: 'none', borderRadius: '4px', height: 'auto', fontWeight: 600 }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -5535,7 +5555,7 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Industri</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={leadFormData.industry}
                     onChange={(e) => setLeadFormData({ ...leadFormData, industry: e.target.value })}
@@ -5547,7 +5567,7 @@ export default function App() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Sumber Lead (Source)</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={leadFormData.source}
                     onChange={(e) => setLeadFormData({ ...leadFormData, source: e.target.value })}
@@ -5562,23 +5582,23 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Deal Value (Estimasi Nilai Rp)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    value={leadFormData.value} 
-                    onChange={(e) => setLeadFormData({ ...leadFormData, value: e.target.value })} 
-                    placeholder="e.g. 150000000" 
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={leadFormData.value}
+                    onChange={(e) => setLeadFormData({ ...leadFormData, value: e.target.value })}
+                    placeholder="e.g. 150000000"
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Lead Score (0-100)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    min="0" 
-                    max="100" 
-                    value={leadFormData.lead_score} 
-                    onChange={(e) => setLeadFormData({ ...leadFormData, lead_score: parseInt(e.target.value) || 0 })} 
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="0"
+                    max="100"
+                    value={leadFormData.lead_score}
+                    onChange={(e) => setLeadFormData({ ...leadFormData, lead_score: parseInt(e.target.value) || 0 })}
                   />
                 </div>
               </div>
@@ -5586,22 +5606,22 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Location (Kota)</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={leadFormData.location} 
-                    onChange={(e) => setLeadFormData({ ...leadFormData, location: e.target.value })} 
-                    placeholder="e.g. Jakarta" 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={leadFormData.location}
+                    onChange={(e) => setLeadFormData({ ...leadFormData, location: e.target.value })}
+                    placeholder="e.g. Jakarta"
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Company Size</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={leadFormData.company_size} 
-                    onChange={(e) => setLeadFormData({ ...leadFormData, company_size: e.target.value })} 
-                    placeholder="e.g. 50-200" 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={leadFormData.company_size}
+                    onChange={(e) => setLeadFormData({ ...leadFormData, company_size: e.target.value })}
+                    placeholder="e.g. 50-200"
                   />
                 </div>
               </div>
@@ -5611,24 +5631,24 @@ export default function App() {
                 <div className="form-row">
                   <div className="form-group" style={{ flex: 1 }}>
                     <label className="form-label">Nama Kontak 1</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={leadFormData.contact1_name || ''} 
-                      onChange={(e) => setLeadFormData({ ...leadFormData, contact1_name: e.target.value })} 
-                      placeholder="Nama Kontak Pertama" 
-                      required 
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={leadFormData.contact1_name || ''}
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact1_name: e.target.value })}
+                      placeholder="Nama Kontak Pertama"
+                      required
                     />
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
                     <label className="form-label">No. Telepon Kontak 1</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={leadFormData.contact1_phone || ''} 
-                      onChange={(e) => setLeadFormData({ ...leadFormData, contact1_phone: e.target.value })} 
-                      placeholder="e.g. +6281122334455" 
-                      required 
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={leadFormData.contact1_phone || ''}
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact1_phone: e.target.value })}
+                      placeholder="e.g. +6281122334455"
+                      required
                     />
                   </div>
                 </div>
@@ -5639,22 +5659,22 @@ export default function App() {
                 <div className="form-row">
                   <div className="form-group" style={{ flex: 1 }}>
                     <label className="form-label">Nama Kontak 2</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={leadFormData.contact2_name || ''} 
-                      onChange={(e) => setLeadFormData({ ...leadFormData, contact2_name: e.target.value })} 
-                      placeholder="Nama Kontak Kedua" 
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={leadFormData.contact2_name || ''}
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact2_name: e.target.value })}
+                      placeholder="Nama Kontak Kedua"
                     />
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
                     <label className="form-label">No. Telepon Kontak 2</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={leadFormData.contact2_phone || ''} 
-                      onChange={(e) => setLeadFormData({ ...leadFormData, contact2_phone: e.target.value })} 
-                      placeholder="e.g. +6287766554433" 
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={leadFormData.contact2_phone || ''}
+                      onChange={(e) => setLeadFormData({ ...leadFormData, contact2_phone: e.target.value })}
+                      placeholder="e.g. +6287766554433"
                     />
                   </div>
                 </div>
@@ -5664,22 +5684,22 @@ export default function App() {
                 <div className="form-row">
                   <div className="form-group" style={{ flex: 1 }}>
                     <label className="form-label">Deadline / Target Proyek</label>
-                    <input 
-                      type="date" 
-                      className="form-input" 
-                      value={leadFormData.deadline || ''} 
-                      onChange={(e) => setLeadFormData({ ...leadFormData, deadline: e.target.value })} 
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={leadFormData.deadline || ''}
+                      onChange={(e) => setLeadFormData({ ...leadFormData, deadline: e.target.value })}
                     />
                   </div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0' }}>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="lead-verified"
-                  checked={leadFormData.verified} 
-                  onChange={(e) => setLeadFormData({ ...leadFormData, verified: e.target.checked })} 
+                  checked={leadFormData.verified}
+                  onChange={(e) => setLeadFormData({ ...leadFormData, verified: e.target.checked })}
                 />
                 <label htmlFor="lead-verified" className="form-label" style={{ textTransform: 'none', cursor: 'pointer' }}>Akun Klien Terverifikasi</label>
               </div>
@@ -5706,51 +5726,51 @@ export default function App() {
             <form onSubmit={addClientContact} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="form-group">
                 <label className="form-label">Nama Lengkap</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={contactFormData.name} 
-                  onChange={(e) => setContactFormData({ ...contactFormData, name: e.target.value })} 
-                  placeholder="e.g. K Seto" 
-                  required 
+                <input
+                  type="text"
+                  className="form-input"
+                  value={contactFormData.name}
+                  onChange={(e) => setContactFormData({ ...contactFormData, name: e.target.value })}
+                  placeholder="e.g. K Seto"
+                  required
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Jabatan (Position)</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={contactFormData.position || ''} 
-                  onChange={(e) => setContactFormData({ ...contactFormData, position: e.target.value })} 
-                  placeholder="e.g. Manager / PIC" 
+                <input
+                  type="text"
+                  className="form-input"
+                  value={contactFormData.position || ''}
+                  onChange={(e) => setContactFormData({ ...contactFormData, position: e.target.value })}
+                  placeholder="e.g. Manager / PIC"
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Nomor WhatsApp</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={contactFormData.phone} 
-                  onChange={(e) => setContactFormData({ ...contactFormData, phone: e.target.value })} 
-                  placeholder="e.g. +62 896-3871-9518" 
+                <input
+                  type="text"
+                  className="form-input"
+                  value={contactFormData.phone}
+                  onChange={(e) => setContactFormData({ ...contactFormData, phone: e.target.value })}
+                  placeholder="e.g. +62 896-3871-9518"
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Email</label>
-                <input 
-                  type="email" 
-                  className="form-input" 
-                  value={contactFormData.email} 
-                  onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })} 
-                  placeholder="e.g. k.seto@company.com" 
+                <input
+                  type="email"
+                  className="form-input"
+                  value={contactFormData.email}
+                  onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
+                  placeholder="e.g. k.seto@company.com"
                 />
               </div>
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="contact-is-primary"
-                  checked={contactFormData.isPrimary || false} 
-                  onChange={(e) => setContactFormData({ ...contactFormData, isPrimary: e.target.checked })} 
+                  checked={contactFormData.isPrimary || false}
+                  onChange={(e) => setContactFormData({ ...contactFormData, isPrimary: e.target.checked })}
                   style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                 />
                 <label htmlFor="contact-is-primary" style={{ fontSize: '13px', cursor: 'pointer', userSelect: 'none' }}>Jadikan sebagai Kontak Utama (Primary)</label>
@@ -5777,9 +5797,9 @@ export default function App() {
             <form onSubmit={addInteractionLog} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="form-group">
                 <label className="form-label">Tipe Interaksi</label>
-                <select 
+                <select
                   className="form-select"
-                  value={newNoteFormData.type} 
+                  value={newNoteFormData.type}
                   onChange={(e) => setNewNoteFormData({ ...newNoteFormData, type: e.target.value })}
                 >
                   <option value="Call">Call (Telepon)</option>
@@ -5790,10 +5810,10 @@ export default function App() {
               </div>
               <div className="form-group">
                 <label className="form-label">Detail Catatan</label>
-                <textarea 
-                  className="form-textarea" 
+                <textarea
+                  className="form-textarea"
                   rows="4"
-                  placeholder="Tulis detail percakapan / notes follow up..." 
+                  placeholder="Tulis detail percakapan / notes follow up..."
                   value={newNoteFormData.notes}
                   onChange={(e) => setNewNoteFormData({ ...newNoteFormData, notes: e.target.value })}
                   required
@@ -5821,12 +5841,12 @@ export default function App() {
             <form onSubmit={saveProfileSelf} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="form-group">
                 <label className="form-label">Nama Lengkap</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={profileFormData.name} 
-                  onChange={(e) => setProfileFormData({ ...profileFormData, name: e.target.value })} 
-                  required 
+                <input
+                  type="text"
+                  className="form-input"
+                  value={profileFormData.name}
+                  onChange={(e) => setProfileFormData({ ...profileFormData, name: e.target.value })}
+                  required
                 />
               </div>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
@@ -5858,8 +5878,8 @@ export default function App() {
 
               <div className="form-group">
                 <label className="form-label">Unggah Berkas CSV</label>
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   accept=".csv"
                   className="form-input"
                   style={{ padding: '8px' }}
@@ -5878,8 +5898,8 @@ export default function App() {
 
               <div className="form-group">
                 <label className="form-label">Atau Tempel / Edit Data CSV Di Sini</label>
-                <textarea 
-                  className="form-input" 
+                <textarea
+                  className="form-input"
                   style={{ minHeight: '180px', fontFamily: 'monospace', fontSize: '12px' }}
                   value={bulkCsvText}
                   onChange={(e) => setBulkCsvText(e.target.value)}
@@ -5918,7 +5938,7 @@ export default function App() {
               </button>
             </div>
             <form onSubmit={saveFuProspectEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              
+
               {/* Stage Proyek */}
               <div className="form-group">
                 <label className="form-label">Stage Prospek</label>
@@ -5948,41 +5968,41 @@ export default function App() {
               <div className="form-row" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Nama Prospek / Proyek</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={fuEditForm.name || ''} 
-                    onChange={(e) => setFuEditForm({ ...fuEditForm, name: e.target.value })} 
-                    placeholder="e.g. 22. Simulasi Basin Sea ..." 
-                    required 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={fuEditForm.name || ''}
+                    onChange={(e) => setFuEditForm({ ...fuEditForm, name: e.target.value })}
+                    placeholder="e.g. 22. Simulasi Basin Sea ..."
+                    required
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Nama Perusahaan (PT)</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={fuEditForm.company || ''} 
-                    onChange={(e) => setFuEditForm({ ...fuEditForm, company: e.target.value })} 
-                    placeholder="e.g. PT Transportasi Gas Indonesia" 
-                    required 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={fuEditForm.company || ''}
+                    onChange={(e) => setFuEditForm({ ...fuEditForm, company: e.target.value })}
+                    placeholder="e.g. PT Transportasi Gas Indonesia"
+                    required
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Nama PIC / Kontak</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={fuEditForm.contact_name || ''} 
-                    onChange={(e) => setFuEditForm({ ...fuEditForm, contact_name: e.target.value })} 
-                    placeholder="e.g. Ryan Vidyantara" 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={fuEditForm.contact_name || ''}
+                    onChange={(e) => setFuEditForm({ ...fuEditForm, contact_name: e.target.value })}
+                    placeholder="e.g. Ryan Vidyantara"
                   />
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Logo Perusahaan (PT)</label>
-                <div 
+                <div
                   style={{
                     border: '2px dashed var(--border-color)',
                     borderRadius: '8px',
@@ -6004,11 +6024,11 @@ export default function App() {
                   onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
                   onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
                 >
-                  <input 
-                    type="file" 
-                    id="prospect-logo-file-input" 
-                    accept="image/*" 
-                    style={{ display: 'none' }} 
+                  <input
+                    type="file"
+                    id="prospect-logo-file-input"
+                    accept="image/*"
+                    style={{ display: 'none' }}
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         handleProspectLogoUpload(e.target.files[0]);
@@ -6017,14 +6037,14 @@ export default function App() {
                   />
                   {fuEditForm.logo_url ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                      <img 
-                        src={fuEditForm.logo_url} 
-                        alt="Logo PT" 
-                        style={{ height: '50px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain' }} 
+                      <img
+                        src={fuEditForm.logo_url}
+                        alt="Logo PT"
+                        style={{ height: '50px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain' }}
                       />
-                      <button 
-                        type="button" 
-                        className="btn" 
+                      <button
+                        type="button"
+                        className="btn"
                         style={{ padding: '3px 8px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', fontSize: '10px', border: 'none', borderRadius: '4px', height: 'auto', fontWeight: 600 }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -6156,12 +6176,12 @@ export default function App() {
             <form onSubmit={saveProject} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="form-group">
                 <label className="form-label">Nama Proyek</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={projectFormData.name} 
-                  onChange={(e) => setProjectFormData({ ...projectFormData, name: e.target.value })} 
-                  required 
+                <input
+                  type="text"
+                  className="form-input"
+                  value={projectFormData.name}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, name: e.target.value })}
+                  required
                 />
               </div>
 
@@ -6182,32 +6202,32 @@ export default function App() {
 
               <div className="form-group">
                 <label className="form-label">Deskripsi Proyek</label>
-                <textarea 
-                  className="form-textarea" 
+                <textarea
+                  className="form-textarea"
                   rows="3"
-                  value={projectFormData.description || ''} 
-                  onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })} 
+                  value={projectFormData.description || ''}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
                 />
               </div>
 
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Budget (Estimasi Nilai Rp)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    value={projectFormData.budget || ''} 
-                    onChange={(e) => setProjectFormData({ ...projectFormData, budget: e.target.value })} 
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={projectFormData.budget || ''}
+                    onChange={(e) => setProjectFormData({ ...projectFormData, budget: e.target.value })}
                     required
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Deadline</label>
-                  <input 
-                    type="date" 
-                    className="form-input" 
-                    value={projectFormData.deadline} 
-                    onChange={(e) => setProjectFormData({ ...projectFormData, deadline: e.target.value })} 
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={projectFormData.deadline}
+                    onChange={(e) => setProjectFormData({ ...projectFormData, deadline: e.target.value })}
                     required
                   />
                 </div>
@@ -6216,18 +6236,18 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Progress (%)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
+                  <input
+                    type="number"
+                    className="form-input"
                     min="0"
                     max="100"
-                    value={projectFormData.progress} 
-                    onChange={(e) => setProjectFormData({ ...projectFormData, progress: parseInt(e.target.value) || 0 })} 
+                    value={projectFormData.progress}
+                    onChange={(e) => setProjectFormData({ ...projectFormData, progress: parseInt(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Status Proyek</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={projectFormData.status}
                     onChange={(e) => setProjectFormData({ ...projectFormData, status: e.target.value })}
@@ -6263,22 +6283,22 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Nama Lengkap</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={operatorFormData.name} 
-                    onChange={(e) => setOperatorFormData({ ...operatorFormData, name: e.target.value })} 
-                    required 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={operatorFormData.name}
+                    onChange={(e) => setOperatorFormData({ ...operatorFormData, name: e.target.value })}
+                    required
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Username</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={operatorFormData.username || ''} 
-                    onChange={(e) => setOperatorFormData({ ...operatorFormData, username: e.target.value })} 
-                    required 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={operatorFormData.username || ''}
+                    onChange={(e) => setOperatorFormData({ ...operatorFormData, username: e.target.value })}
+                    required
                   />
                 </div>
               </div>
@@ -6286,22 +6306,22 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Email</label>
-                  <input 
-                    type="email" 
-                    className="form-input" 
-                    value={operatorFormData.email} 
-                    onChange={(e) => setOperatorFormData({ ...operatorFormData, email: e.target.value })} 
-                    required 
+                  <input
+                    type="email"
+                    className="form-input"
+                    value={operatorFormData.email}
+                    onChange={(e) => setOperatorFormData({ ...operatorFormData, email: e.target.value })}
+                    required
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Password {operatorFormData.id && '(Kosongkan jika tidak diubah)'}</label>
-                  <input 
-                    type="password" 
-                    className="form-input" 
-                    value={operatorFormData.password} 
-                    onChange={(e) => setOperatorFormData({ ...operatorFormData, password: e.target.value })} 
-                    required={!operatorFormData.id} 
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={operatorFormData.password}
+                    onChange={(e) => setOperatorFormData({ ...operatorFormData, password: e.target.value })}
+                    required={!operatorFormData.id}
                   />
                 </div>
               </div>
@@ -6309,16 +6329,16 @@ export default function App() {
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">No. WhatsApp</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={operatorFormData.phone || ''} 
-                    onChange={(e) => setOperatorFormData({ ...operatorFormData, phone: e.target.value })} 
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={operatorFormData.phone || ''}
+                    onChange={(e) => setOperatorFormData({ ...operatorFormData, phone: e.target.value })}
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Role</label>
-                  <select 
+                  <select
                     className="form-select"
                     value={operatorFormData.role}
                     onChange={(e) => setOperatorFormData({ ...operatorFormData, role: e.target.value })}
@@ -6334,7 +6354,7 @@ export default function App() {
 
               <div className="form-group">
                 <label className="form-label">Status</label>
-                <select 
+                <select
                   className="form-select"
                   value={operatorFormData.status}
                   onChange={(e) => setOperatorFormData({ ...operatorFormData, status: e.target.value })}
@@ -6369,8 +6389,8 @@ export default function App() {
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
               {customAlert.message}
             </p>
-            <button 
-              className="btn btn-primary" 
+            <button
+              className="btn btn-primary"
               style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: 'black', fontWeight: 600 }}
               onClick={() => setCustomAlert({ ...customAlert, show: false })}
             >
@@ -6394,15 +6414,15 @@ export default function App() {
               {customConfirm.message}
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 style={{ flex: 1, justifyContent: 'center', border: '1px solid var(--border-color)' }}
                 onClick={() => setCustomConfirm({ show: false, message: '', onConfirm: null })}
               >
                 Batal
               </button>
-              <button 
-                className="btn" 
+              <button
+                className="btn"
                 style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px' }}
                 onClick={() => {
                   const onConf = customConfirm.onConfirm;
