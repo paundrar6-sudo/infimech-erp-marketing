@@ -1242,6 +1242,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   gap: 20px;
 }
 
+.responsive-trend-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .responsive-trend-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
 @media (max-width: 768px) {
   /* Layout changes */
   .app-container {
@@ -1266,7 +1279,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .content-body {
-    padding: 14px;
+    padding: 14px 10px !important;
   }
 
   /* Responsive layout overrides */
@@ -1300,10 +1313,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .glass-panel {
-    padding: 14px 12px;
-    margin-bottom: 16px;
-    max-width: 100%;
-    box-sizing: border-box;
+    padding: 14px 12px !important;
+    margin-bottom: 16px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .kpi-card {

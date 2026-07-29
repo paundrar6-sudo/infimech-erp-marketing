@@ -2099,7 +2099,7 @@ export default function App() {
                   const ceiling = Math.ceil(maxYVal / 5) * 5;
 
                   return (
-                    <div className="glass-panel" style={{ minHeight: '420px', display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px' }}>
+                    <div className="glass-panel" style={{ minHeight: '420px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       {/* Title & Timeframe Selector */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
                         <div>
@@ -2148,7 +2148,7 @@ export default function App() {
                       </div>
 
                       {/* Summary Badges Row */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                      <div className="responsive-trend-summary-grid">
                         <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Leads ({sliceCount} Bln)</span>
                           <span style={{ fontSize: '22px', fontWeight: 700, color: '#38bdf8', marginTop: '2px' }}>{totalTrendLeads} <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)' }}>Prospek</span></span>
@@ -2343,7 +2343,7 @@ export default function App() {
               {/* SECOND DASHBOARD GRID: FOLLOW UP TERDEKAT & RIWAYAT AKTIVITAS TERAKHIR */}
               <div className="dashboard-grid" style={{ marginTop: '24px' }}>
                 {/* Card 1: Follow Up Terdekat */}
-                <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div className="dashboard-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(245, 158, 11, 0.2)' }}>
@@ -2442,7 +2442,7 @@ export default function App() {
                 </div>
 
                 {/* Card 2: Riwayat Aktivitas Terakhir */}
-                <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div className="dashboard-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(6, 182, 212, 0.2)' }}>
