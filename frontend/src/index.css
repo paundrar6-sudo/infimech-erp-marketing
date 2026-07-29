@@ -1362,7 +1362,42 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 }
 
+@media (max-width: 768px) {
+  h1 { font-size: 20px !important; }
+  h2 { font-size: 18px !important; }
+  h3 { font-size: 15px !important; }
+  h4 { font-size: 13px !important; }
+  
+  .header-title { font-size: 17px !important; }
+  .kpi-value { font-size: 20px !important; }
+  .chart-title { font-size: 14px !important; flex-wrap: wrap; gap: 4px; }
+  
+  .chart-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .donut-chart-wrapper {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  .donut-chart-wrapper svg {
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+
 @media (max-width: 480px) {
+  h3 { font-size: 14px !important; }
+  .header-title { font-size: 15px !important; }
+  .kpi-value { font-size: 18px !important; }
+  .kpi-card { padding: 12px 10px !important; }
+
   .responsive-kpi-3col {
     grid-template-columns: 1fr;
   }

@@ -2111,7 +2111,7 @@ export default function App() {
                           </p>
                         </div>
                         
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div className="chart-header-actions">
                           <span style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.35)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px', boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)' }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
                             Realtime Sync
@@ -2280,7 +2280,7 @@ export default function App() {
                     return (
                       <div className="responsive-donut-grid">
                         {/* Precise SVG Donut Chart */}
-                        <div style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="donut-chart-wrapper" style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                           <svg width="150" height="150" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
                             <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" strokeWidth="4.5" />
                             {stages.map((s, idx) => {
@@ -2311,7 +2311,7 @@ export default function App() {
                         </div>
 
                         {/* Exact Precision Breakdown & Progress Legend */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
                           {stages.map((s, idx) => {
                             const pct = ((s.count / totalLeads) * 100).toFixed(1);
                             return (
