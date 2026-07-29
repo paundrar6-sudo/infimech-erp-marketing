@@ -1392,3 +1392,42 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   gap: 12px;
   transition: all 0.25s ease;
 }
+
+/* --- Comprehensive Mobile Dashboard Grid Systems --- */
+.responsive-donut-grid {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 16px 24px;
+  flex: 1;
+}
+
+.responsive-trend-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .responsive-trend-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-donut-grid {
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    gap: 16px !important;
+    padding: 12px 8px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .responsive-trend-summary-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}

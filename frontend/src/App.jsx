@@ -2148,7 +2148,7 @@ export default function App() {
                       </div>
 
                       {/* Summary Badges Row */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                      <div className="responsive-trend-summary-grid">
                         <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Total Leads ({sliceCount} Bln)</span>
                           <span style={{ fontSize: '22px', fontWeight: 700, color: '#38bdf8', marginTop: '2px' }}>{totalTrendLeads} <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)' }}>Prospek</span></span>
@@ -2278,7 +2278,7 @@ export default function App() {
 
                     let cumulativePct = 0;
                     return (
-                      <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '24px', alignItems: 'center', padding: '16px 24px', flex: 1 }}>
+                      <div className="responsive-donut-grid">
                         {/* Precise SVG Donut Chart */}
                         <div style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <svg width="150" height="150" viewBox="0 0 42 42" style={{ transform: 'rotate(-90deg)' }}>
