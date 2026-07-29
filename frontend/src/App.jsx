@@ -2194,7 +2194,7 @@ export default function App() {
                         </div>
 
                         {/* Columns */}
-                        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', paddingBottom: '26px', zIndex: 2 }}>
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', paddingBottom: '26px', paddingLeft: '36px', paddingRight: '16px', zIndex: 2 }}>
                           {displayedTrend.map((t, idx) => {
                             const leadHeight = Math.min(((t.leads || 0) / ceiling) * 100, 100);
                             const wonHeight = Math.min(((t.won || 0) / ceiling) * 100, 100);
