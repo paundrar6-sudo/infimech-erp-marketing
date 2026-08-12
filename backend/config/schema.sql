@@ -137,3 +137,42 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. SEO Configs (Marketing SEO Optimization)
+CREATE TABLE IF NOT EXISTS seo_configs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content_type VARCHAR(100) DEFAULT 'Landing Page',
+  meta_title VARCHAR(255) NOT NULL,
+  meta_description TEXT NOT NULL,
+  focus_keyword VARCHAR(255) NOT NULL,
+  search_intent VARCHAR(100) DEFAULT 'Informational',
+  schema_type VARCHAR(100) DEFAULT 'Organization',
+  schema_json TEXT NULL,
+  og_title VARCHAR(255) NULL,
+  og_description TEXT NULL,
+  og_image TEXT NULL,
+  og_type VARCHAR(50) DEFAULT 'website',
+  meta_robots VARCHAR(100) DEFAULT 'index, follow',
+  canonical_url VARCHAR(255) NULL,
+  score INT DEFAULT 85,
+  created_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (created_by) REFERENCES User(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. User Activity Logs (Real-time tracking & frequency analytics)
+CREATE TABLE IF NOT EXISTS user_activity_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NULL,
+  username VARCHAR(191) NOT NULL,
+  name VARCHAR(191) NULL,
+  role VARCHAR(50) DEFAULT 'Operator',
+  action VARCHAR(255) NOT NULL,
+  module VARCHAR(100) NOT NULL DEFAULT 'marketing',
+  page_url VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

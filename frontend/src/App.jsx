@@ -11,6 +11,9 @@ import {
   Menu, X, MoreHorizontal, UserPlus, Activity
 } from 'lucide-react';
 import { api, API_BASE_URL } from './services/api';
+import SeoInteractiveForm from './components/SeoInteractiveForm';
+import RealtimeUserAnalytics from './components/RealtimeUserAnalytics';
+import { Sparkles } from 'lucide-react';
 
 export default function App() {
   // Auth state
@@ -1911,7 +1914,7 @@ export default function App() {
                 </li>
                 <li>
                   <a
-                    className={`sidebar-item ${currentView === 'digital-marketing' ? 'active' : ''}`}
+                    className={`sidebar-item ${currentView === 'digital-marketing' && digitalTab === 'campaigns' ? 'active' : ''}`}
                     style={{ fontSize: '13px', padding: '8px 12px' }}
                     onClick={() => {
                       setCurrentView('digital-marketing');
@@ -1921,6 +1924,34 @@ export default function App() {
                   >
                     <Target size={16} />
                     <span>Marketing Assets</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    className={`sidebar-item ${currentView === 'digital-marketing' && digitalTab === 'seo' ? 'active' : ''}`}
+                    style={{ fontSize: '13px', padding: '8px 12px' }}
+                    onClick={() => {
+                      setCurrentView('digital-marketing');
+                      setDigitalTab('seo');
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    <Sparkles size={16} className="text-amber-400" />
+                    <span>SEO Marketing</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    className={`sidebar-item ${currentView === 'digital-marketing' && digitalTab === 'analytics' ? 'active' : ''}`}
+                    style={{ fontSize: '13px', padding: '8px 12px' }}
+                    onClick={() => {
+                      setCurrentView('digital-marketing');
+                      setDigitalTab('analytics');
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    <Activity size={16} className="text-emerald-400" />
+                    <span>Real-Time Analytics</span>
                   </a>
                 </li>
                 <li>
@@ -3174,7 +3205,7 @@ export default function App() {
           {/* VIEW: MARKETING DIGITAL */}
           {currentView === 'digital-marketing' && (
             <>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap' }}>
                 <button
                   className={`btn ${digitalTab === 'campaigns' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => setDigitalTab('campaigns')}
@@ -3188,6 +3219,20 @@ export default function App() {
                 >
                   <FolderHeart size={16} />
                   <span>Asset Library</span>
+                </button>
+                <button
+                  className={`btn ${digitalTab === 'seo' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setDigitalTab('seo')}
+                >
+                  <Sparkles size={16} />
+                  <span>Form Options SEO Interaktif</span>
+                </button>
+                <button
+                  className={`btn ${digitalTab === 'analytics' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setDigitalTab('analytics')}
+                >
+                  <Activity size={16} />
+                  <span>Analytics User & Admin Real-Time</span>
                 </button>
               </div>
 
@@ -3732,6 +3777,14 @@ export default function App() {
                     </div>
                   )}
                 </>
+              )}
+
+              {digitalTab === 'seo' && (
+                <SeoInteractiveForm showAlert={showAlert} showConfirm={showConfirm} token={token} user={user} />
+              )}
+
+              {digitalTab === 'analytics' && (
+                <RealtimeUserAnalytics token={token} user={user} />
               )}
             </>
           )}
