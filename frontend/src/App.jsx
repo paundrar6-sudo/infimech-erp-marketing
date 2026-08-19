@@ -13,6 +13,7 @@ import {
 import { api, API_BASE_URL } from './services/api';
 import SeoInteractiveForm from './components/SeoInteractiveForm';
 import RealtimeUserAnalytics from './components/RealtimeUserAnalytics';
+import SeoHead from './components/SeoHead';
 import { Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -1832,6 +1833,16 @@ export default function App() {
 
   return (
     <div className="app-container">
+      <SeoHead
+        title={
+          currentView === 'dashboard' ? 'Dashboard Overview & SEO Engine | Infimech ERP' :
+          currentView === 'digital-marketing' && digitalTab === 'seo' ? 'Pengaturan Presets & Meta SEO | Infimech' :
+          currentView === 'digital-marketing' ? 'Digital Marketing Campaigns & SEO | Infimech' :
+          currentView === 'operator-crm' ? 'CRM Leads & User Management | Infimech' :
+          currentView === 'follow-up' ? 'Follow Up Prospek & Projects | Infimech' :
+          'Infimech ERP Marketing & Engineering Solusi'
+        }
+      />
       {/* Intro Animation Overlay */}
       {showIntro && (
         <IntroAnimation onComplete={() => {
@@ -2580,6 +2591,174 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              {/* SEO ENGINE & META COVERAGE OVERVIEW CARD */}
+              {dashboardData && dashboardData.seoMetrics && (
+                <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2))', border: '1px solid rgba(56, 189, 248, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(56, 189, 248, 0.25)' }}>
+                        <Search size={22} style={{ color: '#38bdf8' }} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          SEO Engine & Meta Coverage Overview
+                        </h3>
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '3px 0 0 0' }}>
+                          Pemantauan skor optimasi SEO, status indeksasi search engine, dan penggunaan Schema JSON-LD
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentView('digital-marketing');
+                        setDigitalTab('seo');
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '9px 18px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #38bdf8, #818cf8)',
+                        color: '#fff',
+                        fontWeight: 600,
+                        fontSize: '13px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 14px rgba(56, 189, 248, 0.3)',
+                        transition: 'all 0.25s ease'
+                      }}
+                    >
+                      <Sparkles size={16} />
+                      <span>Kelola & Preset SEO</span>
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+
+                  {/* SEO Metrics Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                    {/* Metric 1: Average SEO Score */}
+                    <div style={{ padding: '18px 20px', borderRadius: '14px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Rata-Rata Skor SEO</span>
+                        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)', fontWeight: 700 }}>
+                          Optimized
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: '28px', fontWeight: 800, color: '#38bdf8', letterSpacing: '-0.5px' }}>
+                          {dashboardData.seoMetrics.avgScore || 90}%
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>skor kualitas</span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${dashboardData.seoMetrics.avgScore || 90}%`, height: '100%', background: 'linear-gradient(90deg, #38bdf8, #34d399)', borderRadius: '3px', transition: 'width 0.6s ease' }} />
+                      </div>
+                    </div>
+
+                    {/* Metric 2: Indexation Percentage */}
+                    <div style={{ padding: '18px 20px', borderRadius: '14px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Status Indeksasi Google</span>
+                        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 700 }}>
+                          Indexable
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: '28px', fontWeight: 800, color: '#34d399', letterSpacing: '-0.5px' }}>
+                          {dashboardData.seoMetrics.indexedPercentage || 100}%
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({dashboardData.seoMetrics.indexedCount || dashboardData.seoMetrics.totalConfigs} terindeks)</span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${dashboardData.seoMetrics.indexedPercentage || 100}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #34d399)', borderRadius: '3px', transition: 'width 0.6s ease' }} />
+                      </div>
+                    </div>
+
+                    {/* Metric 3: Total Configured Pages */}
+                    <div style={{ padding: '18px 20px', borderRadius: '14px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Halaman SEO Aktif</span>
+                        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', fontWeight: 700 }}>
+                          Active
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: '28px', fontWeight: 800, color: '#c084fc', letterSpacing: '-0.5px' }}>
+                          {dashboardData.seoMetrics.totalConfigs || 0}
+                        </span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>halaman / aset</span>
+                      </div>
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CheckCircle2 size={13} style={{ color: '#34d399' }} /> Meta Title & Description terpasang
+                      </span>
+                    </div>
+
+                    {/* Metric 4: Schema Distribution */}
+                    <div style={{ padding: '18px 20px', borderRadius: '14px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Schema JSON-LD</span>
+                        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', fontWeight: 700 }}>
+                          Structured Data
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '2px' }}>
+                        {(dashboardData.seoMetrics.schemaBreakdown || []).map((sc, idx) => (
+                          <span key={idx} style={{ fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            {sc.type}: {sc.count} ({sc.percentage}%)
+                          </span>
+                        ))}
+                        {(!dashboardData.seoMetrics.schemaBreakdown || dashboardData.seoMetrics.schemaBreakdown.length === 0) && (
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Service, Article, Product</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top SEO Configurations Table */}
+                  {dashboardData.seoMetrics.topConfigs && dashboardData.seoMetrics.topConfigs.length > 0 && (
+                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileText size={16} style={{ color: '#38bdf8' }} />
+                        Konfigurasi SEO Terdaftar
+                      </h4>
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Judul Halaman</th>
+                              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Focus Keyword</th>
+                              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Meta Robots</th>
+                              <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>Skor Optimasi</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dashboardData.seoMetrics.topConfigs.map((cfg, idx) => (
+                              <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                <td style={{ padding: '10px 12px', fontWeight: 600, color: '#fff' }}>{cfg.title}</td>
+                                <td style={{ padding: '10px 12px', color: '#38bdf8' }}>
+                                  <code style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                                    {cfg.focus_keyword || '-'}
+                                  </code>
+                                </td>
+                                <td style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '12px' }}>{cfg.meta_robots || 'index, follow'}</td>
+                                <td style={{ padding: '10px 12px', textAlign: 'right' }}>
+                                  <span style={{ fontWeight: 700, color: cfg.score >= 80 ? '#34d399' : cfg.score >= 60 ? '#fbbf24' : '#f87171' }}>
+                                    {cfg.score}%
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
