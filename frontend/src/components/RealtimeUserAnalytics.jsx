@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Activity, Clock, ShieldCheck, UserCheck, RefreshCw, BarChart2, TrendingUp, Radio, AlertCircle
+  Users, Activity, Clock, ShieldCheck, UserCheck, RefreshCw, BarChart2, TrendingUp, Radio, AlertCircle, HelpCircle, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -9,6 +9,7 @@ export default function RealtimeUserAnalytics({ token, user }) {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [showGuide, setShowGuide] = useState(false);
 
   const fetchRealtimeStats = async (isSilent = false) => {
     if (!isSilent) setIsRefreshing(true);
@@ -82,6 +83,14 @@ export default function RealtimeUserAnalytics({ token, user }) {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowGuide(!showGuide)}
+              className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold hover:bg-emerald-500/30 transition-all"
+            >
+              <HelpCircle className="w-4 h-4" /> Cara Penggunaan
+              {showGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+
             <span className="text-xs text-slate-400 font-mono">
               Update: {lastUpdated.toLocaleTimeString('id-ID')}
             </span>
@@ -95,6 +104,31 @@ export default function RealtimeUserAnalytics({ token, user }) {
             </button>
           </div>
         </div>
+
+        {/* Expandable Guide Drawer */}
+        {showGuide && (
+          <div className="mt-6 pt-5 border-t border-slate-800 space-y-4 text-slate-200 animate-fadeIn">
+            <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+              <HelpCircle className="w-4 h-4" /> Panduan & Cara Membaca Data Analytics Real-Time
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+                <span className="font-bold text-white block">1. Otomatisasi Log Akses</span>
+                <p className="text-slate-400">Setiap kali anggota tim (Superadmin, Admin, Operator) membuka menu atau melakukan aksi di ERP, sistem mencatat log aktivitas secara otomatis tanpa input manual.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+                <span className="font-bold text-white block">2. Frekuensi & Persentase Share</span>
+                <p className="text-slate-400">Papan peringkat mengukur total kunjungan dan persentase kontribusi penggunaan masing-masing akun terhadap total beban kerja tim marketing.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+                <span className="font-bold text-white block">3. Live Online Status</span>
+                <p className="text-slate-400">Status <em>Online Live</em> menunjukkan pengguna yang sedang aktif berinteraksi dengan sistem dalam kurun waktu 15 menit terakhir.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Key Metrics Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">

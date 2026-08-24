@@ -251,6 +251,15 @@ export default function App() {
     loadViewData(currentView);
   }, [currentView, token, selectedLeadId, itActiveLeadId]);
 
+  // Real-time Dashboard Polling Interval (Auto Sync SEO & Metrics every 6s)
+  useEffect(() => {
+    if (!token || currentView !== 'dashboard') return;
+    const interval = setInterval(() => {
+      fetchDashboard();
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [currentView, token]);
+
   // Refresh current data when global search finishes
   useEffect(() => {
     if (currentView === 'operator-crm' && !selectedLeadId) {
@@ -2603,6 +2612,10 @@ export default function App() {
                       <div>
                         <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
                           SEO Engine & Meta Coverage Overview
+                          <span style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d399' }} />
+                            Live Real-Time Syncing
+                          </span>
                         </h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '3px 0 0 0' }}>
                           Pemantauan skor optimasi SEO, status indeksasi search engine, dan penggunaan Schema JSON-LD

@@ -163,6 +163,183 @@ router.get('/presets', (req, res) => {
   });
 });
 
+// GET Marketing Assets list for 1-click SEO generation
+router.get('/marketing-assets', verifyToken, async (req, res) => {
+  try {
+    const [assets] = await pool.query(`
+      SELECT id, name, category, file_type, tags, file_url 
+      FROM assets 
+      ORDER BY id DESC
+    `);
+    res.json({ status: 'success', data: assets });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// POST Smart Automatic SEO Generator
+router.post('/auto-generate', verifyToken, async (req, res) => {
+  try {
+    const { topic, contentType, assetId, customKeyword } = req.body;
+    
+    let baseTitle = topic || 'Jasa Simulasi Engineering & Optimasi Design';
+    let baseCategory = contentType || 'Landing Page (Jasa & Solusi)';
+    let assetObj = null;
+
+    if (assetId) {
+      const [rows] = await pool.query('SELECT * FROM assets WHERE id = ?', [assetId]);
+      if (rows.length > 0) {
+        assetObj = rows[0];
+        baseTitle = assetObj.name;
+        if (assetObj.category) {
+          if (assetObj.category.includes('Case Study')) baseCategory = 'Studi Kasus (Case Study B2B)';
+          else if (assetObj.category.includes('Whitepaper')) baseCategory = 'Whitepaper & Riset Teknik';
+          else if (assetObj.category.includes('Brosur') || assetObj.category.includes('PDF')) baseCategory = 'Katalog & Download Asset';
+        }
+      }
+    }
+
+    // Clean & extract slug
+    const cleanTitle = baseTitle.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    const slug = cleanTitle.toLowerCase().replace(/\s+/g, '-');
+
+    // Extract keyword
+    let focusKw = customKeyword ? customKeyword.trim().toLowerCase() : '';
+    if (!focusKw) {
+      if (cleanTitle.toLowerCase().includes('cfd')) focusKw = 'jasa simulasi cfd dan fea';
+      else if (cleanTitle.toLowerCase().includes('fea') || cleanTitle.toLowerCase().includes('struktur')) focusKw = 'analisis struktur fea industri';
+      else if (cleanTitle.toLowerCase().includes('hvac') || cleanTitle.toLowerCase().includes('building')) focusKw = 'simulasi hvac thermal gedung';
+      else if (cleanTitle.toLowerCase().includes('turbin') || cleanTitle.toLowerCase().includes('wind')) focusKw = 'simulasi aerodinamika turbin angin';
+      else focusKw = cleanTitle.toLowerCase().slice(0, 35);
+    }
+
+    // Determine Intent & Schema
+    let searchIntent = 'Transactional';
+    let schemaType = 'Service';
+    let ogType = 'website';
+    let metaRobots = 'index, follow';
+
+    if (baseCategory.includes('Studi Kasus')) {
+      searchIntent = 'Commercial';
+      schemaType = 'Article';
+      ogType = 'article';
+    } else if (baseCategory.includes('Whitepaper')) {
+      searchIntent = 'Informational';
+      schemaType = 'Article';
+      ogType = 'article';
+    } else if (baseCategory.includes('Katalog')) {
+      searchIntent = 'Navigational';
+      schemaType = 'Product';
+      ogType = 'product';
+    }
+
+    // Generate Optimized Meta Title (target 50-60 chars)
+    let metaTitle = `${cleanTitle} Presisi Tinggi | Infimech`;
+    if (metaTitle.length > 60) {
+      metaTitle = `${cleanTitle.slice(0, 48)} | Infimech`;
+    } else if (metaTitle.length < 50) {
+      metaTitle = `${cleanTitle} Presisi & Garansi Hasil | Infimech`;
+    }
+    // Truncate to max 60 cleanly
+    if (metaTitle.length > 60) metaTitle = metaTitle.slice(0, 57) + '...';
+
+    // Generate Optimized Meta Description (target 140-160 chars)
+    let metaDescription = `Dapatkan analisis ${cleanTitle} presisi tinggi bersama engineer profesional Infimech. Solusi hemat biaya prototyping & optimasi performa industri. Konsultasi gratis!`;
+    if (metaDescription.length > 160) {
+      metaDescription = `Dapatkan analisis ${cleanTitle} presisi tinggi bersama Infimech. Hemat biaya prototyping & tingkatkan performa industri. Konsultasi gratis hari ini!`;
+    }
+    if (metaDescription.length > 160) metaDescription = metaDescription.slice(0, 157) + '...';
+    if (metaDescription.length < 130) {
+      metaDescription += ' Dapatkan estimasi pengerjaan cepat dan laporan riset lengkap.';
+    }
+
+    // Generate JSON-LD Schema
+    let schemaJson = {};
+    if (schemaType === 'Service') {
+      schemaJson = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": cleanTitle,
+        "provider": {
+          "@type": "Organization",
+          "name": "Infimech Engineering",
+          "url": "https://infimech.co.id"
+        },
+        "areaServed": "Indonesia",
+        "description": metaDescription
+      };
+    } else if (schemaType === 'Article') {
+      schemaJson = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": cleanTitle,
+        "description": metaDescription,
+        "author": {
+          "@type": "Organization",
+          "name": "Infimech Engineering R&D Team"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Infimech",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://infimech.co.id/assets/logo.png"
+          }
+        }
+      };
+    } else if (schemaType === 'Product') {
+      schemaJson = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": cleanTitle,
+        "category": "Engineering Services & Digital Assets",
+        "description": metaDescription,
+        "brand": {
+          "@type": "Brand",
+          "name": "Infimech"
+        }
+      };
+    } else {
+      schemaJson = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Infimech Engineering",
+        "url": "https://infimech.co.id",
+        "logo": "https://infimech.co.id/assets/logo.png",
+        "sameAs": ["https://linkedin.com/company/infimech"]
+      };
+    }
+
+    const canonicalUrl = `https://infimech.co.id/services/${slug}`;
+    const ogImage = assetObj && assetObj.file_type === 'Image' 
+      ? assetObj.file_url 
+      : 'https://infimech.co.id/assets/images/cfd_aero.png';
+
+    res.json({
+      status: 'success',
+      generated: {
+        title: cleanTitle,
+        contentType: baseCategory,
+        metaTitle,
+        metaDescription,
+        focusKeyword: focusKw,
+        searchIntent,
+        schemaType,
+        schemaJsonText: JSON.stringify(schemaJson, null, 2),
+        ogTitle: metaTitle,
+        ogDescription: metaDescription,
+        ogImage,
+        ogType,
+        metaRobots,
+        canonicalUrl,
+        calculatedScore: 95
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // GET All SEO Configs
 router.get('/configs', verifyToken, async (req, res) => {
   await seedDefaultSeoConfigs();
@@ -251,3 +428,4 @@ router.delete('/configs/:id', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
+

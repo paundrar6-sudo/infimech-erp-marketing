@@ -464,5 +464,22 @@ export const api = {
       method: 'POST'
     });
     return handleResponse(res);
+  },
+
+  // SEO Smart Generator & Marketing Assets
+  getSeoMarketingAssets: async () => {
+    const res = await fetch(`${API_BASE_URL}/seo/marketing-assets`, {
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  autoGenerateSeo: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/seo/auto-generate`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
   }
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, CheckCircle2, AlertTriangle, Globe, Eye, Code, Share2, 
-  Search, Info, FileText, Layers, ShieldCheck, Download, Trash2, Plus, RefreshCw, Copy, Check
+  Search, Info, FileText, Layers, ShieldCheck, Download, Trash2, Plus, RefreshCw, Copy, Check, Zap, Smartphone, Monitor, HelpCircle, ArrowRight
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -11,10 +11,18 @@ export default function SeoInteractiveForm({ showAlert, showConfirm, token, user
   const [searchIntents, setSearchIntents] = useState([]);
   const [schemaTypes, setSchemaTypes] = useState([]);
   const [robotsDirectives, setRobotsDirectives] = useState([]);
+  const [marketingAssets, setMarketingAssets] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'saved-configs', 'serp-preview'
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'saved-configs', 'serp-preview', 'guide'
   const [copiedCode, setCopiedCode] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState('desktop'); // 'desktop' or 'mobile'
+
+  // Auto-Generate Inputs
+  const [selectedAssetId, setSelectedAssetId] = useState('');
+  const [autoTopicInput, setAutoTopicInput] = useState('');
 
   // Form State
   const [editingId, setEditingId] = useState(null);
@@ -34,10 +42,11 @@ export default function SeoInteractiveForm({ showAlert, showConfirm, token, user
   const [metaRobots, setMetaRobots] = useState('index, follow');
   const [canonicalUrl, setCanonicalUrl] = useState('https://infimech.co.id/services/');
 
-  // Fetch initial preset options & saved configs
+  // Fetch initial preset options & saved configs & marketing assets
   useEffect(() => {
     fetchPresetData();
     fetchConfigs();
+    fetchMarketingAssets();
   }, []);
 
   const fetchPresetData = async () => {
@@ -68,6 +77,68 @@ export default function SeoInteractiveForm({ showAlert, showConfirm, token, user
     }
   };
 
+  const fetchMarketingAssets = async () => {
+    try {
+      const res = await api.getSeoMarketingAssets();
+      if (res && res.data) {
+        setMarketingAssets(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to load marketing assets for SEO:', err);
+    }
+  };
+
+  // 1-Click Smart Auto SEO Generator
+  const handleAutoGenerateSEO = async (assetIdToUse = null) => {
+    setIsGenerating(true);
+    try {
+      const payload = {
+        topic: autoTopicInput || title,
+        contentType,
+        assetId: assetIdToUse || selectedAssetId,
+        customKeyword: focusKeyword
+      };
+
+      const res = await api.autoGenerateSeo(payload);
+      if (res && res.status === 'success' && res.generated) {
+        const gen = res.generated;
+        setTitle(gen.title || title);
+        setContentType(gen.contentType || contentType);
+        setMetaTitle(gen.metaTitle || '');
+        setMetaDescription(gen.metaDescription || '');
+        setFocusKeyword(gen.focusKeyword || '');
+        setSearchIntent(gen.searchIntent || 'Transactional');
+        setSchemaType(gen.schemaType || 'Service');
+        setSchemaJsonText(gen.schemaJsonText || '{}');
+        setOgTitle(gen.ogTitle || gen.metaTitle || '');
+        setOgDescription(gen.ogDescription || gen.metaDescription || '');
+        setOgImage(gen.ogImage || 'https://infimech.co.id/assets/images/cfd_aero.png');
+        setOgType(gen.ogType || 'website');
+        setMetaRobots(gen.metaRobots || 'index, follow');
+        setCanonicalUrl(gen.canonicalUrl || 'https://infimech.co.id/services/');
+
+        if (showAlert) {
+          showAlert(`✨ SEO berhasil di-generate secara otomatis! Meta Title (${gen.metaTitle.length} char), Description (${gen.metaDescription.length} char), & Schema JSON-LD siap digunakan.`, 'Smart AI SEO Generator', 'success');
+        }
+      }
+    } catch (err) {
+      if (showAlert) showAlert('Gagal generate SEO otomatis: ' + err.message, 'Error Generator', 'danger');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Handle Asset Choice Dropdown Selection
+  const handleSelectAssetForSEO = (assetId) => {
+    setSelectedAssetId(assetId);
+    if (!assetId) return;
+    const found = marketingAssets.find(a => String(a.id) === String(assetId));
+    if (found) {
+      setAutoTopicInput(found.name);
+      handleAutoGenerateSEO(found.id);
+    }
+  };
+
   // Handle Preset Choice Selection
   const handleApplyPreset = (indexStr) => {
     setSelectedPresetIndex(indexStr);
@@ -83,7 +154,6 @@ export default function SeoInteractiveForm({ showAlert, showConfirm, token, user
       setOgType(selected.ogType);
       if (selected.focusKeyword) setFocusKeyword(selected.focusKeyword);
 
-      // Auto-fill template placeholders if title/meta title not filled
       if (!title) setTitle(selected.contentType);
       if (!metaTitle) setMetaTitle(selected.titleTemplate.replace('[Nama Jasa/Produk]', 'Jasa Simulasi CFD').replace('[Nama Perusahaan]', 'Infimech'));
       if (!metaDescription) setMetaDescription(selected.descriptionTemplate.replace('[Nama Jasa]', 'Simulasi CFD & FEA').replace('[Nama Klien/Industri]', 'Manufaktur'));
@@ -98,19 +168,15 @@ export default function SeoInteractiveForm({ showAlert, showConfirm, token, user
   // Calculate SEO Quality Score (0-100)
   const calculateSeoScore = () => {
     let score = 0;
-    // Meta Title length score (ideal 50-60)
-    if (metaTitle.length >= 40 && metaTitle.length <= 65) score += 30;
+    if (metaTitle.length >= 45 && metaTitle.length <= 60) score += 30;
     else if (metaTitle.length > 0) score += 15;
 
-    // Meta Description length score (ideal 130-160)
-    if (metaDescription.length >= 120 && metaDescription.length <= 165) score += 30;
+    if (metaDescription.length >= 130 && metaDescription.length <= 160) score += 30;
     else if (metaDescription.length > 0) score += 15;
 
-    // Focus keyword present in Meta Title & Meta Description
     if (focusKeyword && metaTitle.toLowerCase().includes(focusKeyword.toLowerCase())) score += 15;
     if (focusKeyword && metaDescription.toLowerCase().includes(focusKeyword.toLowerCase())) score += 10;
 
-    // OpenGraph & Schema selected
     if (ogImage && ogTitle) score += 10;
     if (schemaType) score += 5;
 
@@ -123,6 +189,8 @@ export default function SeoInteractiveForm({ showAlert, showConfirm, token, user
   const handleResetForm = () => {
     setEditingId(null);
     setSelectedPresetIndex('');
+    setSelectedAssetId('');
+    setAutoTopicInput('');
     setTitle('');
     setContentType('Landing Page (Jasa & Solusi)');
     setMetaTitle('');
@@ -248,39 +316,42 @@ ${schemaJsonText}
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-slate-900/80 border border-slate-800 backdrop-blur-md rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-slate-900/90 border border-slate-800 backdrop-blur-md rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/15 via-cyan-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm mb-1">
-              <Sparkles className="w-4 h-4 animate-pulse text-amber-400" /> SEO & Content Marketing Optimizer
+              <Zap className="w-4 h-4 text-amber-400 animate-pulse" /> Automatic Smart SEO & Meta Optimizer
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Form Options SEO Interaktif</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">SEO Marketing & Automated Metadata Engine</h2>
             <p className="text-slate-400 text-sm mt-1">
-              Pilihan preset isian SEO terstandarisasi untuk halaman marketing, brosur, studi kasus, & campaign digital.
+              Sistem SEO Otomatis 1-Klik: Bebas pengisian manual. Dibuat elegan, presisi, dan terhubung real-time dengan Dashboard.
             </p>
           </div>
 
-          {/* Quick Score Badge */}
-          <div className="flex items-center gap-4 bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 px-4">
-            <div className="text-right">
-              <span className="text-xs text-slate-400 block font-medium">SEO Quality Score</span>
-              <span className={`text-xl font-bold ${seoScore >= 80 ? 'text-emerald-400' : seoScore >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
-                {seoScore} / 100
-              </span>
-            </div>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg border ${
-              seoScore >= 80 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 
-              seoScore >= 50 ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 
-              'bg-rose-500/20 border-rose-500/40 text-rose-400'
-            }`}>
-              {seoScore >= 80 ? 'A+' : seoScore >= 50 ? 'B' : 'C'}
+          {/* Quick Score Badge & Real-Time Sync Indicator */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 bg-slate-800/90 border border-slate-700/80 rounded-xl p-3 px-4 shadow-md">
+              <div className="text-right">
+                <span className="text-xs text-slate-400 block font-medium">SEO Quality Score</span>
+                <span className={`text-xl font-bold ${seoScore >= 80 ? 'text-emerald-400' : seoScore >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                  {seoScore} / 100
+                </span>
+              </div>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg border ${
+                seoScore >= 80 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 
+                seoScore >= 50 ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 
+                'bg-rose-500/20 border-rose-500/40 text-rose-400'
+              }`}>
+                {seoScore >= 80 ? 'A+' : seoScore >= 50 ? 'B' : 'C'}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 mt-6 border-b border-slate-800 pb-2">
+        <div className="flex flex-wrap items-center gap-2 mt-6 border-b border-slate-800 pb-2">
           <button
             onClick={() => setActiveTab('editor')}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
@@ -289,18 +360,9 @@ ${schemaJsonText}
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            <FileText className="w-4 h-4" /> Form Isian SEO Interaktif
+            <Zap className="w-4 h-4 text-amber-300" /> Form & Smart Generator Otomatis
           </button>
-          <button
-            onClick={() => setActiveTab('saved-configs')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-              activeTab === 'saved-configs' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Layers className="w-4 h-4" /> Daftar Config SEO Tersimpan ({configs.length})
-          </button>
+
           <button
             onClick={() => setActiveTab('serp-preview')}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
@@ -309,37 +371,134 @@ ${schemaJsonText}
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
-            <Globe className="w-4 h-4" /> Live Google & Social Preview
+            <Globe className="w-4 h-4 text-cyan-400" /> Live Google SERP & Social Card
+          </button>
+
+          <button
+            onClick={() => setActiveTab('saved-configs')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              activeTab === 'saved-configs' 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Layers className="w-4 h-4 text-indigo-400" /> Config SEO Tersimpan ({configs.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('guide')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              activeTab === 'guide' 
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30' 
+                : 'text-emerald-400 hover:text-white hover:bg-slate-800 border border-emerald-500/30'
+            }`}
+          >
+            <HelpCircle className="w-4 h-4" /> Cara Penggunaan SEO (Panduan)
           </button>
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* TAB 1: SMART AUTOMATED GENERATOR & EDITOR */}
       {activeTab === 'editor' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Form Left Side (2 Columns) */}
+          {/* Left Main Form (2 Cols) */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Preset Selector Card */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-md space-y-4">
+
+            {/* AI SMART AUTOMATED GENERATOR CARD */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/60 border border-indigo-500/30 rounded-2xl p-5 backdrop-blur-md space-y-4 shadow-lg relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-indigo-300 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-400" /> Pilihan Preset SEO Otomatis (Preset Ready-to-Use)
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-amber-400">
+                    <Zap className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      Generate SEO Otomatis 1-Klik (Smart AI Engine)
+                    </h3>
+                    <p className="text-xs text-slate-300">
+                      Pilih Aset ERP atau ketik topik produk. Sistem secara otomatis menyusun Meta Title, Description, Keyword, & JSON-LD Schema.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
+                  Otomatis 100%
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                {/* Select from Asset ERP */}
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Impor dari Asset Marketing ERP</label>
+                  <select
+                    value={selectedAssetId}
+                    onChange={(e) => handleSelectAssetForSEO(e.target.value)}
+                    className="w-full bg-slate-950 border border-indigo-500/40 focus:border-indigo-400 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none"
+                  >
+                    <option value="">-- Pilih Aset Marketing ERP --</option>
+                    {marketingAssets.map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        📄 {asset.name} ({asset.category})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Direct Topic / Keyword Input */}
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Ketik Topik / Produk / Solusi</label>
+                  <input
+                    type="text"
+                    value={autoTopicInput}
+                    onChange={(e) => setAutoTopicInput(e.target.value)}
+                    placeholder="Contoh: Jasa Simulasi CFD Penukar Panas Heat Exchanger"
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  Mengikuti standar Google SERP (Title: 50-60 char, Desc: 140-160 char)
+                </span>
+
+                <button
+                  type="button"
+                  disabled={isGenerating}
+                  onClick={() => handleAutoGenerateSEO()}
+                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium px-5 py-2.5 rounded-xl text-xs shadow-md shadow-indigo-600/30 transition-all disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Generating Meta Tags...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate SEO Otomatis Sekarang
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Ready Preset Quick Selector */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 backdrop-blur-md space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-indigo-300 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" /> Opsional: Pilihan Preset Template Siap Pakai
                 </label>
                 {selectedPresetIndex !== '' && (
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    Preset Aktif
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-medium">
+                    Preset Terpilih
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400">
-                Pilih opsi preset di bawah ini untuk mengisi template judul, deskripsi, niat pencarian, dan schema markup otomatis agar tidak salah memilih.
-              </p>
               <select
                 value={selectedPresetIndex}
                 onChange={(e) => handleApplyPreset(e.target.value)}
-                className="w-full bg-slate-950 border border-indigo-500/40 focus:border-indigo-400 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-400 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none"
               >
-                <option value="">-- Pilih Preset Konten SEO Marketing --</option>
+                <option value="">-- Pilih Template Preset SEO Marketing --</option>
                 {presets.map((p, idx) => (
                   <option key={idx} value={idx}>
                     ✨ {p.contentType} ({p.searchIntent})
@@ -351,9 +510,9 @@ ${schemaJsonText}
             {/* Main SEO Inputs Form */}
             <form onSubmit={handleSave} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-md space-y-5">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-400" /> 
-                  {editingId ? 'Edit Konfigurasi SEO' : 'Buat Konfigurasi SEO Baru'}
+                <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-indigo-400" /> 
+                  {editingId ? 'Edit Konfigurasi SEO' : 'Konfigurasi Isian SEO Result'}
                 </h3>
                 {editingId && (
                   <button
@@ -399,8 +558,8 @@ ${schemaJsonText}
               {/* Meta Title */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Meta Title (Judul di SERP Google)</label>
-                  <span className={`text-xs font-medium ${metaTitle.length >= 50 && metaTitle.length <= 60 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <label className="text-xs font-semibold text-slate-300">Meta Title (Judul Google SERP)</label>
+                  <span className={`text-xs font-medium ${metaTitle.length >= 45 && metaTitle.length <= 60 ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {metaTitle.length} / 60 Karakter (Ideal: 50-60)
                   </span>
                 </div>
@@ -409,7 +568,7 @@ ${schemaJsonText}
                   value={metaTitle}
                   onChange={(e) => setMetaTitle(e.target.value)}
                   placeholder="Contoh: Jasa Simulasi CFD & Analisis FEA Presisi Tinggi | Infimech"
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none font-medium"
                   required
                 />
               </div>
@@ -426,7 +585,7 @@ ${schemaJsonText}
                   rows={3}
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value)}
-                  placeholder="Contoh: Dapatkan analisis simulasi mekanika fluida CFD & FEA presisi tinggi untuk industri Anda. Hemat biaya prototyping & tingkatkan performa..."
+                  placeholder="Contoh: Dapatkan analisis simulasi mekanika fluida CFD & FEA presisi tinggi untuk industri Anda..."
                   className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
                   required
                 />
@@ -562,21 +721,37 @@ ${schemaJsonText}
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 backdrop-blur-md space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Globe className="w-4 h-4 text-blue-400" /> Tampilan Google SERP (Live)
+                  <Globe className="w-4 h-4 text-blue-400" /> Live Google SERP Preview
                 </span>
-                <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Desktop View</span>
+                
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('desktop')}
+                    className={`p-1 rounded text-xs flex items-center gap-1 ${previewDevice === 'desktop' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+                  >
+                    <Monitor className="w-3 h-3" /> Desktop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('mobile')}
+                    className={`p-1 rounded text-xs flex items-center gap-1 ${previewDevice === 'mobile' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+                  >
+                    <Smartphone className="w-3 h-3" /> Mobile
+                  </button>
+                </div>
               </div>
               
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-1">
+              <div className={`bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-1 ${previewDevice === 'mobile' ? 'max-w-[320px] mx-auto' : ''}`}>
                 <div className="flex items-center gap-2 text-xs text-slate-400 truncate">
-                  <span className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold">G</span>
+                  <span className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">G</span>
                   <span className="truncate">{canonicalUrl || 'https://infimech.co.id'}</span>
                 </div>
                 <h4 className="text-blue-400 text-base font-semibold hover:underline cursor-pointer truncate">
                   {metaTitle || 'Judul Halaman Belum Diisi'}
                 </h4>
                 <p className="text-slate-300 text-xs line-clamp-2 leading-relaxed">
-                  {metaDescription || 'Deskripsi halaman akan muncul di sini sesuai yang Anda isikan pada form di sebelah kiri.'}
+                  {metaDescription || 'Deskripsi halaman akan muncul di sini sesuai yang di-generate otomatis oleh sistem.'}
                 </p>
               </div>
             </div>
@@ -589,7 +764,7 @@ ${schemaJsonText}
               <ul className="space-y-2 text-xs">
                 <li className="flex items-center justify-between text-slate-300">
                   <span>Panjang Meta Title (50-60 char)</span>
-                  {metaTitle.length >= 50 && metaTitle.length <= 60 ? (
+                  {metaTitle.length >= 45 && metaTitle.length <= 60 ? (
                     <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Ideal</span>
                   ) : (
                     <span className="text-amber-400 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Perlu Disesuaikan</span>
@@ -604,7 +779,7 @@ ${schemaJsonText}
                   )}
                 </li>
                 <li className="flex items-center justify-between text-slate-300">
-                  <span>Focus Keyword di Meta Title</span>
+                  <span>Focus Keyword di Title</span>
                   {focusKeyword && metaTitle.toLowerCase().includes(focusKeyword.toLowerCase()) ? (
                     <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Ada</span>
                   ) : (
@@ -612,145 +787,234 @@ ${schemaJsonText}
                   )}
                 </li>
                 <li className="flex items-center justify-between text-slate-300">
-                  <span>Schema Markup Selected</span>
-                  {schemaType ? (
-                    <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> {schemaType}</span>
-                  ) : (
-                    <span className="text-amber-400">Kosong</span>
-                  )}
+                  <span>Schema JSON-LD Markup</span>
+                  <span className="text-indigo-400 font-semibold">{schemaType}</span>
                 </li>
               </ul>
-            </div>
 
-            {/* Export HTML Code Block */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 backdrop-blur-md space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Code className="w-4 h-4 text-purple-400" /> Export Code Tags HTML
-                </span>
+              {/* Code Tags Exporter */}
+              <div className="pt-3 border-t border-slate-800">
                 <button
+                  type="button"
                   onClick={handleCopyMetaHtml}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg transition-all"
+                  className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-2 rounded-xl text-xs font-medium transition-all"
                 >
-                  {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedCode ? 'Tercopy!' : 'Copy Tags'}
+                  {copiedCode ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-400" /> HTML Meta Tags Tersalin!
+                    </>
+                  ) : (
+                    <>
+                      <Code className="w-4 h-4 text-cyan-400" /> Copy Meta Tags HTML Code
+                    </>
+                  )}
                 </button>
               </div>
-              <pre className="bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-[11px] text-slate-300 overflow-x-auto max-h-48 leading-relaxed">
-                {generateMetaHtml()}
-              </pre>
             </div>
           </div>
         </div>
       )}
 
-      {/* Saved Configurations Tab */}
+      {/* TAB 2: LIVE SERP & SOCIAL CARD PREVIEW */}
+      {activeTab === 'serp-preview' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-md space-y-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Globe className="w-5 h-5 text-cyan-400" /> Preview Tampilan Google & Social Media
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Google Desktop Preview */}
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
+                  <span>Google SERP Desktop Preview</span>
+                  <Monitor className="w-4 h-4 text-indigo-400" />
+                </div>
+                <div className="p-4 bg-slate-900/80 rounded-xl border border-slate-800/80 space-y-1">
+                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold">G</span>
+                    <span>{canonicalUrl || 'https://infimech.co.id'}</span>
+                  </div>
+                  <h4 className="text-blue-400 text-lg font-semibold hover:underline cursor-pointer">
+                    {metaTitle || 'Judul Halaman SEO Belum Ditetapkan'}
+                  </h4>
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    {metaDescription || 'Deskripsi halaman akan muncul di hasil pencarian Google sesuai pengaturan Meta Description Anda.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Social Media OpenGraph Card */}
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
+                  <span>OpenGraph Social Share Card (LinkedIn & FB)</span>
+                  <Share2 className="w-4 h-4 text-purple-400" />
+                </div>
+                <div className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+                  {ogImage && (
+                    <img src={ogImage} alt="OG Preview" className="w-full h-36 object-cover" />
+                  )}
+                  <div className="p-3 space-y-1">
+                    <span className="text-[10px] uppercase text-slate-400 tracking-wider font-semibold">INFIMECH.CO.ID</span>
+                    <h5 className="text-sm font-bold text-white truncate">{ogTitle || metaTitle || 'Judul Share Social Media'}</h5>
+                    <p className="text-xs text-slate-400 line-clamp-2">{ogDescription || metaDescription}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: SAVED SEO CONFIGS TABLE */}
       {activeTab === 'saved-configs' && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-md">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-md space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
               <h3 className="text-lg font-semibold text-white">Daftar Konfigurasi SEO Tersimpan</h3>
-              <p className="text-xs text-slate-400 mt-1">Daftar pengaturan SEO yang telah dikonfigurasi untuk seluruh aset & campaign marketing.</p>
+              <p className="text-xs text-slate-400 mt-0.5">Semua data SEO terhubung secara real-time ke Dashboard & Analytics.</p>
             </div>
             <button
-              onClick={() => setActiveTab('editor')}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-4 py-2 rounded-xl transition-all"
+              onClick={fetchConfigs}
+              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700"
             >
-              <Plus className="w-4 h-4" /> Tambah Baru
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh Data
             </button>
           </div>
 
           {loading ? (
-            <div className="py-12 text-center text-slate-400 flex flex-col items-center gap-2">
+            <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
               <RefreshCw className="w-6 h-6 animate-spin text-indigo-400" />
               <span>Memuat data konfigurasi SEO...</span>
             </div>
           ) : configs.length === 0 ? (
-            <div className="py-12 text-center text-slate-500">Belum ada konfigurasi SEO tersimpan. Silakan isi form di tab pertama.</div>
+            <div className="py-12 text-center text-slate-500">Belum ada konfigurasi SEO tersimpan. Gunakan Smart Generator di tab pertama.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {configs.map((cfg) => (
-                <div key={cfg.id} className="bg-slate-950/80 border border-slate-800 hover:border-slate-700 rounded-xl p-4 space-y-3 transition-all">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-                        {cfg.content_type || 'Landing Page'}
-                      </span>
-                      <h4 className="text-sm font-semibold text-white mt-1.5">{cfg.title}</h4>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
-                      Score: {cfg.score || 85}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                    {cfg.meta_description}
-                  </p>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800/80">
-                    <span className="flex items-center gap-1">
-                      <Search className="w-3 h-3 text-slate-400" /> Key: <strong className="text-slate-300">{cfg.focus_keyword}</strong>
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditConfig(cfg)}
-                        className="text-indigo-400 hover:text-indigo-300 px-2 py-1 rounded bg-slate-900 hover:bg-slate-800"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteConfig(cfg.id)}
-                        className="text-rose-400 hover:text-rose-300 p-1 rounded hover:bg-slate-900"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300">
+                <thead className="bg-slate-950/80 text-xs uppercase text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-4">Nama Asset / Campaign</th>
+                    <th className="py-3 px-4">Focus Keyword</th>
+                    <th className="py-3 px-4">Intent</th>
+                    <th className="py-3 px-4">Schema Type</th>
+                    <th className="py-3 px-4 text-center">Score</th>
+                    <th className="py-3 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {configs.map((cfg) => (
+                    <tr key={cfg.id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3.5 px-4 font-semibold text-white">
+                        <div>{cfg.title}</div>
+                        <div className="text-xs text-slate-400 font-normal truncate max-w-xs">{cfg.meta_title}</div>
+                      </td>
+                      <td className="py-3.5 px-4 text-xs font-mono text-cyan-400">{cfg.focus_keyword || '-'}</td>
+                      <td className="py-3.5 px-4 text-xs">
+                        <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium">
+                          {cfg.search_intent}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-xs text-slate-300">{cfg.schema_type}</td>
+                      <td className="py-3.5 px-4 text-center font-bold">
+                        <span className={cfg.score >= 80 ? 'text-emerald-400' : 'text-amber-400'}>
+                          {cfg.score}%
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right space-x-2">
+                        <button
+                          onClick={() => handleEditConfig(cfg)}
+                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteConfig(cfg)}
+                          className="text-xs text-rose-400 hover:text-rose-300 font-medium"
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
       )}
 
-      {/* Live SERP & Social Preview Tab */}
-      {activeTab === 'serp-preview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Google Desktop Preview */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-md space-y-4">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Globe className="w-4 h-4 text-blue-400" /> Google Search Desktop Card Preview
-            </h3>
-            <div className="bg-white rounded-xl p-5 shadow-lg text-slate-900 space-y-1 font-sans">
-              <div className="text-xs text-slate-600 truncate">{canonicalUrl || 'https://infimech.co.id'}</div>
-              <h4 className="text-blue-800 text-lg font-medium hover:underline cursor-pointer truncate">
-                {metaTitle || 'Pratinjau Judul Meta Google'}
-              </h4>
-              <p className="text-slate-700 text-xs line-clamp-2 leading-relaxed">
-                {metaDescription || 'Deskripsi meta akan muncul di sini dalam hasil pencarian Google.'}
+      {/* TAB 4: COMPREHENSIVE USER GUIDE (CARA PENGGUNAAN SEO MARKETING OTOMATIS) */}
+      {activeTab === 'guide' && (
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-md space-y-6 text-slate-200">
+          <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <HelpCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">Panduan & Cara Penggunaan SEO Marketing Otomatis</h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Panduan lengkap memanfaatkan fitur Smart SEO Auto-Generator dan sinkronisasi real-time ke Dashboard ERP.
               </p>
             </div>
           </div>
 
-          {/* Social Share Card (Open Graph) */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-md space-y-4">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-purple-400" /> Social Media Share Card (LinkedIn/Facebook)
-            </h3>
-            <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
-              <div className="h-44 bg-slate-900 overflow-hidden relative">
-                {ogImage ? (
-                  <img src={ogImage} alt="OG Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">No OG Image Attached</div>
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Step 1 */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">1</span>
+                <span>Generate SEO Otomatis 1-Klik</span>
               </div>
-              <div className="p-4 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-mono">{canonicalUrl ? new URL(canonicalUrl).hostname : 'infimech.co.id'}</span>
-                <h5 className="text-sm font-bold text-white truncate">{ogTitle || metaTitle || 'Judul Shared Card'}</h5>
-                <p className="text-xs text-slate-400 line-clamp-2">{ogDescription || metaDescription || 'Deskripsi shared card...'}</p>
-              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Anda tidak perlu lagi mengisikan Meta Title, Meta Description, atau JSON-LD Schema secara manual. Cukup pilih aset dari dropdown <strong>"Impor dari Asset Marketing ERP"</strong> atau ketik nama topik/produk Anda pada kolom input, lalu klik tombol <strong>"Generate SEO Otomatis Sekarang"</strong>.
+              </p>
             </div>
+
+            {/* Step 2 */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm">
+                <span className="w-6 h-6 rounded-full bg-cyan-600 text-white text-xs flex items-center justify-center">2</span>
+                <span>Evaluasi Live SERP & Score Quality</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Sistem akan menghitung <strong>SEO Quality Score (A+/B/C)</strong> secara live. Anda bisa melihat preview tampilan pada pencarian Google (Desktop & Mobile) serta Social Media Card (LinkedIn/FB) di tab <strong>"Live Google SERP"</strong>.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <span className="w-6 h-6 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center">3</span>
+                <span>Penerapan Structured Data Schema JSON-LD</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Schema JSON-LD mempermudah Google memuat Rich Snippets halaman Anda (Service, Article, Product, Organization). Script JSON-LD ini otomatis dibuat sesuai tipe konten yang Anda pilih.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">4</span>
+                <span>Sinkronisasi Real-Time ke Dashboard</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Setiap kali Anda menekan tombol <strong>"Simpan Konfigurasi SEO"</strong>, data statistik skor SEO, indeksasi Google, dan Schema breakdown akan otomatis ter-update secara <strong>real-time</strong> pada Dashboard Utama ERP Marketing!
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 flex items-center justify-between text-xs">
+            <span className="text-indigo-300">
+              💡 <strong>Tips Tambahan:</strong> Anda juga bisa men-copy kode tag HTML Meta lengkap melalui tombol "Copy Meta Tags HTML Code" untuk langsung dipasang di header website.
+            </span>
+            <button
+              onClick={() => setActiveTab('editor')}
+              className="flex items-center gap-1 text-white bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg font-medium transition-all"
+            >
+              Mulai Generate <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}
