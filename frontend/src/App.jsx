@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import { api, API_BASE_URL } from './services/api';
 import SeoInteractiveForm from './components/SeoInteractiveForm';
+import GscDashboardPanel from './components/GscDashboardPanel';
 import RealtimeUserAnalytics from './components/RealtimeUserAnalytics';
 import SeoHead from './components/SeoHead';
 import { Sparkles } from 'lucide-react';
+import PageViewLogger from './components/PageViewLogger';
 
 export default function App() {
   // Auth state
@@ -1962,6 +1964,20 @@ export default function App() {
                 </li>
                 <li>
                   <a
+                    className={`sidebar-item ${currentView === 'digital-marketing' && digitalTab === 'gsc' ? 'active' : ''}`}
+                    style={{ fontSize: '13px', padding: '8px 12px' }}
+                    onClick={() => {
+                      setCurrentView('digital-marketing');
+                      setDigitalTab('gsc');
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    <Search size={16} />
+                    <span>GSC Dashboard</span>
+                  </a>
+                </li>
+                <li>
+                  <a
                     className={`sidebar-item ${currentView === 'digital-marketing' && digitalTab === 'analytics' ? 'active' : ''}`}
                     style={{ fontSize: '13px', padding: '8px 12px' }}
                     onClick={() => {
@@ -1993,6 +2009,7 @@ export default function App() {
             )}
           </li>
         </ul>
+        <PageViewLogger token={token} user={user} currentView={currentView} digitalTab={digitalTab} />
 
         <div className="sidebar-footer">
           {user && (
@@ -3420,6 +3437,13 @@ export default function App() {
                   <span>Form Options SEO Interaktif</span>
                 </button>
                 <button
+                  className={`btn ${digitalTab === 'gsc' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setDigitalTab('gsc')}
+                >
+                  <Search size={16} />
+                  <span>GSC Performance</span>
+                </button>
+                <button
                   className={`btn ${digitalTab === 'analytics' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => setDigitalTab('analytics')}
                 >
@@ -3973,6 +3997,10 @@ export default function App() {
 
               {digitalTab === 'seo' && (
                 <SeoInteractiveForm showAlert={showAlert} showConfirm={showConfirm} token={token} user={user} />
+              )}
+
+              {digitalTab === 'gsc' && (
+                <GscDashboardPanel />
               )}
 
               {digitalTab === 'analytics' && (

@@ -31,6 +31,7 @@ app.use('/api/social', require('./routes/social'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/seo', require('./routes/seo'));
+app.use('/api/gsc', require('./routes/gsc'));
 app.use('/api/analytics', require('./routes/analytics'));
 
 // Base route status

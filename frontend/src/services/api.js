@@ -481,5 +481,38 @@ export const api = {
       body: JSON.stringify(data)
     });
     return handleResponse(res);
-  }
+  },
+
+  // Realtime Analytics
+  logVisit: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/analytics/log-visit`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  getRealtimeStats: async () => {
+    const res = await fetch(`${API_BASE_URL}/analytics/realtime-stats`, {
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  // GSC Performance Dashboard
+  getGscSites: async () => {
+    const res = await fetch(`${API_BASE_URL}/gsc/sites`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getGscAnalytics: async (siteUrl, range = '28d', searchType = 'web') => {
+    const params = new URLSearchParams({ siteUrl, range, searchType });
+    const res = await fetch(`${API_BASE_URL}/gsc/analytics?${params.toString()}`, {
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };

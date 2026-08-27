@@ -93,13 +93,18 @@ router.get('/realtime-stats', verifyToken, async (req, res) => {
     `);
 
     // 4. Active Sessions (Users active within the last 15 minutes)
+    // FIX: GROUP BY hanya per user (bukan per user+page_url+action),
+    // supaya 1 orang yang buka banyak halaman tetap dihitung 1 "online",
+    // bukan dianggap beberapa sesi terpisah.
     const [activeUsers] = await pool.query(`
-      SELECT DISTINCT 
-        user_id, username, name, role, MAX(created_at) as last_seen,
-        page_url, action
+      SELECT 
+        user_id, username, name, role, 
+        MAX(created_at) as last_seen,
+        SUBSTRING_INDEX(GROUP_CONCAT(page_url ORDER BY created_at DESC SEPARATOR '|||'), '|||', 1) as page_url,
+        SUBSTRING_INDEX(GROUP_CONCAT(action ORDER BY created_at DESC SEPARATOR '|||'), '|||', 1) as action
       FROM user_activity_logs
       WHERE created_at >= NOW() - INTERVAL 15 MINUTE
-      GROUP BY user_id, username, name, role, page_url, action
+      GROUP BY user_id, username, name, role
       ORDER BY last_seen DESC
     `);
 
