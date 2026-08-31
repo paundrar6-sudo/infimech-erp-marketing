@@ -11,7 +11,6 @@ import {
   Menu, X, MoreHorizontal, UserPlus, Activity
 } from 'lucide-react';
 import { api, API_BASE_URL } from './services/api';
-import SeoInteractiveForm from './components/SeoInteractiveForm';
 import GscDashboardPanel from './components/GscDashboardPanel';
 import RealtimeUserAnalytics from './components/RealtimeUserAnalytics';
 import SeoHead from './components/SeoHead';
@@ -1847,7 +1846,6 @@ export default function App() {
       <SeoHead
         title={
           currentView === 'dashboard' ? 'Dashboard Overview & SEO Engine | Infimech ERP' :
-          currentView === 'digital-marketing' && digitalTab === 'seo' ? 'Pengaturan Presets & Meta SEO | Infimech' :
           currentView === 'digital-marketing' ? 'Digital Marketing Campaigns & SEO | Infimech' :
           currentView === 'operator-crm' ? 'CRM Leads & User Management | Infimech' :
           currentView === 'follow-up' ? 'Follow Up Prospek & Projects | Infimech' :
@@ -1946,20 +1944,6 @@ export default function App() {
                   >
                     <Target size={16} />
                     <span>Marketing Assets</span>
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className={`sidebar-item ${currentView === 'digital-marketing' && digitalTab === 'seo' ? 'active' : ''}`}
-                    style={{ fontSize: '13px', padding: '8px 12px' }}
-                    onClick={() => {
-                      setCurrentView('digital-marketing');
-                      setDigitalTab('seo');
-                      setSidebarOpen(false);
-                    }}
-                  >
-                    <Sparkles size={16} className="text-amber-400" />
-                    <span>SEO Marketing</span>
                   </a>
                 </li>
                 <li>
@@ -2640,32 +2624,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentView('digital-marketing');
-                        setDigitalTab('seo');
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '9px 18px',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #38bdf8, #818cf8)',
-                        color: '#fff',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 14px rgba(56, 189, 248, 0.3)',
-                        transition: 'all 0.25s ease'
-                      }}
-                    >
-                      <Sparkles size={16} />
-                      <span>Kelola & Preset SEO</span>
-                      <ChevronRight size={16} />
-                    </button>
                   </div>
 
                   {/* SEO Metrics Grid */}
@@ -3430,13 +3388,6 @@ export default function App() {
                   <span>Asset Library</span>
                 </button>
                 <button
-                  className={`btn ${digitalTab === 'seo' ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => setDigitalTab('seo')}
-                >
-                  <Sparkles size={16} />
-                  <span>Form Options SEO Interaktif</span>
-                </button>
-                <button
                   className={`btn ${digitalTab === 'gsc' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => setDigitalTab('gsc')}
                 >
@@ -3995,9 +3946,6 @@ export default function App() {
                 </>
               )}
 
-              {digitalTab === 'seo' && (
-                <SeoInteractiveForm showAlert={showAlert} showConfirm={showConfirm} token={token} user={user} />
-              )}
 
               {digitalTab === 'gsc' && (
                 <GscDashboardPanel />
