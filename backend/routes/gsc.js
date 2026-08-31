@@ -5,10 +5,22 @@ const path = require('path');
 const { verifyToken } = require('../middleware/auth');
 
 // --- GSC Client Initialization ---
-const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(__dirname, '..', 'gsc-service-account-key.json'),
-  scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
-});
+// Supports both env var (production/Cloud Run) and local key file (development)
+let authConfig;
+if (process.env.GSC_SERVICE_ACCOUNT_JSON) {
+  // Production: parse JSON from environment variable
+  authConfig = {
+    credentials: JSON.parse(process.env.GSC_SERVICE_ACCOUNT_JSON),
+    scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
+  };
+} else {
+  // Development: read from local file
+  authConfig = {
+    keyFile: path.join(__dirname, '..', 'gsc-service-account-key.json'),
+    scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
+  };
+}
+const auth = new google.auth.GoogleAuth(authConfig);
 
 const searchconsole = google.searchconsole({ version: 'v1', auth });
 
