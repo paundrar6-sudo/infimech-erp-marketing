@@ -8,7 +8,7 @@ import {
   Users2, AlertTriangle, Eye, ShieldAlert, KeyRound, Mail, ChevronDown, ChevronRight,
   MapPin, Building, Landmark, Phone, PlusCircle, ArrowLeft, Send, MoreVertical, FileText,
   Copy, ExternalLink, ListChecks, CircleDot, Clipboard, PhoneCall, CheckSquare, CalendarDays,
-  Menu, X, MoreHorizontal, UserPlus, Activity
+  Menu, X, MoreHorizontal, UserPlus, Activity, ImageIcon, FileSpreadsheet, Archive
 } from 'lucide-react';
 import { api, API_BASE_URL } from './services/api';
 import GscDashboardPanel from './components/GscDashboardPanel';
@@ -1652,7 +1652,7 @@ export default function App() {
                 SHARED MARKETING FOLDER
               </span>
               <h2 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', margin: '4px 0 10px' }}>
-                📁 {clientPortalFolder.name}
+                {clientPortalFolder.name}
               </h2>
               <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: '1.6' }}>
                 {clientPortalFolder.description || 'Berikut adalah daftar lengkap aset pemasaran, brosur spesifikasi teknik, dan dokumen pendukung proyek untuk Anda unduh.'}
@@ -1675,13 +1675,13 @@ export default function App() {
             <div style={{ flex: 1, minWidth: '260px', position: 'relative' }}>
               <input
                 type="text"
-                placeholder="🔍 Cari file apa yang ingin Anda unduh (nama dokumen, tipe, topik)..."
+                placeholder="Cari file apa yang ingin Anda unduh (nama dokumen, tipe, topik)..."
                 className="form-input"
                 style={{ width: '100%', paddingLeft: '38px', height: '42px', fontSize: '13px' }}
                 value={clientSearchTerm}
                 onChange={e => setClientSearchTerm(e.target.value)}
               />
-              <span style={{ position: 'absolute', left: '12px', top: '12px', fontSize: '16px' }}>🔍</span>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
             </div>
 
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -1732,8 +1732,8 @@ export default function App() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'rgba(6,182,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                        {a.file_type === 'PDF' ? '📄' : a.file_type === 'Image' ? '🖼️' : a.file_type === 'Template' ? '📊' : '📁'}
+                      <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'rgba(6,182,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {a.file_type === 'PDF' ? <FileText size={22} style={{ color: '#ef4444' }} /> : a.file_type === 'Image' ? <ImageIcon size={22} style={{ color: '#ec4899' }} /> : a.file_type === 'Template' ? <FileSpreadsheet size={22} style={{ color: '#f59e0b' }} /> : <Archive size={22} style={{ color: 'var(--accent-cyan)' }} />}
                       </div>
                       <div>
                         <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
@@ -3709,7 +3709,6 @@ export default function App() {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
                               <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span>📦</span>
                                 <span>{f.item_count || f.assets?.length || 0} Aset Tersimpan</span>
                               </span>
 
@@ -3761,7 +3760,7 @@ export default function App() {
                           <span>← Kembali ke Semua Folder</span>
                         </button>
                         <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                          Perpustakaan Aset / <strong style={{ color: 'var(--text-primary)' }}>📁 {selectedFolder.name}</strong>
+                          Perpustakaan Aset / <strong style={{ color: 'var(--text-primary)' }}>{selectedFolder.name}</strong>
                         </div>
                       </div>
 
@@ -3777,7 +3776,7 @@ export default function App() {
                             </span>
                           </div>
                           <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
-                            📁 {selectedFolder.name}
+                            {selectedFolder.name}
                           </h2>
                           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: '1.5' }}>
                             {selectedFolder.description || 'Kumpulan brosur, studi kasus, dan spesifikasi proyek resmi.'}
@@ -3823,7 +3822,7 @@ export default function App() {
                             }}
                           >
                             <Edit3 size={16} />
-                            <span>✏️ Edit Folder</span>
+                            <span>Edit Folder</span>
                           </button>
 
                           <button
@@ -3831,7 +3830,7 @@ export default function App() {
                             style={{ background: 'rgba(168,85,247,0.25)', border: '1px solid rgba(168,85,247,0.5)', color: '#d8b4fe', fontWeight: 700, padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}
                             onClick={() => setClientPortalFolder(selectedFolder)}
                           >
-                            <span>👁️ Lihat Halaman Klien</span>
+                            <Eye size={16} /><span>Lihat Halaman Klien</span>
                           </button>
                         </div>
                       </div>
