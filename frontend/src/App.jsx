@@ -1495,7 +1495,7 @@ export default function App() {
 
           {publicShareLoading ? (
             <div style={{ padding: '40px 0' }}>
-              <div style={{ fontSize: '32px', marginBottom: '14px', animation: 'spin 1.5s linear infinite' }}>⏱️</div>
+              <div style={{ fontSize: '32px', marginBottom: '14px', animation: 'spin 1.5s linear infinite' }}>...</div>
               <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Mengambil materi pemasaran secure share...</p>
             </div>
           ) : publicShareError ? (
@@ -1599,7 +1599,7 @@ export default function App() {
     return (
       <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px' }}>
         <div className="login-card" style={{ maxWidth: '440px', width: '100%', padding: '36px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '36px', marginBottom: '14px', animation: 'spin 1.5s linear infinite' }}>⏱️</div>
+          <div style={{ fontSize: '36px', marginBottom: '14px', animation: 'spin 1.5s linear infinite' }}>...</div>
           <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>Memuat Folder Aset Pemasaran...</h3>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Harap tunggu sebentar, sedang mengambil daftar dokumen brosur & spesifikasi.</p>
         </div>
@@ -1960,20 +1960,7 @@ export default function App() {
                     <span>GSC Dashboard</span>
                   </a>
                 </li>
-                <li>
-                  <a
-                    className={`sidebar-item ${currentView === 'digital-marketing' && digitalTab === 'analytics' ? 'active' : ''}`}
-                    style={{ fontSize: '13px', padding: '8px 12px' }}
-                    onClick={() => {
-                      setCurrentView('digital-marketing');
-                      setDigitalTab('analytics');
-                      setSidebarOpen(false);
-                    }}
-                  >
-                    <Activity size={16} className="text-emerald-400" />
-                    <span>Real-Time Analytics</span>
-                  </a>
-                </li>
+
                 <li>
                   <a
                     className={`sidebar-item ${currentView === 'follow-up' ? 'active' : ''}`}
@@ -2666,44 +2653,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Metric 3: Total Configured Pages */}
-                    <div style={{ padding: '18px 20px', borderRadius: '14px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Halaman SEO Aktif</span>
-                        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', fontWeight: 700 }}>
-                          Active
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                        <span style={{ fontSize: '28px', fontWeight: 800, color: '#c084fc', letterSpacing: '-0.5px' }}>
-                          {dashboardData.seoMetrics.totalConfigs || 0}
-                        </span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>halaman / aset</span>
-                      </div>
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <CheckCircle2 size={13} style={{ color: '#34d399' }} /> Meta Title & Description terpasang
-                      </span>
-                    </div>
 
-                    {/* Metric 4: Schema Distribution */}
-                    <div style={{ padding: '18px 20px', borderRadius: '14px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Schema JSON-LD</span>
-                        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', fontWeight: 700 }}>
-                          Structured Data
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '2px' }}>
-                        {(dashboardData.seoMetrics.schemaBreakdown || []).map((sc, idx) => (
-                          <span key={idx} style={{ fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            {sc.type}: {sc.count} ({sc.percentage}%)
-                          </span>
-                        ))}
-                        {(!dashboardData.seoMetrics.schemaBreakdown || dashboardData.seoMetrics.schemaBreakdown.length === 0) && (
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Service, Article, Product</span>
-                        )}
-                      </div>
-                    </div>
                   </div>
 
                   {/* Top SEO Configurations Table */}
@@ -3394,13 +3344,7 @@ export default function App() {
                   <Search size={16} />
                   <span>GSC Performance</span>
                 </button>
-                <button
-                  className={`btn ${digitalTab === 'analytics' ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => setDigitalTab('analytics')}
-                >
-                  <Activity size={16} />
-                  <span>Analytics User & Admin Real-Time</span>
-                </button>
+
               </div>
 
               {digitalTab === 'campaigns' && (
@@ -3578,7 +3522,7 @@ export default function App() {
                                 }}
                                 title="Klik untuk lihat riwayat versi"
                               >
-                                ⏱️ v{a.version || '1.0'}
+                                v{a.version || '1.0'}
                               </button>
                             </div>
 
@@ -3810,7 +3754,7 @@ export default function App() {
                             onClick={() => setShareFolderModal(selectedFolder)}
                           >
                             <Share2 size={16} />
-                            <span>🔗 Share Folder ke Klien</span>
+                            <span>Share Folder ke Klien</span>
                           </button>
 
                           <button
@@ -3950,9 +3894,7 @@ export default function App() {
                 <GscDashboardPanel />
               )}
 
-              {digitalTab === 'analytics' && (
-                <RealtimeUserAnalytics token={token} user={user} />
-              )}
+
             </>
           )}
 
@@ -4396,7 +4338,7 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
                     <div>
                       <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '4px', background: 'linear-gradient(135deg, #a855f7, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                        📅 Kalender Konten Sosmed
+                        Kalender Konten Sosmed
                       </h3>
                       <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Jadwalkan dan kelola konten untuk semua platform media sosial Anda</span>
                     </div>
@@ -4427,7 +4369,6 @@ export default function App() {
                   {/* Post grid */}
                   {posts.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-                      <div style={{ fontSize: '56px', marginBottom: '16px' }}>📱</div>
                       <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Belum Ada Konten Dijadwalkan</h3>
                       <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>Mulai buat jadwal konten untuk Instagram, Facebook, TikTok, dan platform lainnya</p>
                       <button
@@ -4442,14 +4383,14 @@ export default function App() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '18px' }}>
                       {posts.map((p) => {
                         const platformConfig = {
-                          Instagram: { color: '#e1306c', bg: 'linear-gradient(135deg,#e1306c,#f77737,#fcaf45)', icon: '📸', textColor: '#fff' },
-                          Facebook: { color: '#1877F2', bg: 'linear-gradient(135deg,#1877F2,#0d5dbf)', icon: '👍', textColor: '#fff' },
-                          TikTok: { color: '#010101', bg: 'linear-gradient(135deg,#010101,#69C9D0)', icon: '🎵', textColor: '#fff' },
-                          LinkedIn: { color: '#0A66C2', bg: 'linear-gradient(135deg,#0A66C2,#0d4a8a)', icon: '💼', textColor: '#fff' },
-                          Twitter: { color: '#1DA1F2', bg: 'linear-gradient(135deg,#1DA1F2,#0c7abf)', icon: '🐦', textColor: '#fff' },
-                          YouTube: { color: '#FF0000', bg: 'linear-gradient(135deg,#FF0000,#c20000)', icon: '▶️', textColor: '#fff' },
+                          Instagram: { color: '#e1306c', bg: 'linear-gradient(135deg,#e1306c,#f77737,#fcaf45)', icon: '', textColor: '#fff' },
+                          Facebook: { color: '#1877F2', bg: 'linear-gradient(135deg,#1877F2,#0d5dbf)', icon: '', textColor: '#fff' },
+                          TikTok: { color: '#010101', bg: 'linear-gradient(135deg,#010101,#69C9D0)', icon: '', textColor: '#fff' },
+                          LinkedIn: { color: '#0A66C2', bg: 'linear-gradient(135deg,#0A66C2,#0d4a8a)', icon: '', textColor: '#fff' },
+                          Twitter: { color: '#1DA1F2', bg: 'linear-gradient(135deg,#1DA1F2,#0c7abf)', icon: '', textColor: '#fff' },
+                          YouTube: { color: '#FF0000', bg: 'linear-gradient(135deg,#FF0000,#c20000)', icon: '', textColor: '#fff' },
                         };
-                        const cfg = platformConfig[p.platform] || { color: '#6b7280', bg: 'linear-gradient(135deg,#374151,#1f2937)', icon: '📢', textColor: '#fff' };
+                        const cfg = platformConfig[p.platform] || { color: '#6b7280', bg: 'linear-gradient(135deg,#374151,#1f2937)', icon: '', textColor: '#fff' };
                         const statusColors = { Published: '#10b981', Scheduled: '#3b82f6', Draft: '#6b7280' };
                         const statusColor = statusColors[p.status] || '#6b7280';
 
@@ -4548,7 +4489,7 @@ export default function App() {
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)', margin: '-1px -1px 0', padding: '20px 24px', borderRadius: '14px 14px 0 0' }}>
               <div>
                 <h3 className="modal-title" style={{ color: '#fff', marginBottom: '2px' }}>
-                  {postFormData.id ? '✏️ Edit Jadwal Post' : '📅 Jadwalkan Post Baru'}
+                  {postFormData.id ? 'Edit Jadwal Post' : 'Jadwalkan Post Baru'}
                 </h3>
                 <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Buat dan jadwalkan konten untuk media sosial</p>
               </div>
@@ -4562,12 +4503,12 @@ export default function App() {
                 <label className="form-label">Platform</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {[
-                    { name: 'Instagram', icon: '📸', color: '#e1306c' },
-                    { name: 'Facebook', icon: '👍', color: '#1877F2' },
-                    { name: 'TikTok', icon: '🎵', color: '#69C9D0' },
-                    { name: 'LinkedIn', icon: '💼', color: '#0A66C2' },
-                    { name: 'Twitter', icon: '🐦', color: '#1DA1F2' },
-                    { name: 'YouTube', icon: '▶️', color: '#FF0000' },
+                    { name: 'Instagram', icon: '', color: '#e1306c' },
+                    { name: 'Facebook', icon: '', color: '#1877F2' },
+                    { name: 'TikTok', icon: '', color: '#69C9D0' },
+                    { name: 'LinkedIn', icon: '', color: '#0A66C2' },
+                    { name: 'Twitter', icon: '', color: '#1DA1F2' },
+                    { name: 'YouTube', icon: '', color: '#FF0000' },
                   ].map(pl => (
                     <button
                       key={pl.name}
@@ -4668,14 +4609,14 @@ export default function App() {
       {selectedPost && (() => {
         const p = selectedPost;
         const platformConfig = {
-          Instagram: { color: '#e1306c', bg: 'linear-gradient(135deg,#e1306c,#f77737,#fcaf45)', icon: '📸' },
-          Facebook: { color: '#1877F2', bg: 'linear-gradient(135deg,#1877F2,#0d5dbf)', icon: '👍' },
-          TikTok: { color: '#010101', bg: 'linear-gradient(135deg,#010101,#69C9D0)', icon: '🎵' },
-          LinkedIn: { color: '#0A66C2', bg: 'linear-gradient(135deg,#0A66C2,#0d4a8a)', icon: '💼' },
-          Twitter: { color: '#1DA1F2', bg: 'linear-gradient(135deg,#1DA1F2,#0c7abf)', icon: '🐦' },
-          YouTube: { color: '#FF0000', bg: 'linear-gradient(135deg,#FF0000,#c20000)', icon: '▶️' },
+          Instagram: { color: '#e1306c', bg: 'linear-gradient(135deg,#e1306c,#f77737,#fcaf45)', icon: '' },
+          Facebook: { color: '#1877F2', bg: 'linear-gradient(135deg,#1877F2,#0d5dbf)', icon: '' },
+          TikTok: { color: '#010101', bg: 'linear-gradient(135deg,#010101,#69C9D0)', icon: '' },
+          LinkedIn: { color: '#0A66C2', bg: 'linear-gradient(135deg,#0A66C2,#0d4a8a)', icon: '' },
+          Twitter: { color: '#1DA1F2', bg: 'linear-gradient(135deg,#1DA1F2,#0c7abf)', icon: '' },
+          YouTube: { color: '#FF0000', bg: 'linear-gradient(135deg,#FF0000,#c20000)', icon: '' },
         };
-        const cfg = platformConfig[p.platform] || { color: '#6b7280', bg: 'linear-gradient(135deg,#374151,#1f2937)', icon: '📢' };
+        const cfg = platformConfig[p.platform] || { color: '#6b7280', bg: 'linear-gradient(135deg,#374151,#1f2937)', icon: '' };
         const statusColors = { Published: '#10b981', Scheduled: '#3b82f6', Draft: '#6b7280' };
         const statusColor = statusColors[p.status] || '#6b7280';
         return (
@@ -5035,7 +4976,7 @@ export default function App() {
                     setClientPortalFolder(f);
                   }}
                 >
-                  👁️ Buka / Simulasi Halaman Klien (Public Portal)
+                  Buka / Simulasi Halaman Klien (Public Portal)
                 </button>
               </div>
             </div>
@@ -5101,7 +5042,7 @@ export default function App() {
                   SHARED MARKETING FOLDER
                 </span>
                 <h2 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', margin: '4px 0 10px' }}>
-                  📁 {clientPortalFolder.name}
+                  {clientPortalFolder.name}
                 </h2>
                 <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', margin: 0, lineHeight: '1.6' }}>
                   {clientPortalFolder.description || 'Berikut adalah daftar lengkap aset pemasaran, brosur spesifikasi teknik, dan dokumen pendukung proyek untuk Anda unduh.'}
@@ -5124,13 +5065,13 @@ export default function App() {
               <div style={{ flex: 1, minWidth: '260px', position: 'relative' }}>
                 <input
                   type="text"
-                  placeholder="🔍 Cari file apa yang ingin Anda unduh (nama dokumen, tipe, topik)..."
+                  placeholder="Cari file apa yang ingin Anda unduh (nama dokumen, tipe, topik)..."
                   className="form-input"
                   style={{ width: '100%', paddingLeft: '38px', height: '42px', fontSize: '13px' }}
                   value={clientSearchTerm}
                   onChange={e => setClientSearchTerm(e.target.value)}
                 />
-                <span style={{ position: 'absolute', left: '12px', top: '12px', fontSize: '16px' }}>🔍</span>
+                <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
               </div>
 
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -5236,7 +5177,7 @@ export default function App() {
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary-glow) 0%, #a855f7 100%)', margin: '-1px -1px 0', padding: '18px 24px', borderRadius: '14px 14px 0 0' }}>
               <div>
                 <h3 className="modal-title" style={{ color: '#fff', marginBottom: '2px' }}>
-                  {assetFormData.id ? '✏️ Edit Metadata Aset' : '📤 Upload Materi Pemasaran Baru'}
+                  {assetFormData.id ? 'Edit Metadata Aset' : 'Upload Materi Pemasaran Baru'}
                 </h3>
                 <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: 0 }}>Simpan materi CFD/FEA, proposal, case study secara terpusat</p>
               </div>
@@ -5448,7 +5389,7 @@ export default function App() {
               <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                 <div>
                   <h3 className="modal-title" style={{ fontSize: '16px', fontWeight: 700 }}>
-                    ⏱️ Version Control & Riwayat Versi
+                    Version Control & Riwayat Versi
                   </h3>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{selectedAssetHistory.name}</span>
                 </div>
@@ -5616,7 +5557,7 @@ export default function App() {
             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
               <div>
                 <h3 className="modal-title" style={{ fontSize: '16px', fontWeight: 700 }}>
-                  🔗 Bagikan Materi Pemasaran ke Sales
+                  Bagikan Materi Pemasaran ke Sales
                 </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Bagikan file ke tim sales tanpa perlu kirim file manual</span>
               </div>
